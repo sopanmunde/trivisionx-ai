@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { motion, useInView } from "framer-motion"
-import { useRef } from "react"
-import { ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function FinalCTA() {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-100px" })
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
     <section className="py-24 px-4">
@@ -18,13 +18,12 @@ export function FinalCTA() {
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className="max-w-4xl mx-auto text-center"
       >
-        <h2
-          className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight"
-        >
+        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
           Ready to ship faster?
         </h2>
         <p className="text-lg sm:text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">
-          Join thousands of teams already building with Apex. Start free, no credit card required.
+          Join thousands of teams already building with Apex. Start free, no
+          credit card required.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -44,8 +43,10 @@ export function FinalCTA() {
           </Button>
         </div>
 
-        <p className="mt-8 text-sm text-zinc-500">Free forever for individuals. Team plans start at $29/month.</p>
+        <p className="mt-8 text-sm text-zinc-500">
+          Free forever for individuals. Team plans start at $29/month.
+        </p>
       </motion.div>
     </section>
-  )
+  );
 }

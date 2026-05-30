@@ -1,10 +1,17 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { FolderIcon, ChevronRight, ChevronDown, MoreHorizontal, Edit3, Trash2 } from "lucide-react"
-import ConversationRow from "./ConversationRow"
-import { motion, AnimatePresence } from "framer-motion"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { useState } from "react";
+import {
+  FolderIcon,
+  ChevronRight,
+  ChevronDown,
+  MoreHorizontal,
+  Edit3,
+  Trash2,
+} from "lucide-react";
+import ConversationRow from "./ConversationRow";
+import { motion, AnimatePresence } from "framer-motion";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 export default function FolderRow({
   name,
@@ -21,41 +28,44 @@ export default function FolderRow({
   isExpanded,
   onToggle,
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   // Support both controlled (isExpanded/onToggle) and local state
-  const [localExpanded, setLocalExpanded] = useState(false)
-  const expanded = isExpanded !== undefined ? isExpanded : localExpanded
+  const [localExpanded, setLocalExpanded] = useState(false);
+  const expanded = isExpanded !== undefined ? isExpanded : localExpanded;
   const handleToggle = () => {
-    if (onToggle) onToggle()
-    else setLocalExpanded((v) => !v)
-  }
+    if (onToggle) onToggle();
+    else setLocalExpanded((v) => !v);
+  };
 
   const handleRename = (e) => {
-    e.stopPropagation()
-    const newName = prompt(`Rename folder "${name}" to:`, name)
+    e.stopPropagation();
+    const newName = prompt(`Rename folder "${name}" to:`, name);
     if (newName && newName.trim() && newName !== name) {
-      onRenameFolder?.(name, newName.trim())
+      onRenameFolder?.(name, newName.trim());
     }
-    setOpen(false)
-  }
+    setOpen(false);
+  };
 
   const handleDelete = (e) => {
-    e.stopPropagation()
+    e.stopPropagation();
     if (
       confirm(
         `Are you sure you want to delete the folder "${name}"? This will move all conversations to the root level.`,
       )
     ) {
-      onDeleteFolder?.(name)
+      onDeleteFolder?.(name);
     }
-    setOpen(false)
-  }
+    setOpen(false);
+  };
 
   return (
     <div className="group">
       <div className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors">
-        <button onClick={handleToggle} className="flex items-center gap-2 flex-1 text-left min-w-0">
+        <button
+          onClick={handleToggle}
+          className="flex items-center gap-2 flex-1 text-left min-w-0"
+        >
           <div className="flex h-4 w-4 shrink-0 items-center justify-center">
             {expanded ? (
               <ChevronDown className="h-3 w-3 text-zinc-500" />
@@ -64,20 +74,20 @@ export default function FolderRow({
             )}
           </div>
           <FolderIcon className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-          <span className="truncate text-[12px] font-medium text-zinc-700 dark:text-zinc-300">{name}</span>
+          <span className="truncate text-[12px] font-medium text-zinc-700 dark:text-zinc-300">
+            {name}
+          </span>
         </button>
 
         <div className="flex items-center gap-1.5 shrink-0 ml-2">
-          <span className="text-[10px] font-medium text-zinc-400">
-            {count}
-          </span>
+          <span className="text-[10px] font-medium text-zinc-400">{count}</span>
 
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <button
                 onClick={(e) => {
-                  e.stopPropagation()
-                  setOpen(true)
+                  e.stopPropagation();
+                  setOpen(true);
                 }}
                 className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all active:scale-95"
               >
@@ -142,5 +152,5 @@ export default function FolderRow({
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }

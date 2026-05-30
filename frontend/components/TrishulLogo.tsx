@@ -1,26 +1,49 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 
-type LogoSize = "xs" | "sm" | "md" | "lg" | "xl"
+type LogoSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 interface TrishulLogoProps {
-  size?: LogoSize
-  shimmer?: boolean
-  glow?: boolean
-  showWordmark?: boolean
-  wordmark?: string
-  className?: string
-  animate?: boolean
+  size?: LogoSize;
+  shimmer?: boolean;
+  glow?: boolean;
+  showWordmark?: boolean;
+  wordmark?: string;
+  className?: string;
+  animate?: boolean;
 }
 
-const sizeConfig: Record<LogoSize, { box: string; icon: string; text: string }> = {
-  xs: { box: "h-5 w-5 rounded-md",         icon: "w-[52%] h-[52%]", text: "text-[13px]" },
-  sm: { box: "h-7 w-7 rounded-[8px]",      icon: "w-[54%] h-[54%]", text: "text-[14px]" },
-  md: { box: "h-9 w-9 rounded-[10px]",     icon: "w-[54%] h-[54%]", text: "text-[15px]" },
-  lg: { box: "h-14 w-14 rounded-[14px]",   icon: "w-[54%] h-[54%]", text: "text-[18px]" },
-  xl: { box: "h-20 w-20 rounded-[18px]",   icon: "w-[54%] h-[54%]", text: "text-[22px]" },
-}
+const sizeConfig: Record<
+  LogoSize,
+  { box: string; icon: string; text: string }
+> = {
+  xs: {
+    box: "h-5 w-5 rounded-md",
+    icon: "w-[52%] h-[52%]",
+    text: "text-[13px]",
+  },
+  sm: {
+    box: "h-7 w-7 rounded-[8px]",
+    icon: "w-[54%] h-[54%]",
+    text: "text-[14px]",
+  },
+  md: {
+    box: "h-9 w-9 rounded-[10px]",
+    icon: "w-[54%] h-[54%]",
+    text: "text-[15px]",
+  },
+  lg: {
+    box: "h-14 w-14 rounded-[14px]",
+    icon: "w-[54%] h-[54%]",
+    text: "text-[18px]",
+  },
+  xl: {
+    box: "h-20 w-20 rounded-[18px]",
+    icon: "w-[54%] h-[54%]",
+    text: "text-[22px]",
+  },
+};
 
 export function TrishulLogo({
   size = "md",
@@ -31,26 +54,30 @@ export function TrishulLogo({
   className = "",
   animate = true,
 }: TrishulLogoProps) {
-  const cfg = sizeConfig[size]
+  const cfg = sizeConfig[size];
 
-  const Wrapper = animate ? motion.div : "div"
+  const Wrapper = animate ? motion.div : "div";
   const animateProps = animate
     ? {
         initial: { opacity: 0, y: -6 },
         animate: { opacity: 1, y: 0 },
         transition: { duration: 0.35, ease: "easeOut" },
       }
-    : {}
+    : {};
 
   return (
-    <Wrapper className={`flex items-center gap-2.5 ${className}`} {...animateProps}>
+    <Wrapper
+      className={`flex items-center gap-2.5 ${className}`}
+      {...animateProps}
+    >
       <div className="relative flex-shrink-0">
         {/* Subtle glow ring — only when glow prop is true */}
         {glow && (
           <div
             className="absolute inset-0 rounded-[inherit] animate-pulse-glow blur-xl opacity-80"
             style={{
-              background: "radial-gradient(circle, rgba(139,92,246,0.4) 0%, rgba(59,130,246,0.2) 50%, transparent 80%)",
+              background:
+                "radial-gradient(circle, rgba(139,92,246,0.4) 0%, rgba(59,130,246,0.2) 50%, transparent 80%)",
               transform: "scale(1.8)",
             }}
           />
@@ -104,5 +131,5 @@ export function TrishulLogo({
         </span>
       )}
     </Wrapper>
-  )
+  );
 }

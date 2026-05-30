@@ -29,18 +29,25 @@ export const metadata: Metadata = {
   },
 }
 
+import { Toaster } from 'sonner';
+
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className="font-sans antialiased">
-        {children}
+        <TooltipProvider>
+          {children}
+        </TooltipProvider>
+        <Toaster position="bottom-right" richColors />
         <Analytics />
       </body>
     </html>
-  )
+  );
 }
 

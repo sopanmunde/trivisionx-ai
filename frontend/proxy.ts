@@ -7,7 +7,7 @@ const protectedRoutes = ["/dashboard"]
 // Routes only accessible to unauthenticated users
 const authRoutes = ["/login", "/signup"]
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Check for auth token in cookies (set on login)

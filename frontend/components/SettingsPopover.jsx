@@ -1,9 +1,19 @@
-"use client"
-import { useState, useEffect } from "react"
-import { Globe, HelpCircle, Crown, BookOpen, LogOut, ChevronRight, Settings, Sparkles, Zap } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-import { UserProfileModal } from "./UserProfileModal"
-import { motion, AnimatePresence } from "framer-motion"
+"use client";
+import { useState, useEffect } from "react";
+import {
+  Globe,
+  HelpCircle,
+  Crown,
+  BookOpen,
+  LogOut,
+  ChevronRight,
+  Settings,
+  Sparkles,
+  Zap,
+} from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { UserProfileModal } from "./UserProfileModal";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* ── tiny shimmer border helper ─────────────────────────────────────────── */
 function ShimmerBorder({ className = "" }) {
@@ -17,60 +27,87 @@ function ShimmerBorder({ className = "" }) {
         animation: "shimmer-border 3s linear infinite",
       }}
     />
-  )
+  );
 }
 
 /* ── menu item ───────────────────────────────────────────────────────────── */
-function MenuItem({ icon: Icon, label, iconBg = "bg-zinc-100 dark:bg-zinc-800", iconColor = "text-zinc-500 dark:text-zinc-400", badge, badgeColor = "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400", suffix, onClick, danger = false }) {
+function MenuItem({
+  icon: Icon,
+  label,
+  iconBg = "bg-zinc-100 dark:bg-zinc-800",
+  iconColor = "text-zinc-500 dark:text-zinc-400",
+  badge,
+  badgeColor = "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+  suffix,
+  onClick,
+  danger = false,
+}) {
   return (
     <motion.button
       onClick={onClick}
       whileHover={{ x: 2 }}
       transition={{ duration: 0.15 }}
       className={`group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left transition-all duration-150 active:scale-[0.98]
-        ${danger
-          ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
-          : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/80 dark:hover:bg-white/[0.06]"
+        ${
+          danger
+            ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+            : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/80 dark:hover:bg-white/[0.06]"
         }`}
     >
-      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${danger ? "bg-red-50 dark:bg-red-500/10" : iconBg}`}>
-        <Icon className={`h-3.5 w-3.5 ${danger ? "text-red-500" : iconColor}`} />
+      <div
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${danger ? "bg-red-50 dark:bg-red-500/10" : iconBg}`}
+      >
+        <Icon
+          className={`h-3.5 w-3.5 ${danger ? "text-red-500" : iconColor}`}
+        />
       </div>
       <span className="font-medium flex-1">{label}</span>
       {badge && (
-        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${badgeColor}`}>
+        <span
+          className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${badgeColor}`}
+        >
           {badge}
         </span>
       )}
       {suffix}
     </motion.button>
-  )
+  );
 }
 
 /* ── main component ──────────────────────────────────────────────────────── */
-export default function SettingsPopover({ children, onUserUpdate = () => { } }) {
-  const [open, setOpen] = useState(false)
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [user, setUser] = useState(null)
+export default function SettingsPopover({ children, onUserUpdate = () => {} }) {
+  const [open, setOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
-    if (!token) return
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"}/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.ok ? r.json() : null)
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) return;
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"}/me`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => data && setUser(data))
-      .catch(() => { })
-  }, [open])
+      .catch(() => {});
+  }, [open]);
 
   const initials = user
-    ? ((user.first_name?.[0] || "") + (user.last_name?.[0] || "")).toUpperCase() || user.username?.[0]?.toUpperCase() || "U"
-    : "U"
+    ? (
+        (user.first_name?.[0] || "") + (user.last_name?.[0] || "")
+      ).toUpperCase() ||
+      user.username?.[0]?.toUpperCase() ||
+      "U"
+    : "U";
   const displayName = user
-    ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username || "User"
-    : "User"
-  const email = user?.email || ""
+    ? `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
+      user.username ||
+      "User"
+    : "User";
+  const email = user?.email || "";
 
   return (
     <>
@@ -113,14 +150,22 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[13.5px] font-semibold text-zinc-900 dark:text-zinc-100 leading-none mb-1">{displayName}</div>
-                      {email && <div className="truncate text-[11px] text-zinc-500 dark:text-zinc-500 font-medium leading-none">{email}</div>}
+                      <div className="truncate text-[13.5px] font-semibold text-zinc-900 dark:text-zinc-100 leading-none mb-1">
+                        {displayName}
+                      </div>
+                      {email && (
+                        <div className="truncate text-[11px] text-zinc-500 dark:text-zinc-500 font-medium leading-none">
+                          {email}
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="mt-3.5 flex items-center gap-2 rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 shadow-sm">
                     <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />
-                    <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">Free plan</span>
+                    <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                      Free plan
+                    </span>
                     <button className="ml-auto text-[10px] font-bold text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
                       Upgrade
                     </button>
@@ -132,7 +177,10 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                   <MenuItem
                     icon={Settings}
                     label="Settings"
-                    onClick={() => { setOpen(false); setIsProfileOpen(true) }}
+                    onClick={() => {
+                      setOpen(false);
+                      setIsProfileOpen(true);
+                    }}
                   />
                   <MenuItem
                     icon={Globe}
@@ -151,13 +199,13 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                 <div className="p-1.5 space-y-0.5">
                   {/* Upgrade — Magic UI shimmer card */}
                   <div className="relative overflow-hidden rounded-xl">
-                    <button
-                      className="group relative flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left transition-all duration-150 hover:bg-amber-50 dark:hover:bg-amber-500/10 active:scale-[0.98]"
-                    >
+                    <button className="group relative flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left transition-all duration-150 hover:bg-amber-50 dark:hover:bg-amber-500/10 active:scale-[0.98]">
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-500/10">
                         <Crown className="h-3.5 w-3.5 text-amber-500" />
                       </div>
-                      <span className="font-medium text-zinc-700 dark:text-zinc-300">Upgrade plan</span>
+                      <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                        Upgrade plan
+                      </span>
                       <span className="ml-auto rounded-full bg-gradient-to-r from-amber-400 to-orange-400 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">
                         PRO
                       </span>
@@ -179,9 +227,9 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                     label="Log out"
                     danger
                     onClick={() => {
-                      localStorage.removeItem("token")
-                      document.cookie = "auth_token=; path=/; max-age=0"
-                      window.location.href = "/login"
+                      localStorage.removeItem("token");
+                      document.cookie = "auth_token=; path=/; max-age=0";
+                      window.location.href = "/login";
                     }}
                   />
                 </div>
@@ -197,5 +245,5 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
         />
       </Popover>
     </>
-  )
+  );
 }

@@ -1,40 +1,59 @@
-"use client"
-import { motion, AnimatePresence } from "framer-motion"
+"use client";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  PanelLeftClose, PanelLeftOpen, SearchIcon, Plus, FolderIcon,
-  Settings, PenSquare, ChevronRight
-} from "lucide-react"
-import { TrishulLogo } from "./TrishulLogo"
-import SidebarSection from "./SidebarSection"
-import ConversationRow from "./ConversationRow"
-import FolderRow from "./FolderRow"
-import TemplateRow from "./TemplateRow"
-import FolderPopover from "./CreateFolderModal"
-import TemplatePopover from "./CreateTemplateModal"
-import SearchPopover from "./SearchModal"
-import SettingsPopover from "./SettingsPopover"
-import { cls } from "./utils"
-import { useState, useEffect } from "react"
+  PanelLeftClose,
+  PanelLeftOpen,
+  SearchIcon,
+  Plus,
+  FolderIcon,
+  Settings,
+  PenSquare,
+  ChevronRight,
+} from "lucide-react";
+import { TrishulLogo } from "./TrishulLogo";
+import SidebarSection from "./SidebarSection";
+import ConversationRow from "./ConversationRow";
+import FolderRow from "./FolderRow";
+import TemplateRow from "./TemplateRow";
+import FolderPopover from "./CreateFolderModal";
+import TemplatePopover from "./CreateTemplateModal";
+import SearchPopover from "./SearchModal";
+import SettingsPopover from "./SettingsPopover";
+import { cls } from "./utils";
+import { useState, useEffect } from "react";
 
 // ── Date grouping helpers ────────────────────────────────────────────────────
 function groupByDate(conversations) {
-  const now = new Date()
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const startOfYesterday = new Date(startOfToday); startOfYesterday.setDate(startOfYesterday.getDate() - 1)
-  const startOf7DaysAgo = new Date(startOfToday); startOf7DaysAgo.setDate(startOfToday.getDate() - 7)
-  const startOf30DaysAgo = new Date(startOfToday); startOf30DaysAgo.setDate(startOfToday.getDate() - 30)
+  const now = new Date();
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+  const startOfYesterday = new Date(startOfToday);
+  startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+  const startOf7DaysAgo = new Date(startOfToday);
+  startOf7DaysAgo.setDate(startOfToday.getDate() - 7);
+  const startOf30DaysAgo = new Date(startOfToday);
+  startOf30DaysAgo.setDate(startOfToday.getDate() - 30);
 
-  const groups = { Today: [], Yesterday: [], "Previous 7 Days": [], "Previous 30 Days": [], Older: [] }
+  const groups = {
+    Today: [],
+    Yesterday: [],
+    "Previous 7 Days": [],
+    "Previous 30 Days": [],
+    Older: [],
+  };
 
   for (const c of conversations) {
-    const d = new Date(c.updatedAt || c.updated_at || 0)
-    if (d >= startOfToday) groups["Today"].push(c)
-    else if (d >= startOfYesterday) groups["Yesterday"].push(c)
-    else if (d >= startOf7DaysAgo) groups["Previous 7 Days"].push(c)
-    else if (d >= startOf30DaysAgo) groups["Previous 30 Days"].push(c)
-    else groups["Older"].push(c)
+    const d = new Date(c.updatedAt || c.updated_at || 0);
+    if (d >= startOfToday) groups["Today"].push(c);
+    else if (d >= startOfYesterday) groups["Yesterday"].push(c);
+    else if (d >= startOf7DaysAgo) groups["Previous 7 Days"].push(c);
+    else if (d >= startOf30DaysAgo) groups["Previous 30 Days"].push(c);
+    else groups["Older"].push(c);
   }
-  return groups
+  return groups;
 }
 
 // ── Icon button reused throughout ───────────────────────────────────────────
@@ -47,11 +66,18 @@ function SidebarIconBtn({ onClick, title, children }) {
     >
       {children}
     </button>
-  )
+  );
 }
 
 // ── Collapsed rail ───────────────────────────────────────────────────────────
-function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, selectedId, onSelect, onUserUpdate }) {
+function CollapsedSidebar({
+  setSidebarCollapsed,
+  createNewChat,
+  conversations,
+  selectedId,
+  onSelect,
+  onUserUpdate,
+}) {
   return (
     <motion.aside
       initial={{ width: 240 }}
@@ -60,7 +86,10 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
       className="z-50 flex h-full shrink-0 flex-col border-r border-zinc-200 bg-[#f9f9f9] dark:border-zinc-800/60 dark:bg-zinc-950"
     >
       <div className="flex items-center justify-center border-b border-zinc-200 px-1.5 py-2.5 dark:border-zinc-800/80">
-        <SidebarIconBtn onClick={() => setSidebarCollapsed(false)} title="Open sidebar">
+        <SidebarIconBtn
+          onClick={() => setSidebarCollapsed(false)}
+          title="Open sidebar"
+        >
           <PanelLeftOpen className="h-3.5 w-3.5" />
         </SidebarIconBtn>
       </div>
@@ -70,13 +99,21 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
           <PenSquare className="h-3.5 w-3.5" />
         </SidebarIconBtn>
 
-        <SearchPopover conversations={conversations} onSelect={onSelect} createNewChat={createNewChat}>
+        <SearchPopover
+          conversations={conversations}
+          onSelect={onSelect}
+          createNewChat={createNewChat}
+        >
           <SidebarIconBtn title="Search">
             <SearchIcon className="h-3.5 w-3.5" />
           </SidebarIconBtn>
         </SearchPopover>
 
-        <FolderPopover onCreateFolder={() => { setSidebarCollapsed(false) }}>
+        <FolderPopover
+          onCreateFolder={() => {
+            setSidebarCollapsed(false);
+          }}
+        >
           <SidebarIconBtn title="Folders">
             <FolderIcon className="h-3.5 w-3.5" />
           </SidebarIconBtn>
@@ -91,68 +128,103 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
         </SettingsPopover>
       </div>
     </motion.aside>
-  )
+  );
 }
 
 // ── Main Sidebar ─────────────────────────────────────────────────────────────
 export default function Sidebar({
-  open, onClose,
-  collapsed, setCollapsed,
-  conversations, pinned, recent,
-  folders, folderCounts,
-  selectedId, onSelect, togglePin,
-  query, setQuery, searchRef,
-  createFolder, deleteFolder, renameFolder, createNewChat,
-  templates = [], setTemplates = () => { }, onUseTemplate = () => { },
-  sidebarCollapsed = false, setSidebarCollapsed = () => { },
-  onDeleteConversation = () => { }, onRenameConversation = () => { },
-  user = null, onUserUpdate = () => { },
+  open,
+  onClose,
+  collapsed,
+  setCollapsed,
+  conversations,
+  pinned,
+  recent,
+  folders,
+  folderCounts,
+  selectedId,
+  onSelect,
+  togglePin,
+  query,
+  setQuery,
+  searchRef,
+  createFolder,
+  deleteFolder,
+  renameFolder,
+  createNewChat,
+  templates = [],
+  setTemplates = () => { },
+  onUseTemplate = () => { },
+  sidebarCollapsed = false,
+  setSidebarCollapsed = () => { },
+  onDeleteConversation = () => { },
+  onRenameConversation = () => { },
+  user = null,
+  onUserUpdate = () => { },
 }) {
-  const [editingTemplate, setEditingTemplate] = useState(null)
-  const [mounted, setMounted] = useState(false)
-  const [collapsedGroups, setCollapsedGroups] = useState({})
-  const [expandedFolder, setExpandedFolder] = useState(null)
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [mounted, setMounted] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [expandedFolder, setExpandedFolder] = useState(null);
 
   useEffect(() => {
-    const timer = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(timer)
-  }, [])
+    const timer = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(timer);
+  }, []);
 
   const toggleGroup = (label) => {
-    setCollapsedGroups(prev => ({ ...prev, [label]: !prev[label] }))
-  }
+    setCollapsedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
 
   const getConversationsByFolder = (folderName) =>
-    conversations.filter((c) => c.folder === folderName)
+    conversations.filter((c) => c.folder === folderName);
 
-  const handleCreateFolder = (name) => createFolder(name)
-  const handleDeleteFolder = (name) => deleteFolder?.(name)
-  const handleRenameFolder = (old, next) => renameFolder?.(old, next)
+  const handleCreateFolder = (name) => createFolder(name);
+  const handleDeleteFolder = (name) => deleteFolder?.(name);
+  const handleRenameFolder = (old, next) => renameFolder?.(old, next);
 
   const handleCreateTemplate = (data) => {
     if (editingTemplate) {
-      setTemplates(templates.map((t) => t.id === editingTemplate.id ? { ...data, id: editingTemplate.id } : t))
-      setEditingTemplate(null)
+      setTemplates(
+        templates.map((t) =>
+          t.id === editingTemplate.id ? { ...data, id: editingTemplate.id } : t,
+        ),
+      );
+      setEditingTemplate(null);
     } else {
-      setTemplates([...templates, { ...data, id: Date.now().toString() }])
+      setTemplates([...templates, { ...data, id: Date.now().toString() }]);
     }
-  }
+  };
 
-  const handleEditTemplate = (t) => { setEditingTemplate(t) }
-  const handleRenameTemplate = (id, name) => setTemplates(templates.map((t) => t.id === id ? { ...t, name } : t))
-  const handleDeleteTemplate = (id) => setTemplates(templates.filter((t) => t.id !== id))
-  const handleUseTemplate = (t) => onUseTemplate(t)
+  const handleEditTemplate = (t) => {
+    setEditingTemplate(t);
+  };
+  const handleRenameTemplate = (id, name) =>
+    setTemplates(templates.map((t) => (t.id === id ? { ...t, name } : t)));
+  const handleDeleteTemplate = (id) =>
+    setTemplates(templates.filter((t) => t.id !== id));
+  const handleUseTemplate = (t) => onUseTemplate(t);
 
   const userInitials = user
-    ? ((user.first_name?.[0] || "") + (user.last_name?.[0] || "")).toUpperCase() || user.username?.[0]?.toUpperCase() || "U"
-    : "U"
+    ? (
+      (user.first_name?.[0] || "") + (user.last_name?.[0] || "")
+    ).toUpperCase() ||
+    user.username?.[0]?.toUpperCase() ||
+    "U"
+    : "U";
   const userName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username
-    : "Loading…"
+    : "Loading…";
 
-  const nonPinned = (recent || []).filter((c) => !c.pinned)
-  const grouped = groupByDate(nonPinned)
-  const groupOrder = ["Today", "Yesterday", "Previous 7 Days", "Previous 30 Days", "Older"]
+  const nonPinned = (recent || []).filter((c) => !c.pinned);
+  const grouped = groupByDate(nonPinned);
+  const groupOrder = [
+    "Today",
+    "Yesterday",
+    "Previous 7 Days",
+    "Previous 30 Days",
+    "Older",
+  ];
 
   if (sidebarCollapsed) {
     return (
@@ -164,7 +236,7 @@ export default function Sidebar({
         onSelect={onSelect}
         onUserUpdate={onUserUpdate}
       />
-    )
+    );
   }
 
   return (
@@ -198,14 +270,22 @@ export default function Sidebar({
             {/* Header */}
             <div className="flex items-center gap-1.5 border-b border-zinc-200/60 px-2.5 py-2 dark:border-zinc-800/60">
               <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                <TrishulLogo size="sm" showWordmark wordmark="Trishul AI" animate={false} />
+                <TrishulLogo
+                  size="sm"
+                  showWordmark
+                  wordmark="Trishul AI"
+                  animate={false}
+                />
               </div>
 
               <div className="flex items-center gap-0">
                 <SidebarIconBtn onClick={createNewChat} title="New Chat (⌘N)">
                   <PenSquare className="h-3.5 w-3.5" />
                 </SidebarIconBtn>
-                <SidebarIconBtn onClick={() => setSidebarCollapsed(true)} title="Collapse sidebar">
+                <SidebarIconBtn
+                  onClick={() => setSidebarCollapsed(true)}
+                  title="Collapse sidebar"
+                >
                   <PanelLeftClose className="h-3.5 w-3.5 hidden md:block" />
                 </SidebarIconBtn>
                 <button
@@ -227,7 +307,9 @@ export default function Sidebar({
                   <div className="flex h-5 w-5 items-center justify-center rounded-md bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100">
                     <Plus className="h-3 w-3" />
                   </div>
-                  <span className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100">New Chat</span>
+                  <span className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100">
+                    New Chat
+                  </span>
                 </div>
                 <div className="rounded-md border border-zinc-100 bg-zinc-50 px-1 py-0.5 text-[10px] font-bold text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800">
                   ⌘N
@@ -263,14 +345,19 @@ export default function Sidebar({
                 <SidebarSection
                   title="Pinned"
                   collapsed={collapsed.pinned}
-                  onToggle={() => setCollapsed((s) => ({ ...s, pinned: !s.pinned }))}
+                  onToggle={() =>
+                    setCollapsed((s) => ({ ...s, pinned: !s.pinned }))
+                  }
                 >
                   {pinned.map((c) => (
                     <ConversationRow
                       key={c.id}
                       data={c}
                       active={c.id === selectedId}
-                      onSelect={() => { onSelect(c.id); onClose?.() }}
+                      onSelect={() => {
+                        onSelect(c.id);
+                        onClose?.();
+                      }}
                       onTogglePin={() => togglePin(c.id)}
                       onDelete={onDeleteConversation}
                       onRename={onRenameConversation}
@@ -281,8 +368,8 @@ export default function Sidebar({
 
               {/* Grouped by date */}
               {groupOrder.map((label) => {
-                const items = grouped[label]
-                if (!items || items.length === 0) return null
+                const items = grouped[label];
+                if (!items || items.length === 0) return null;
                 return (
                   <SidebarSection
                     key={label}
@@ -295,36 +382,42 @@ export default function Sidebar({
                         key={c.id}
                         data={c}
                         active={c.id === selectedId}
-                        onSelect={() => { onSelect(c.id); onClose?.() }}
+                        onSelect={() => {
+                          onSelect(c.id);
+                          onClose?.();
+                        }}
                         onTogglePin={() => togglePin(c.id)}
                         onDelete={onDeleteConversation}
                         onRename={onRenameConversation}
                       />
                     ))}
                   </SidebarSection>
-                )
+                );
               })}
 
               {/* Empty state */}
-              {(!recent || recent.length === 0) && (!pinned || pinned.length === 0) && (
-                <div className="mt-8 select-none rounded-[20px] border border-dashed border-zinc-200 px-4 py-8 text-center text-[12px] text-zinc-400 dark:border-zinc-800 dark:text-zinc-600">
-                  <div className="mb-2 flex justify-center opacity-30">
-                    <TrishulLogo size="lg" glow animate={false} />
+              {(!recent || recent.length === 0) &&
+                (!pinned || pinned.length === 0) && (
+                  <div className="mt-8 select-none rounded-[20px] border border-dashed border-zinc-200 px-4 py-8 text-center text-[12px] text-zinc-400 dark:border-zinc-800 dark:text-zinc-600">
+                    <div className="mb-2 flex justify-center opacity-30">
+                      <TrishulLogo size="lg" glow animate={false} />
+                    </div>
+                    No conversations yet.
+                    <br />
+                    Start a new chat to begin.
                   </div>
-                  No conversations yet.<br />Start a new chat to begin.
-                </div>
-              )}
+                )}
 
               {/* Folders */}
               <SidebarSection
                 title="Folders"
                 collapsed={collapsed.folders}
-                onToggle={() => setCollapsed((s) => ({ ...s, folders: !s.folders }))}
+                onToggle={() =>
+                  setCollapsed((s) => ({ ...s, folders: !s.folders }))
+                }
               >
                 <FolderPopover onCreateFolder={handleCreateFolder}>
-                  <button
-                    className="mb-0.5 flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[11px] font-medium text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300 transition-colors"
-                  >
+                  <button className="mb-0.5 flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[11px] font-medium text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300 transition-colors">
                     <Plus className="h-3 w-3" /> New folder
                   </button>
                 </FolderPopover>
@@ -342,7 +435,9 @@ export default function Sidebar({
                     onDeleteConversation={onDeleteConversation}
                     onRenameConversation={onRenameConversation}
                     isExpanded={expandedFolder === f.id}
-                    onToggle={() => setExpandedFolder(prev => prev === f.id ? null : f.id)}
+                    onToggle={() =>
+                      setExpandedFolder((prev) => (prev === f.id ? null : f.id))
+                    }
                   />
                 ))}
               </SidebarSection>
@@ -351,12 +446,15 @@ export default function Sidebar({
               <SidebarSection
                 title="Templates"
                 collapsed={collapsed.templates}
-                onToggle={() => setCollapsed((s) => ({ ...s, templates: !s.templates }))}
+                onToggle={() =>
+                  setCollapsed((s) => ({ ...s, templates: !s.templates }))
+                }
               >
-                <TemplatePopover onCreateTemplate={handleCreateTemplate} editingTemplate={editingTemplate}>
-                  <button
-                    className="mb-0.5 flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[11px] font-medium text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300 transition-colors"
-                  >
+                <TemplatePopover
+                  onCreateTemplate={handleCreateTemplate}
+                  editingTemplate={editingTemplate}
+                >
+                  <button className="mb-0.5 flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[11px] font-medium text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300 transition-colors">
                     <Plus className="h-3 w-3" /> New template
                   </button>
                 </TemplatePopover>
@@ -390,7 +488,9 @@ export default function Sidebar({
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[12px] font-semibold text-zinc-900 dark:text-zinc-100">{userName}</div>
+                    <div className="truncate text-[12px] font-semibold text-zinc-900 dark:text-zinc-100">
+                      {userName}
+                    </div>
                     <div className="flex items-center gap-1 text-[10px] text-zinc-500">
                       <span className="h-1 w-1 rounded-full bg-emerald-400" />
                       Free plan
@@ -405,5 +505,5 @@ export default function Sidebar({
         )}
       </AnimatePresence>
     </>
-  )
+  );
 }

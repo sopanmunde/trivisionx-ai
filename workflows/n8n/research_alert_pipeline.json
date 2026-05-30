@@ -1,0 +1,168 @@
+{
+  "name": "AI Copilot — Research Keyword Alert Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cron-every-6h",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const keywords = $env.ALERT_KEYWORDS ? $env.ALERT_KEYWORDS.split('|') : ['large language models', 'RAG retrieval', 'AI agents'];\nreturn keywords.map(k => ({ keyword: k.trim() }));"
+      },
+      "id": "load-keywords",
+      "name": "Load Alert Keywords",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.COPILOT_API_URL }}/api/auth/login",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "email", "value": "={{ $env.COPILOT_BOT_EMAIL }}" },
+            { "name": "password", "value": "={{ $env.COPILOT_BOT_PASSWORD }}" }
+          ]
+        }
+      },
+      "id": "auth",
+      "name": "Authenticate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.COPILOT_API_URL }}/api/chat/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('Authenticate').item.json.access_token }}" },
+            { "name": "Accept", "value": "text/event-stream" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "msg", "value": "=What are the latest findings about {{ $json.keyword }}? Summarize key insights from indexed documents." }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "query-keyword",
+      "name": "Query Keyword",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.all();\nconst hasContent = results.some(item => item.json.body && item.json.body.length > 100);\nreturn [{ json: { has_new_content: hasContent, result_count: results.length } }];"
+      },
+      "id": "check-content",
+      "name": "Check for New Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.has_new_content }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ]
+        }
+      },
+      "id": "if-content",
+      "name": "Has Relevant Content?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "channel": "={{ $env.SLACK_ALERT_CHANNEL_ID }}",
+        "text": "🔔 *Research Alert — New Content Detected*\n\n📡 *Keywords monitored:* {{ $env.ALERT_KEYWORDS }}\n🕐 *Checked at:* {{ $now.format('YYYY-MM-DD HH:mm') }}\n\nNew relevant documents have been indexed in your AI Research Copilot. Visit your dashboard to explore the latest findings.\n\n👉 {{ $env.COPILOT_DASHBOARD_URL }}/dashboard",
+        "otherOptions": {}
+      },
+      "id": "slack-alert",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1560, 200]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {
+      "main": [
+        [{ "node": "Load Alert Keywords", "type": "main", "index": 0 }]
+      ]
+    },
+    "Load Alert Keywords": {
+      "main": [
+        [{ "node": "Authenticate", "type": "main", "index": 0 }]
+      ]
+    },
+    "Authenticate": {
+      "main": [
+        [{ "node": "Query Keyword", "type": "main", "index": 0 }]
+      ]
+    },
+    "Query Keyword": {
+      "main": [
+        [{ "node": "Check for New Content", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check for New Content": {
+      "main": [
+        [{ "node": "Has Relevant Content?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Relevant Content?": {
+      "main": [
+        [{ "node": "Send Slack Alert", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "Polls every 6 hours for content matching configured keywords. Sends a Slack alert when relevant new information is found in indexed documents. Configure keywords via pipe-separated ALERT_KEYWORDS env var.",
+    "environment_variables": [
+      "COPILOT_API_URL — FastAPI backend URL",
+      "COPILOT_BOT_EMAIL — Service account email",
+      "COPILOT_BOT_PASSWORD — Service account password",
+      "ALERT_KEYWORDS — Pipe-separated list of research keywords to monitor",
+      "SLACK_ALERT_CHANNEL_ID — Slack channel for alerts",
+      "COPILOT_DASHBOARD_URL — Frontend URL for dashboard link"
+    ]
+  }
+}

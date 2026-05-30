@@ -5,8 +5,8 @@ export default function ThemeToggle({ theme, setTheme }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const timer = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(timer)
+    const timer = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(timer);
   }, []);
 
   if (!mounted) {
@@ -30,8 +30,14 @@ export default function ThemeToggle({ theme, setTheme }) {
       aria-label="Toggle theme"
       title="Toggle theme"
     >
-      {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      <span className="hidden sm:inline">{theme === "dark" ? "Light" : "Dark"}</span>
+      {theme === "dark" ? (
+        <Sun className="h-4 w-4" />
+      ) : (
+        <Moon className="h-4 w-4" />
+      )}
+      <span className="hidden sm:inline">
+        {theme === "dark" ? "Light" : "Dark"}
+      </span>
     </button>
   );
 }

@@ -1,44 +1,69 @@
-version: '3.8'
+version: '3.9'
 
 networks:
-  trishul-network:
+  copilot-network:
     driver: bridge
 
+volumes:
+  backend_data:
+
 services:
-  # Python FastAPI Backend Service
+  # ── FastAPI Backend ────────────────────────────────────────────────────────
   backend:
     build:
-      context: ./api
+      context: ./backend
       dockerfile: Dockerfile
-    container_name: trishul-backend
+      target: production
+    container_name: ai-research-copilot-backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
-      - ./api:/app
+      - backend_data:/app/data
     environment:
       - PORT=8000
-      - BIND=0.0.0.0:8000
-      - DATABASE_NAME=auth_db
-      - SECRET_KEY=fallback-secret-key-for-local-development-32-chars
+      # ── AI ────────────────────────────────────────────────────────────────
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      # ── Vector DB ─────────────────────────────────────────────────────────
       - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_INDEX_NAME=${PINECONE_INDEX_NAME:-trishul-ui}
+      - PINECONE_ENVIRONMENT=${PINECONE_ENVIRONMENT:-us-east-1}
+      # ── Database ──────────────────────────────────────────────────────────
       - MONGODB_URL=${MONGODB_URL}
+      - DATABASE_NAME=${DATABASE_NAME:-trishul_db}
+      # ── Auth ──────────────────────────────────────────────────────────────
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      # ── App ───────────────────────────────────────────────────────────────
       - FRONTEND_URL=http://localhost:3000
+      - DEBUG=false
+      # ── Cache (optional) ──────────────────────────────────────────────────
+      - REDIS_URL=${REDIS_URL:-}
     networks:
-      - trishul-network
+      - copilot-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  # Next.js Frontend Service
+  # ── Next.js Frontend ──────────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: trishul-frontend
+    container_name: ai-research-copilot-frontend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - PORT=3000
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
-      - trishul-network
+      - copilot-network

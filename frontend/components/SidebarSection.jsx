@@ -1,9 +1,14 @@
-import React from "react"
-import { AnimatePresence, motion } from "framer-motion"
-import { ChevronDown } from "lucide-react"
-import { cls } from "./utils"
+import React from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
+import { cls } from "./utils";
 
-export default function SidebarSection({ title, children, collapsed, onToggle }) {
+export default function SidebarSection({
+  title,
+  children,
+  collapsed,
+  onToggle,
+}) {
   return (
     <section className="flex flex-col">
       <button
@@ -15,7 +20,7 @@ export default function SidebarSection({ title, children, collapsed, onToggle })
         <ChevronDown
           className={cls(
             "h-2.5 w-2.5 transition-transform duration-200",
-            collapsed ? "-rotate-90" : "rotate-0"
+            collapsed ? "-rotate-90" : "rotate-0",
           )}
         />
       </button>
@@ -33,5 +38,5 @@ export default function SidebarSection({ title, children, collapsed, onToggle })
         )}
       </AnimatePresence>
     </section>
-  )
+  );
 }

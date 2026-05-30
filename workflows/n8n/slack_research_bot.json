@@ -1,0 +1,136 @@
+{
+  "name": "AI Copilot — Slack Research Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slack-research",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "slack-webhook",
+      "name": "Slack Slash Command Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "slack-research-bot"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst text = body.text || '';\nconst userId = body.user_id || 'unknown';\nconst channelId = body.channel_id || '';\nreturn [{ json: { query: text.trim(), slack_user_id: userId, channel_id: channelId } }];"
+      },
+      "id": "parse-command",
+      "name": "Parse Slash Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.COPILOT_API_URL }}/api/auth/login",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "email", "value": "={{ $env.COPILOT_BOT_EMAIL }}" },
+            { "name": "password", "value": "={{ $env.COPILOT_BOT_PASSWORD }}" }
+          ]
+        }
+      },
+      "id": "auth",
+      "name": "Authenticate Bot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.COPILOT_API_URL }}/api/reports/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('Authenticate Bot').item.json.access_token }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "query", "value": "={{ $('Parse Slash Command').item.json.query }}" },
+            { "name": "top_k", "value": 6 }
+          ]
+        }
+      },
+      "id": "query-copilot",
+      "name": "Query AI Copilot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const report = $input.first().json;\nconst query = $('Parse Slash Command').item.json.query;\nconst preview = report.report ? report.report.substring(0, 800).trim() : 'No content generated.';\nconst citationCount = report.citations ? report.citations.length : 0;\nconst message = `🤖 *AI Research Copilot Result*\\n*Query:* ${query}\\n\\n${preview}\\n\\n_${citationCount} source(s) cited. Full report available in dashboard._`;\nreturn [{ json: { text: message, response_type: 'in_channel' } }];"
+      },
+      "id": "format-response",
+      "name": "Format Slack Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "reply-slack",
+      "name": "Reply to Slack",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Slack Slash Command Webhook": {
+      "main": [
+        [{ "node": "Parse Slash Command", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Slash Command": {
+      "main": [
+        [{ "node": "Authenticate Bot", "type": "main", "index": 0 }]
+      ]
+    },
+    "Authenticate Bot": {
+      "main": [
+        [{ "node": "Query AI Copilot", "type": "main", "index": 0 }]
+      ]
+    },
+    "Query AI Copilot": {
+      "main": [
+        [{ "node": "Format Slack Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Slack Response": {
+      "main": [
+        [{ "node": "Reply to Slack", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "Slack slash command /research <query> integration. Webhook receives the command, queries the AI Copilot report API, formats the result, and replies in-channel. Set this webhook URL as your Slack app slash command endpoint.",
+    "setup_instructions": [
+      "1. Create a Slack App at api.slack.com/apps",
+      "2. Add a slash command /research pointing to this n8n webhook URL",
+      "3. Set COPILOT_BOT_EMAIL and COPILOT_BOT_PASSWORD env vars in n8n",
+      "4. Set COPILOT_API_URL to your FastAPI backend URL"
+    ],
+    "environment_variables": [
+      "COPILOT_API_URL — FastAPI backend base URL",
+      "COPILOT_BOT_EMAIL — Bot service account email",
+      "COPILOT_BOT_PASSWORD — Bot service account password"
+    ]
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "name": "AI Copilot — Scheduled Daily Research Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Daily 8am (Mon–Fri)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.COPILOT_API_URL }}/api/auth/login",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "email", "value": "={{ $env.COPILOT_REPORT_USER_EMAIL }}" },
+            { "name": "password", "value": "={{ $env.COPILOT_REPORT_USER_PASSWORD }}" }
+          ]
+        }
+      },
+      "id": "get-token",
+      "name": "Authenticate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const queries = $env.SCHEDULED_REPORT_QUERIES ? $env.SCHEDULED_REPORT_QUERIES.split('|') : ['AI research trends this week', 'latest findings in machine learning'];\nreturn queries.map(q => ({ query: q.trim() }));"
+      },
+      "id": "prepare-queries",
+      "name": "Prepare Research Queries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.COPILOT_API_URL }}/api/reports/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('Authenticate').item.json.access_token }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "query", "value": "={{ $json.query }}" },
+            { "name": "top_k", "value": 10 }
+          ]
+        }
+      },
+      "id": "generate-report",
+      "name": "Generate Research Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const reports = $input.all();\nlet summary = '📊 *Daily Research Digest — ' + new Date().toDateString() + '*\\n\\n';\nfor (const item of reports) {\n  const r = item.json;\n  summary += `*Query:* ${r.query}\\n`;\n  if (r.citations && r.citations.length > 0) {\n    summary += `*Sources:* ${r.citations.length} documents cited\\n`;\n  }\n  const preview = r.report ? r.report.substring(0, 300).replace(/#+/g, '').trim() : '';\n  summary += `*Preview:* ${preview}...\\n\\n---\\n\\n`;\n}\nreturn [{ json: { message: summary, reportCount: reports.length } }];"
+      },
+      "id": "format-digest",
+      "name": "Format Daily Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "channel": "={{ $env.SLACK_CHANNEL_ID }}",
+        "text": "={{ $json.message }}",
+        "otherOptions": {
+          "mrkdwn": true
+        }
+      },
+      "id": "slack-digest",
+      "name": "Post to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Daily 8am (Mon–Fri)": {
+      "main": [
+        [{ "node": "Authenticate", "type": "main", "index": 0 }]
+      ]
+    },
+    "Authenticate": {
+      "main": [
+        [{ "node": "Prepare Research Queries", "type": "main", "index": 0 }]
+      ]
+    },
+    "Prepare Research Queries": {
+      "main": [
+        [{ "node": "Generate Research Report", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Research Report": {
+      "main": [
+        [{ "node": "Format Daily Digest", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Daily Digest": {
+      "main": [
+        [{ "node": "Post to Slack", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "Runs every weekday at 8am. Authenticates with the AI Copilot API, generates research reports for configured queries, formats a daily digest, and posts to Slack.",
+    "environment_variables": [
+      "COPILOT_API_URL — FastAPI backend base URL",
+      "COPILOT_REPORT_USER_EMAIL — Service account email",
+      "COPILOT_REPORT_USER_PASSWORD — Service account password",
+      "SCHEDULED_REPORT_QUERIES — Pipe-separated list of daily research queries",
+      "SLACK_CHANNEL_ID — Slack channel for digest"
+    ]
+  }
+}

@@ -1,35 +1,42 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { MoreHorizontal, Pin, Edit3, Trash2 } from "lucide-react"
-import { cls } from "./utils"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { useState } from "react";
+import { MoreHorizontal, Pin, Edit3, Trash2 } from "lucide-react";
+import { cls } from "./utils";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
-export default function ConversationRow({ data, active, onSelect, onTogglePin, onDelete, onRename }) {
-  const [open, setOpen] = useState(false)
+export default function ConversationRow({
+  data,
+  active,
+  onSelect,
+  onTogglePin,
+  onDelete,
+  onRename,
+}) {
+  const [open, setOpen] = useState(false);
 
   const handlePin = (e) => {
-    e.stopPropagation()
-    onTogglePin?.()
-    setOpen(false)
-  }
+    e.stopPropagation();
+    onTogglePin?.();
+    setOpen(false);
+  };
 
   const handleRename = (e) => {
-    e.stopPropagation()
-    const newName = prompt(`Rename chat "${data.title}" to:`, data.title)
+    e.stopPropagation();
+    const newName = prompt(`Rename chat "${data.title}" to:`, data.title);
     if (newName && newName.trim() && newName !== data.title) {
-      onRename?.(data.id, newName.trim())
+      onRename?.(data.id, newName.trim());
     }
-    setOpen(false)
-  }
+    setOpen(false);
+  };
 
   const handleDelete = (e) => {
-    e.stopPropagation()
+    e.stopPropagation();
     if (confirm(`Are you sure you want to delete "${data.title}"?`)) {
-      onDelete?.(data.id)
+      onDelete?.(data.id);
     }
-    setOpen(false)
-  }
+    setOpen(false);
+  };
 
   return (
     <div className="group relative px-1">
@@ -39,8 +46,8 @@ export default function ConversationRow({ data, active, onSelect, onTogglePin, o
         onClick={onSelect}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            onSelect()
+            e.preventDefault();
+            onSelect();
           }
         }}
         className={cls(
@@ -55,19 +62,21 @@ export default function ConversationRow({ data, active, onSelect, onTogglePin, o
         )}
 
         <div className="min-w-0 flex-1 pl-1">
-          <span className="block truncate text-[12px] font-medium leading-snug">{data.title}</span>
+          <span className="block truncate text-[12px] font-medium leading-snug">
+            {data.title}
+          </span>
         </div>
 
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button
               onClick={(e) => {
-                e.stopPropagation()
-                setOpen(true)
+                e.stopPropagation();
+                setOpen(true);
               }}
               className={cls(
                 "rounded-md p-0.5 text-zinc-500 transition-all hover:bg-black/5 dark:text-zinc-400 dark:hover:bg-white/5",
-                open ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                open ? "opacity-100" : "opacity-0 group-hover:opacity-100",
               )}
               aria-label="Chat options"
             >
@@ -108,5 +117,5 @@ export default function ConversationRow({ data, active, onSelect, onTogglePin, o
         </Popover>
       </div>
     </div>
-  )
+  );
 }

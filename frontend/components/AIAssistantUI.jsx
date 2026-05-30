@@ -1,156 +1,180 @@
-"use client"
+"use client";
 
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
-import Sidebar from "./Sidebar"
-import ChatPane from "./ChatPane"
-import Header from "./Header"
-import { INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData"
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
+import { AppSidebar } from "./AppSidebar";
+import ChatPane from "./ChatPane";
+import Header from "./Header";
+import { INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData";
+import { SidebarProvider } from "./ui/sidebar";
 
 export default function AIAssistantUI() {
   const [theme, setTheme] = useState(() => {
-    const saved = typeof window !== "undefined" && localStorage.getItem("theme")
-    if (saved) return saved
-    if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
-      return "dark"
-    return "light"
-  })
+    const saved =
+      typeof window !== "undefined" && localStorage.getItem("theme");
+    if (saved) return saved;
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    )
+      return "dark";
+    return "light";
+  });
 
   useEffect(() => {
     try {
-      if (theme === "dark") document.documentElement.classList.add("dark")
-      else document.documentElement.classList.remove("dark")
-      document.documentElement.setAttribute("data-theme", theme)
-      document.documentElement.style.colorScheme = theme
-      localStorage.setItem("theme", theme)
-    } catch { }
-  }, [theme])
+      if (theme === "dark") document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
+      document.documentElement.setAttribute("data-theme", theme);
+      document.documentElement.style.colorScheme = theme;
+      localStorage.setItem("theme", theme);
+    } catch {}
+  }, [theme]);
 
   useEffect(() => {
     try {
-      const media = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)")
-      if (!media) return
+      const media =
+        window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+      if (!media) return;
       const listener = (e) => {
-        const saved = localStorage.getItem("theme")
-        if (!saved) setTheme(e.matches ? "dark" : "light")
-      }
-      media.addEventListener("change", listener)
-      return () => media.removeEventListener("change", listener)
-    } catch { }
-  }, [])
+        const saved = localStorage.getItem("theme");
+        if (!saved) setTheme(e.matches ? "dark" : "light");
+      };
+      media.addEventListener("change", listener);
+      return () => media.removeEventListener("change", listener);
+    } catch {}
+  }, []);
 
   // Auth guard: redirect to login if no token is present
   useEffect(() => {
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
       if (!token) {
-        window.location.href = "/login"
+        window.location.href = "/login";
       }
-    } catch { }
-  }, [])
+    } catch {}
+  }, []);
 
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     try {
-      const raw = localStorage.getItem("sidebar-collapsed")
-      return raw ? JSON.parse(raw) : { pinned: true, recent: false, folders: true, templates: true }
+      const raw = localStorage.getItem("sidebar-collapsed");
+      return raw
+        ? JSON.parse(raw)
+        : { pinned: true, recent: false, folders: true, templates: true };
     } catch {
-      return { pinned: true, recent: false, folders: true, templates: true }
+      return { pinned: true, recent: false, folders: true, templates: true };
     }
-  })
+  });
   useEffect(() => {
     try {
-      localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed))
-    } catch { }
-  }, [collapsed])
+      localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
+    } catch {}
+  }, [collapsed]);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
-      const saved = localStorage.getItem("sidebar-collapsed-state")
-      return saved ? JSON.parse(saved) : false
+      const saved = localStorage.getItem("sidebar-collapsed-state");
+      return saved ? JSON.parse(saved) : false;
     } catch {
-      return false
+      return false;
     }
-  })
+  });
 
   useEffect(() => {
     try {
-      localStorage.setItem("sidebar-collapsed-state", JSON.stringify(sidebarCollapsed))
-    } catch { }
-  }, [sidebarCollapsed])
+      localStorage.setItem(
+        "sidebar-collapsed-state",
+        JSON.stringify(sidebarCollapsed),
+      );
+    } catch {}
+  }, [sidebarCollapsed]);
 
-  const [conversations, setConversations] = useState([])
-  const [isConversationsLoaded, setIsConversationsLoaded] = useState(false)
-  const [selectedId, setSelectedId] = useState(null)
-  const [templates, setTemplates] = useState(INITIAL_TEMPLATES)
-  const [folders, setFolders] = useState(INITIAL_FOLDERS)
+  const [conversations, setConversations] = useState([]);
+  const [isConversationsLoaded, setIsConversationsLoaded] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [templates, setTemplates] = useState(INITIAL_TEMPLATES);
+  const [folders, setFolders] = useState(INITIAL_FOLDERS);
 
-  const [query, setQuery] = useState("")
-  const searchRef = useRef(null)
+  const [query, setQuery] = useState("");
+  const searchRef = useRef(null);
 
-  const [isThinking, setIsThinking] = useState(false)
-  const [thinkingConvId, setThinkingConvId] = useState(null)
-  const [user, setUser] = useState(null)
+  const [isThinking, setIsThinking] = useState(false);
+  const [thinkingConvId, setThinkingConvId] = useState(null);
+  const [agentState, setAgentState] = useState(null);
+  const [user, setUser] = useState(null);
 
   const fetchUser = async () => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) return
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
       const res = await fetch(`${apiUrl}/me`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
+      });
       if (res.ok) {
-        const data = await res.json()
-        setUser(data)
+        const data = await res.json();
+        setUser(data);
       }
     } catch (err) {
-      console.error("Failed to fetch user", err)
+      console.error("Failed to fetch user", err);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchUser()
-  }, [])
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const onKey = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
-        e.preventDefault()
-        createNewChat()
+        e.preventDefault();
+        createNewChat();
       }
       if (!e.metaKey && !e.ctrlKey && e.key === "/") {
-        const tag = document.activeElement?.tagName?.toLowerCase()
+        const tag = document.activeElement?.tagName?.toLowerCase();
         if (tag !== "input" && tag !== "textarea") {
-          e.preventDefault()
-          searchRef.current?.focus()
+          e.preventDefault();
+          searchRef.current?.focus();
         }
       }
-      if (e.key === "Escape" && sidebarOpen) setSidebarOpen(false)
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [sidebarOpen, conversations])
+      if (e.key === "Escape" && sidebarOpen) setSidebarOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sidebarOpen, conversations]);
 
   useEffect(() => {
     const fetchConversations = async () => {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"
+        const apiUrl =
+          process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
         const res = await fetch(`${apiUrl}/conversations`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
           const data = await res.json();
-          setConversations(data.map(c => ({
-            ...c,
-            updatedAt: c.updated_at || c.updatedAt || new Date().toISOString(),
-            // messages are NOT included in the list response — they're lazy-loaded
-            messages: [],
-            // Use the messageCount returned by the API (not c.messages.length which is always 0)
-            messageCount: c.messageCount || 0,
-            preview: c.preview || ""
-          })));
+          setConversations(
+            data.map((c) => ({
+              ...c,
+              updatedAt:
+                c.updated_at || c.updatedAt || new Date().toISOString(),
+              // messages are NOT included in the list response — they're lazy-loaded
+              messages: [],
+              // Use the messageCount returned by the API (not c.messages.length which is always 0)
+              messageCount: c.messageCount || 0,
+              preview: c.preview || "",
+            })),
+          );
           setIsConversationsLoaded(true);
         }
       } catch (err) {
@@ -163,30 +187,44 @@ export default function AIAssistantUI() {
   useEffect(() => {
     if (isConversationsLoaded && !selectedId) {
       // Always open a new conversation on login
-      setSelectedId("new")
+      setSelectedId("new");
     }
-  }, [isConversationsLoaded, selectedId])
+  }, [isConversationsLoaded, selectedId]);
 
   useEffect(() => {
     if (!selectedId || selectedId === "new") return;
-    const conv = conversations.find(c => c.id === selectedId);
+    const conv = conversations.find((c) => c.id === selectedId);
     // Load messages when: conversation exists, has no messages loaded yet, and has messages in DB
     if (conv && conv.messages.length === 0 && conv.messageCount > 0) {
       const fetchMessages = async () => {
         const token = localStorage.getItem("token");
         if (!token) return;
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"
-          const res = await fetch(`${apiUrl}/conversations/${selectedId}/messages`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const apiUrl =
+            process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+          const res = await fetch(
+            `${apiUrl}/conversations/${selectedId}/messages`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
           if (res.ok) {
             const msgs = await res.json();
-            setConversations(prev => prev.map(c =>
-              c.id === selectedId
-                ? { ...c, messages: msgs, messageCount: msgs.length, preview: msgs.length > 0 ? msgs[msgs.length - 1].content.slice(0, 120) : c.preview }
-                : c
-            ));
+            setConversations((prev) =>
+              prev.map((c) =>
+                c.id === selectedId
+                  ? {
+                      ...c,
+                      messages: msgs,
+                      messageCount: msgs.length,
+                      preview:
+                        msgs.length > 0
+                          ? msgs[msgs.length - 1].content.slice(0, 120)
+                          : c.preview,
+                    }
+                  : c,
+              ),
+            );
           }
         } catch (err) {
           console.error(err);
@@ -197,91 +235,117 @@ export default function AIAssistantUI() {
   }, [selectedId]);
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return conversations
-    const q = query.toLowerCase()
-    return conversations.filter((c) =>
-      c.title?.toLowerCase().includes(q) || (c.preview || "").toLowerCase().includes(q)
-    )
-  }, [conversations, query])
+    if (!query.trim()) return conversations;
+    const q = query.toLowerCase();
+    return conversations.filter(
+      (c) =>
+        c.title?.toLowerCase().includes(q) ||
+        (c.preview || "").toLowerCase().includes(q),
+    );
+  }, [conversations, query]);
 
-  const pinned = filtered.filter((c) => c.pinned).sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))
+  const pinned = filtered
+    .filter((c) => c.pinned)
+    .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
 
   const recent = filtered
     .filter((c) => !c.pinned)
     .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))
-    .slice(0, 10)
+    .slice(0, 10);
 
   const folderCounts = React.useMemo(() => {
-    const map = Object.fromEntries(folders.map((f) => [f.name, 0]))
-    for (const c of conversations) if (map[c.folder] != null) map[c.folder] += 1
-    return map
-  }, [conversations, folders])
+    const map = Object.fromEntries(folders.map((f) => [f.name, 0]));
+    for (const c of conversations)
+      if (map[c.folder] != null) map[c.folder] += 1;
+    return map;
+  }, [conversations, folders]);
 
   function togglePin(id) {
-    setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)))
+    setConversations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)),
+    );
   }
 
   function createNewChat() {
-    setSelectedId("new")
-    setSidebarOpen(false)
+    setSelectedId("new");
+    setSidebarOpen(false);
   }
 
   async function deleteConversation(id) {
-    const token = localStorage.getItem("token")
-    if (!token) return
+    const token = localStorage.getItem("token");
+    if (!token) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
       const res = await fetch(`${apiUrl}/conversations/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      })
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.ok) {
-        setConversations(prev => prev.filter(c => c.id !== id))
-        if (selectedId === id) setSelectedId(null)
+        setConversations((prev) => prev.filter((c) => c.id !== id));
+        if (selectedId === id) setSelectedId(null);
       }
     } catch (err) {
-      console.error("Failed to delete conversation", err)
+      console.error("Failed to delete conversation", err);
     }
   }
 
   async function renameConversation(id, newTitle) {
-    const token = localStorage.getItem("token")
-    if (!token) return
+    const token = localStorage.getItem("token");
+    if (!token) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
       const res = await fetch(`${apiUrl}/conversations/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title: newTitle })
-      })
+        body: JSON.stringify({ title: newTitle }),
+      });
       if (res.ok) {
-        setConversations(prev => prev.map(c => c.id === id ? { ...c, title: newTitle, updatedAt: new Date().toISOString() } : c))
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === id
+              ? { ...c, title: newTitle, updatedAt: new Date().toISOString() }
+              : c,
+          ),
+        );
       }
     } catch (err) {
-      console.error("Failed to rename conversation", err)
+      console.error("Failed to rename conversation", err);
     }
   }
 
   function createFolder(name) {
-    if (!name) return
-    if (folders.some((f) => f.name.toLowerCase() === name.toLowerCase())) return alert("Folder already exists.")
-    setFolders((prev) => [...prev, { id: Math.random().toString(36).slice(2), name }])
+    if (!name) return;
+    if (folders.some((f) => f.name.toLowerCase() === name.toLowerCase()))
+      return alert("Folder already exists.");
+    setFolders((prev) => [
+      ...prev,
+      { id: Math.random().toString(36).slice(2), name },
+    ]);
   }
 
   function deleteFolder(name) {
-    setFolders((prev) => prev.filter((f) => f.name !== name))
+    setFolders((prev) => prev.filter((f) => f.name !== name));
     // Move conversations in that folder back to root (clear their folder)
-    setConversations((prev) => prev.map((c) => c.folder === name ? { ...c, folder: null } : c))
+    setConversations((prev) =>
+      prev.map((c) => (c.folder === name ? { ...c, folder: null } : c)),
+    );
   }
 
   function renameFolder(oldName, newName) {
-    if (!newName || !newName.trim()) return
-    if (folders.some((f) => f.name.toLowerCase() === newName.toLowerCase())) return alert("Folder already exists.")
-    setFolders((prev) => prev.map((f) => f.name === oldName ? { ...f, name: newName } : f))
-    setConversations((prev) => prev.map((c) => c.folder === oldName ? { ...c, folder: newName } : c))
+    if (!newName || !newName.trim()) return;
+    if (folders.some((f) => f.name.toLowerCase() === newName.toLowerCase()))
+      return alert("Folder already exists.");
+    setFolders((prev) =>
+      prev.map((f) => (f.name === oldName ? { ...f, name: newName } : f)),
+    );
+    setConversations((prev) =>
+      prev.map((c) => (c.folder === oldName ? { ...c, folder: newName } : c)),
+    );
   }
 
   async function sendMessage(convId, content) {
@@ -290,12 +354,18 @@ export default function AIAssistantUI() {
 
     let targetConvId = convId;
     const now = new Date().toISOString();
-    const userMsg = { id: Math.random().toString(36).slice(2), role: "user", content, createdAt: now };
+    const userMsg = {
+      id: Math.random().toString(36).slice(2),
+      role: "user",
+      content,
+      createdAt: now,
+    };
 
     // 1. Handle New Chat creation
     if (convId === "new") {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"
+        const apiUrl =
+          process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
         const res = await fetch(`${apiUrl}/conversations`, {
           method: "POST",
           headers: {
@@ -303,10 +373,12 @@ export default function AIAssistantUI() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            title: content.trim().split(/\s+/).slice(0, 6).join(" ").slice(0, 50) || "New Chat",
+            title:
+              content.trim().split(/\s+/).slice(0, 6).join(" ").slice(0, 50) ||
+              "New Chat",
             folder: "Work Projects",
-            pinned: false
-          })
+            pinned: false,
+          }),
         });
         if (res.ok) {
           const item = await res.json();
@@ -316,9 +388,9 @@ export default function AIAssistantUI() {
             updatedAt: now,
             messages: [userMsg],
             messageCount: 1,
-            preview: content.slice(0, 80)
+            preview: content.slice(0, 80),
           };
-          setConversations(prev => [initialConv, ...prev]);
+          setConversations((prev) => [initialConv, ...prev]);
           setSelectedId(targetConvId);
         } else {
           return;
@@ -329,7 +401,7 @@ export default function AIAssistantUI() {
       }
     } else {
       // 2. Regular message handling for existing chat
-      const targetConv = conversations.find(c => c.id === convId);
+      const targetConv = conversations.find((c) => c.id === convId);
       if (targetConv && targetConv.title === "New Chat") {
         let newTitle = content.trim().split(/\s+/).slice(0, 5).join(" ");
         if (newTitle.length < content.trim().length) newTitle += "...";
@@ -347,7 +419,7 @@ export default function AIAssistantUI() {
             messageCount: msgs.length,
             preview: content.slice(0, 80),
           };
-        })
+        }),
       );
     }
 
@@ -355,9 +427,11 @@ export default function AIAssistantUI() {
     const asstMsgId = Math.random().toString(36).slice(2);
     setIsThinking(true);
     setThinkingConvId(targetConvId);
+    setAgentState(null);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
       const response = await fetch(`${apiUrl}/chat`, {
         method: "POST",
         headers: {
@@ -404,19 +478,37 @@ export default function AIAssistantUI() {
                       if (c.id !== targetConvId) return c;
 
                       // Find if we already have the assistant message in this conversation
-                      const hasAsstMsg = c.messages.some(m => m.id === asstMsgId);
+                      const hasAsstMsg = c.messages.some(
+                        (m) => m.id === asstMsgId,
+                      );
 
                       let msgs;
                       if (!hasAsstMsg) {
                         // Insert new assistant message if it's the first chunk
-                        msgs = [...c.messages, { id: asstMsgId, role: "assistant", content: textContent, createdAt: new Date().toISOString() }];
+                        msgs = [
+                          ...c.messages,
+                          {
+                            id: asstMsgId,
+                            role: "assistant",
+                            content: textContent,
+                            createdAt: new Date().toISOString(),
+                          },
+                        ];
                       } else {
                         // Update existing assistant message
-                        msgs = c.messages.map(m => m.id === asstMsgId ? { ...m, content: textContent } : m);
+                        msgs = c.messages.map((m) =>
+                          m.id === asstMsgId
+                            ? { ...m, content: textContent }
+                            : m,
+                        );
                       }
 
-                      return { ...c, messages: msgs, preview: textContent.slice(0, 80) };
-                    })
+                      return {
+                        ...c,
+                        messages: msgs,
+                        preview: textContent.slice(0, 80),
+                      };
+                    }),
                   );
                 }
                 if (data.done) {
@@ -424,10 +516,18 @@ export default function AIAssistantUI() {
                     prev.map((c) => {
                       // IMPORTANT: use targetConvId (the real DB id)
                       if (c.id !== targetConvId) return c;
-                      const msgs = c.messages.map(m => m.id === asstMsgId ? { ...m, sources: data.sources } : m);
+                      const msgs = c.messages.map((m) =>
+                        m.id === asstMsgId
+                          ? { ...m, sources: data.sources }
+                          : m,
+                      );
                       return { ...c, messages: msgs };
-                    })
+                    }),
                   );
+                  setAgentState(null);
+                }
+                if (data.node) {
+                  setAgentState(data.node);
                 }
               } catch (e) {
                 // Ignore incomplete JSON parses as chunks might break mid-string, although unlikely with \n\n boundaries
@@ -443,61 +543,76 @@ export default function AIAssistantUI() {
       setConversations((prev) =>
         prev.map((c) => {
           if (c.id !== targetConvId) return c;
-          const msgs = c.messages.map(m => m.id === asstMsgId ? { ...m, content: "Sorry, I couldn't process your request. Please try again." } : m);
+          const msgs = c.messages.map((m) =>
+            m.id === asstMsgId
+              ? {
+                  ...m,
+                  content:
+                    "Sorry, I couldn't process your request. Please try again.",
+                }
+              : m,
+          );
           return { ...c, messages: msgs };
-        })
+        }),
       );
     }
   }
   function editMessage(convId, messageId, newContent) {
-    const now = new Date().toISOString()
+    const now = new Date().toISOString();
     setConversations((prev) =>
       prev.map((c) => {
-        if (c.id !== convId) return c
+        if (c.id !== convId) return c;
         const msgs = (c.messages || []).map((m) =>
           m.id === messageId ? { ...m, content: newContent, editedAt: now } : m,
-        )
+        );
         return {
           ...c,
           messages: msgs,
           preview: msgs[msgs.length - 1]?.content?.slice(0, 80) || c.preview,
-        }
+        };
       }),
-    )
+    );
   }
 
   function resendMessage(convId, messageId) {
-    const conv = conversations.find((c) => c.id === convId)
-    const msg = conv?.messages?.find((m) => m.id === messageId)
-    if (!msg) return
-    sendMessage(convId, msg.content)
+    const conv = conversations.find((c) => c.id === convId);
+    const msg = conv?.messages?.find((m) => m.id === messageId);
+    if (!msg) return;
+    sendMessage(convId, msg.content);
   }
 
   function pauseThinking() {
-    setIsThinking(false)
-    setThinkingConvId(null)
+    setIsThinking(false);
+    setThinkingConvId(null);
+    setAgentState(null);
   }
 
   function handleUseTemplate(template) {
     // This will be passed down to the Composer component
     // The Composer will handle inserting the template content
     if (composerRef.current) {
-      composerRef.current.insertTemplate(template.content)
+      composerRef.current.insertTemplate(template.content);
     }
   }
 
-  const composerRef = useRef(null)
+  const composerRef = useRef(null);
 
   const selected = useMemo(() => {
     if (selectedId === "new") {
-      return { id: "new", title: "New Chat", messages: [], preview: "Say hello to start..." }
+      return {
+        id: "new",
+        title: "New Chat",
+        messages: [],
+        preview: "Say hello to start...",
+      };
     }
-    return conversations.find((c) => c.id === selectedId) || null
-  }, [selectedId, conversations])
+    return conversations.find((c) => c.id === selectedId) || null;
+  }, [selectedId, conversations]);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-white text-zinc-900 dark:bg-[#212121] dark:text-zinc-100">
-      <Sidebar
+    <SidebarProvider>
+      <div className="flex h-screen w-full overflow-hidden bg-white text-zinc-900 dark:bg-[#212121] dark:text-zinc-100">
+        <AppSidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         theme={theme}
@@ -542,12 +657,18 @@ export default function AIAssistantUI() {
           ref={composerRef}
           conversation={selected}
           onSend={(content) => selected && sendMessage(selected.id, content)}
-          onEditMessage={(messageId, newContent) => selected && editMessage(selected.id, messageId, newContent)}
-          onResendMessage={(messageId) => selected && resendMessage(selected.id, messageId)}
+          onEditMessage={(messageId, newContent) =>
+            selected && editMessage(selected.id, messageId, newContent)
+          }
+          onResendMessage={(messageId) =>
+            selected && resendMessage(selected.id, messageId)
+          }
           isThinking={isThinking && thinkingConvId === selected?.id}
           onPauseThinking={pauseThinking}
+          agentState={agentState}
         />
       </main>
     </div>
-  )
+    </SidebarProvider>
+  );
 }

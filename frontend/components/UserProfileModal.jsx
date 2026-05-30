@@ -1,8 +1,30 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { X, User, Mail, AtSign, Check, AlertCircle, Loader2, Sparkles, Camera, Shield, Trash2, ChevronRight, Fingerprint, CreditCard } from "lucide-react"
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  X,
+  User,
+  Mail,
+  AtSign,
+  Check,
+  AlertCircle,
+  Loader2,
+  Sparkles,
+  Camera,
+  Shield,
+  Trash2,
+  ChevronRight,
+  Fingerprint,
+  CreditCard,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "./ui/dialog";
 
 export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
   const [formData, setFormData] = useState({
@@ -10,59 +32,59 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
     last_name: "",
     username: "",
     email: "",
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const [focusedField, setFocusedField] = useState(null)
-  const [activeTab, setActiveTab] = useState("general")
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [focusedField, setFocusedField] = useState(null);
+  const [activeTab, setActiveTab] = useState("general");
 
   useEffect(() => {
     if (isOpen) {
-      fetchUserProfile()
+      fetchUserProfile();
     } else {
-      setError("")
-      setSuccess("")
+      setError("");
+      setSuccess("");
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   const fetchUserProfile = async () => {
-    setIsLoading(true)
-    setError("")
+    setIsLoading(true);
+    setError("");
     try {
-      const token = localStorage.getItem("token")
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+      const token = localStorage.getItem("token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
       const res = await fetch(`${apiUrl}/me`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error("Failed to fetch profile")
-      const data = await res.json()
+      });
+      if (!res.ok) throw new Error("Failed to fetch profile");
+      const data = await res.json();
       setFormData({
         first_name: data.first_name || "",
         last_name: data.last_name || "",
         username: data.username || "",
         email: data.email || "",
-      })
+      });
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
-  }
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsSaving(true)
-    setError("")
-    setSuccess("")
+    e.preventDefault();
+    setIsSaving(true);
+    setError("");
+    setSuccess("");
     try {
-      const token = localStorage.getItem("token")
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+      const token = localStorage.getItem("token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
       const res = await fetch(`${apiUrl}/me`, {
         method: "PUT",
         headers: {
@@ -74,72 +96,55 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
           last_name: formData.last_name,
           username: formData.username,
         }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || "Failed to update profile")
-      
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to update profile");
+
       // Update successful
-      setSuccess("Profile updated successfully!")
-      onUpdate() // Trigger refresh in parent
-      setTimeout(() => setSuccess(""), 3000)
+      setSuccess("Profile updated successfully!");
+      onUpdate(); // Trigger refresh in parent
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const initials =
-    ((formData.first_name?.[0] || "") + (formData.last_name?.[0] || "")).toUpperCase() ||
+    (
+      (formData.first_name?.[0] || "") + (formData.last_name?.[0] || "")
+    ).toUpperCase() ||
     formData.username?.[0]?.toUpperCase() ||
-    "U"
+    "U";
 
   const inputClass = (field) =>
     `w-full rounded-xl border bg-zinc-50/50 px-4 py-2.5 text-[14px] text-zinc-900 outline-none transition-all duration-200 placeholder:text-zinc-400 dark:bg-zinc-900/50 dark:text-white ${
       focusedField === field
         ? "border-zinc-900 ring-1 ring-zinc-900 dark:border-white dark:ring-white"
         : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700"
-    }`
+    }`;
 
   const tabs = [
     { id: "general", label: "Profile", icon: User },
     { id: "security", label: "Security", icon: Shield },
     { id: "billing", label: "Billing", icon: CreditCard },
-  ]
+  ];
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
-            onClick={onClose}
-          />
-
-          <motion.div
-            key="drawer"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            className="fixed left-1/2 top-1/2 z-[70] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[24px] border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
-          >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-lg p-0 overflow-hidden rounded-[24px] border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 sm:rounded-[24px]">
+        <div className="relative flex max-h-[85vh] flex-col">
+          <DialogHeader className="px-8 pt-8 pb-4 text-left">
+            <DialogTitle className="text-xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+              Settings
+            </DialogTitle>
+            <DialogDescription className="text-[13px] text-zinc-500 font-medium">
+              Manage your account and preferences
+            </DialogDescription>
+          </DialogHeader>
             <div className="relative flex h-full flex-col">
-              <div className="flex items-center justify-between px-8 pt-8 pb-4">
-                <div>
-                  <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Settings</h2>
-                  <p className="text-[13px] text-zinc-500 font-medium">Manage your account and preferences</p>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 transition-all hover:bg-zinc-200 hover:text-zinc-900 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+
 
               <div className="px-8 mb-6">
                 <div className="flex p-1 gap-1 rounded-xl bg-zinc-100/50 border border-zinc-200 dark:bg-zinc-900/50 dark:border-zinc-800">
@@ -157,7 +162,11 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                         <motion.div
                           layoutId="activeTabCompact"
                           className="absolute inset-0 rounded-lg bg-white border border-zinc-200 shadow-sm dark:bg-zinc-800 dark:border-zinc-700"
-                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 30,
+                          }}
                         />
                       )}
                       <tab.icon className="relative z-10 h-3.5 w-3.5" />
@@ -193,14 +202,20 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                               <Camera className="h-4.5 w-4.5" />
                             </button>
                           </div>
-                          <h3 className="text-lg font-bold text-zinc-900 dark:text-white">{formData.first_name} {formData.last_name}</h3>
-                          <p className="text-[13px] text-zinc-500 font-medium">{formData.email}</p>
+                          <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
+                            {formData.first_name} {formData.last_name}
+                          </h3>
+                          <p className="text-[13px] text-zinc-500 font-medium">
+                            {formData.email}
+                          </p>
                         </div>
 
                         <div className="space-y-5">
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-2">
-                              <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 px-1">First Name</label>
+                              <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 px-1">
+                                First Name
+                              </label>
                               <input
                                 name="first_name"
                                 value={formData.first_name}
@@ -211,7 +226,9 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 px-1">Last Name</label>
+                              <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 px-1">
+                                Last Name
+                              </label>
                               <input
                                 name="last_name"
                                 value={formData.last_name}
@@ -224,7 +241,9 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 px-1">Username</label>
+                            <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 px-1">
+                              Username
+                            </label>
                             <div className="relative">
                               <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" />
                               <input
@@ -249,17 +268,35 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                       >
                         <div className="rounded-2xl border border-zinc-200 bg-zinc-50/50 p-2 space-y-1 dark:border-zinc-800 dark:bg-zinc-900/50">
                           {[
-                            { icon: Fingerprint, label: "Biometric Login", status: "Active" },
-                            { icon: Shield, label: "2-Factor Auth", status: "Off" },
+                            {
+                              icon: Fingerprint,
+                              label: "Biometric Login",
+                              status: "Active",
+                            },
+                            {
+                              icon: Shield,
+                              label: "2-Factor Auth",
+                              status: "Off",
+                            },
                           ].map((item, idx) => (
-                            <button key={idx} type="button" className="flex w-full items-center justify-between rounded-xl px-4 py-3 hover:bg-white dark:hover:bg-zinc-800 transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 shadow-sm hover:shadow-md transition-all">
+                            <button
+                              key={idx}
+                              type="button"
+                              className="flex w-full items-center justify-between rounded-xl px-4 py-3 hover:bg-white dark:hover:bg-zinc-800 transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 shadow-sm hover:shadow-md transition-all"
+                            >
                               <div className="flex items-center gap-3">
                                 <div className="h-9 w-9 rounded-lg bg-white border border-zinc-200 flex items-center justify-center dark:bg-zinc-900 dark:border-zinc-700">
                                   <item.icon className="h-4.5 w-4.5 text-zinc-500" />
                                 </div>
-                                <span className="text-[14px] font-bold text-zinc-800 dark:text-zinc-200">{item.label}</span>
+                                <span className="text-[14px] font-bold text-zinc-800 dark:text-zinc-200">
+                                  {item.label}
+                                </span>
                               </div>
-                              <span className={`text-[11px] font-bold ${item.status === 'Active' ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}`}>{item.status}</span>
+                              <span
+                                className={`text-[11px] font-bold ${item.status === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400"}`}
+                              >
+                                {item.status}
+                              </span>
                             </button>
                           ))}
                         </div>
@@ -271,7 +308,9 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                           >
                             <div className="flex items-center gap-3">
                               <Trash2 className="h-4.5 w-4.5 text-red-500" />
-                              <span className="text-[14px] font-bold text-red-600 dark:text-red-400">Delete Account</span>
+                              <span className="text-[14px] font-bold text-red-600 dark:text-red-400">
+                                Delete Account
+                              </span>
                             </div>
                             <ChevronRight className="h-4 w-4 text-red-300 transition-transform group-hover:translate-x-0.5 dark:text-red-800" />
                           </button>
@@ -306,7 +345,11 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                         className="relative flex-[1.5] group overflow-hidden rounded-xl bg-zinc-900 py-3 text-[13px] font-bold text-white shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
                       >
                         <span className="relative flex items-center justify-center gap-2">
-                          {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                          {isSaving ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-3.5 w-3.5" />
+                          )}
                           Save Changes
                         </span>
                       </button>
@@ -315,9 +358,8 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                 )}
               </div>
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  )
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }

@@ -1,16 +1,9 @@
-import type { Config } from "tailwindcss";
-import animate from "tailwindcss-animate";
-
-const config: Config = {
-    content: [
-        "./app/**/*.{js,jsx,ts,tsx}",
-        "./components/**/*.{js,jsx,ts,tsx}",
-        "./pages/**/*.{js,jsx,ts,tsx}",
-    ],
-    theme: {
-        extend: {},
-    },
-    plugins: [animate],
-};
-
-export default config;
+/**
+ * tailwind.config.ts — LEGACY FILE (Tailwind v3 format)
+ *
+ * NOTE: This project uses Tailwind CSS v4 which is CSS-first.
+ * Configuration is done entirely in app/globals.css via @theme blocks.
+ * This file is NOT loaded by @tailwindcss/postcss in v4.
+ *
+ * Kept as reference only. Safe to delete.
+ */

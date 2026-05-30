@@ -1,22 +1,34 @@
-"use client"
-import { useState, useRef } from "react"
-import { Paperclip, Bot, Search, Palette, BookOpen, MoreHorizontal, Globe, ChevronLeft, Zap, ChevronRight } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-import { motion, AnimatePresence } from "framer-motion"
+"use client";
+import { useState, useRef } from "react";
+import {
+  Paperclip,
+  Bot,
+  Search,
+  Palette,
+  BookOpen,
+  MoreHorizontal,
+  Globe,
+  ChevronLeft,
+  Zap,
+  ChevronRight,
+} from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 /* ── icon wrapper ───────────────────────────────────────────────────────── */
 function ActionIcon({ icon: Icon, customIcon }) {
-  if (customIcon) return customIcon
+  if (customIcon) return customIcon;
   return (
     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 transition-colors group-hover:bg-zinc-200 dark:group-hover:bg-zinc-800">
       <Icon className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
     </div>
-  )
+  );
 }
 
 /* ── single action row ───────────────────────────────────────────────────── */
 function ActionRow({ action, index, onAction }) {
-  const Icon = action.icon
+  const Icon = action.icon;
   return (
     <motion.button
       initial={{ opacity: 0, y: 4 }}
@@ -33,7 +45,7 @@ function ActionRow({ action, index, onAction }) {
         </span>
       )}
     </motion.button>
-  )
+  );
 }
 
 /* ── section label ───────────────────────────────────────────────────────── */
@@ -44,48 +56,57 @@ function SectionLabel({ children }) {
         {children}
       </p>
     </div>
-  )
+  );
 }
 
 /* ── divider ─────────────────────────────────────────────────────────────── */
 function Divider() {
-  return <div className="mx-2.5 my-1.5 h-px bg-zinc-100 dark:bg-zinc-800/80" />
+  return <div className="mx-2.5 my-1.5 h-px bg-zinc-100 dark:bg-zinc-800/80" />;
 }
 
 export default function ComposerActionsPopover({ children }) {
-  const [open, setOpen] = useState(false)
-  const [showMore, setShowMore] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const fileInputRef = useRef(null)
+  const [open, setOpen] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleUpload = async (event) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
     if (!file.name.endsWith(".pdf")) {
-      alert("Only PDF files are supported currently.")
-      return
+      toast.error("Only PDF files are supported currently.");
+      return;
     }
-    setIsUploading(true)
-    const token = localStorage.getItem("token")
-    const formData = new FormData()
-    formData.append("file", file)
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/documents/upload`, {
+
+    setIsUploading(true);
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const uploadPromise = fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/documents/upload`,
+      {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
+      },
+    )
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Upload failed");
+        const result = await response.json();
+        return result;
       })
-      if (!response.ok) throw new Error("Upload failed")
-      const result = await response.json()
-      alert(`Upload successful! Indexed ${result.chunks} chunks.`)
-    } catch (error) {
-      console.error("Error uploading document:", error)
-      alert("Failed to upload document.")
-    } finally {
-      setIsUploading(false)
-      setOpen(false)
-    }
-  }
+      .finally(() => {
+        setIsUploading(false);
+        setOpen(false);
+      });
+
+    toast.promise(uploadPromise, {
+      loading: "Uploading and indexing document...",
+      success: (data) => `Upload successful! Indexed ${data.chunks} chunks.`,
+      error: "Failed to upload document.",
+    });
+  };
 
   const mainActions = [
     {
@@ -101,7 +122,8 @@ export default function ComposerActionsPopover({ children }) {
       color: "text-violet-500 dark:text-violet-400",
       bg: "bg-violet-50 dark:bg-violet-500/10",
       badge: "NEW",
-      badgeStyle: "bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
+      badgeStyle:
+        "bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
       action: () => console.log("Agent mode"),
     },
     {
@@ -125,7 +147,7 @@ export default function ComposerActionsPopover({ children }) {
       bg: "bg-pink-50 dark:bg-pink-500/10",
       action: () => console.log("Study and learn"),
     },
-  ]
+  ];
 
   const moreActions = [
     {
@@ -164,18 +186,18 @@ export default function ComposerActionsPopover({ children }) {
       ),
       label: "SharePoint",
     },
-  ]
+  ];
 
   const handleAction = (action) => {
-    action?.()
-    setOpen(false)
-    setShowMore(false)
-  }
+    action?.();
+    setOpen(false);
+    setShowMore(false);
+  };
 
   const handleOpenChange = (newOpen) => {
-    setOpen(newOpen)
-    if (!newOpen) setShowMore(false)
-  }
+    setOpen(newOpen);
+    if (!newOpen) setShowMore(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -201,7 +223,12 @@ export default function ComposerActionsPopover({ children }) {
 
               <div className="space-y-px">
                 {mainActions.map((action, i) => (
-                  <ActionRow key={i} action={action} index={i} onAction={handleAction} />
+                  <ActionRow
+                    key={i}
+                    action={action}
+                    index={i}
+                    onAction={handleAction}
+                  />
                 ))}
               </div>
 
@@ -242,7 +269,12 @@ export default function ComposerActionsPopover({ children }) {
 
               <div className="space-y-px">
                 {moreActions.map((action, i) => (
-                  <ActionRow key={i} action={action} index={i} onAction={handleAction} />
+                  <ActionRow
+                    key={i}
+                    action={action}
+                    index={i}
+                    onAction={handleAction}
+                  />
                 ))}
               </div>
             </motion.div>
@@ -250,7 +282,13 @@ export default function ComposerActionsPopover({ children }) {
         </AnimatePresence>
       </PopoverContent>
 
-      <input type="file" accept=".pdf" className="hidden" ref={fileInputRef} onChange={handleUpload} />
+      <input
+        type="file"
+        accept=".pdf"
+        className="hidden"
+        ref={fileInputRef}
+        onChange={handleUpload}
+      />
     </Popover>
-  )
+  );
 }

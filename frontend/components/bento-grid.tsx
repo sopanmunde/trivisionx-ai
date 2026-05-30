@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { motion, useInView } from "framer-motion"
-import { useRef, useEffect, useState } from "react"
-import { Activity, Command, BarChart3, Zap, Shield } from "lucide-react"
+import { motion, useInView } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
+import { Activity, Command, BarChart3, Zap, Shield } from "lucide-react";
 
 function MetricValue({ min = 60, max = 100 }) {
-  const [value, setValue] = useState(null)
+  const [value, setValue] = useState(null);
   useEffect(() => {
-    setValue(Math.floor(Math.random() * (max - min) + min))
-  }, [min, max])
+    setValue(Math.floor(Math.random() * (max - min) + min));
+  }, [min, max]);
 
-  if (value === null) return <span className="opacity-0">--</span>
-  return <>{value}%</>
+  if (value === null) return <span className="opacity-0">--</span>;
+  return <>{value}%</>;
 }
 
 const containerVariants = {
@@ -21,7 +21,7 @@ const containerVariants = {
       staggerChildren: 0.1,
     },
   },
-}
+};
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -33,17 +33,17 @@ const itemVariants = {
       ease: [0.22, 1, 0.36, 1],
     },
   },
-}
+};
 
 function SystemStatus() {
-  const [dots, setDots] = useState([true, true, true, false, true])
+  const [dots, setDots] = useState([true, true, true, false, true]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setDots((prev) => prev.map(() => Math.random() > 0.2))
-    }, 2000)
-    return () => clearInterval(interval)
-  }, [])
+      setDots((prev) => prev.map(() => Math.random() > 0.2));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex items-center gap-2">
@@ -52,23 +52,27 @@ function SystemStatus() {
           key={i}
           className={`w-2 h-2 rounded-full ${active ? "bg-emerald-500" : "bg-zinc-700"}`}
           animate={active ? { scale: [1, 1.2, 1] } : {}}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, delay: i * 0.2 }}
+          transition={{
+            duration: 1,
+            repeat: Number.POSITIVE_INFINITY,
+            delay: i * 0.2,
+          }}
         />
       ))}
     </div>
-  )
+  );
 }
 
 function KeyboardCommand() {
-  const [pressed, setPressed] = useState(false)
+  const [pressed, setPressed] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setPressed(true)
-      setTimeout(() => setPressed(false), 200)
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [])
+      setPressed(true);
+      setTimeout(() => setPressed(false), 200);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex items-center gap-1">
@@ -86,12 +90,12 @@ function KeyboardCommand() {
         K
       </motion.kbd>
     </div>
-  )
+  );
 }
 
 function AnimatedChart() {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
 
   const points = [
     { x: 0, y: 60 },
@@ -100,11 +104,13 @@ function AnimatedChart() {
     { x: 60, y: 30 },
     { x: 80, y: 40 },
     { x: 100, y: 15 },
-  ]
+  ];
 
   const pathD = points.reduce((acc, point, i) => {
-    return i === 0 ? `M ${point.x} ${point.y}` : `${acc} L ${point.x} ${point.y}`
-  }, "")
+    return i === 0
+      ? `M ${point.x} ${point.y}`
+      : `${acc} L ${point.x} ${point.y}`;
+  }, "");
 
   return (
     <svg ref={ref} viewBox="0 0 100 70" className="w-full h-24">
@@ -116,17 +122,28 @@ function AnimatedChart() {
       </defs>
       {isInView && (
         <>
-          <path d={`${pathD} L 100 70 L 0 70 Z`} fill="url(#chartGradient)" className="opacity-50" />
-          <path d={pathD} fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="draw-line" />
+          <path
+            d={`${pathD} L 100 70 L 0 70 Z`}
+            fill="url(#chartGradient)"
+            className="opacity-50"
+          />
+          <path
+            d={pathD}
+            fill="none"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            className="draw-line"
+          />
         </>
       )}
     </svg>
-  )
+  );
 }
 
 export function BentoGrid() {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-100px" })
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
     <section id="features" className="py-24 px-4">
@@ -137,13 +154,12 @@ export function BentoGrid() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2
-            className="text-3xl sm:text-4xl font-bold text-white mb-4"
-          >
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Everything you need to ship
           </h2>
           <p className="text-zinc-400 max-w-2xl mx-auto">
-            Built for modern teams. Powerful features that help you build, deploy, and scale faster than ever.
+            Built for modern teams. Powerful features that help you build,
+            deploy, and scale faster than ever.
           </p>
         </motion.div>
 
@@ -160,16 +176,27 @@ export function BentoGrid() {
             className="md:col-span-2 group relative p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-600 backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden"
           >
             {/* Mouse-follow spotlight effect (simulated with CSS) */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-              style={{ background: "radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%)" }} />
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%)",
+              }}
+            />
             <div className="flex items-start justify-between mb-8">
               <div>
                 <div className="p-2 rounded-lg bg-zinc-800 w-fit mb-4">
-                  <Activity className="w-5 h-5 text-zinc-400" strokeWidth={1.5} />
+                  <Activity
+                    className="w-5 h-5 text-zinc-400"
+                    strokeWidth={1.5}
+                  />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Real-time Monitoring</h3>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  Real-time Monitoring
+                </h3>
                 <p className="text-zinc-400 text-sm">
-                  Track system health, performance metrics, and alerts in real-time across all your deployments.
+                  Track system health, performance metrics, and alerts in
+                  real-time across all your deployments.
                 </p>
               </div>
               <SystemStatus />
@@ -191,13 +218,22 @@ export function BentoGrid() {
             variants={itemVariants}
             className="group relative p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-600 backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden"
           >
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-              style={{ background: "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%)" }} />
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%)",
+              }}
+            />
             <div className="p-2 rounded-lg bg-zinc-800 w-fit mb-4">
               <Command className="w-5 h-5 text-zinc-400" strokeWidth={1.5} />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Command Palette</h3>
-            <p className="text-zinc-400 text-sm mb-6">Navigate anywhere instantly with powerful keyboard shortcuts.</p>
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Command Palette
+            </h3>
+            <p className="text-zinc-400 text-sm mb-6">
+              Navigate anywhere instantly with powerful keyboard shortcuts.
+            </p>
             <KeyboardCommand />
           </motion.div>
 
@@ -206,13 +242,20 @@ export function BentoGrid() {
             variants={itemVariants}
             className="group relative p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-600 backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden"
           >
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-              style={{ background: "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%)" }} />
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%)",
+              }}
+            />
             <div className="p-2 rounded-lg bg-zinc-800 w-fit mb-4">
               <BarChart3 className="w-5 h-5 text-zinc-400" strokeWidth={1.5} />
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">Analytics</h3>
-            <p className="text-zinc-400 text-sm mb-4">Deep insights into your application performance.</p>
+            <p className="text-zinc-400 text-sm mb-4">
+              Deep insights into your application performance.
+            </p>
             <AnimatedChart />
           </motion.div>
 
@@ -221,14 +264,22 @@ export function BentoGrid() {
             variants={itemVariants}
             className="group relative p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-600 backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden"
           >
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-              style={{ background: "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%)" }} />
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%)",
+              }}
+            />
             <div className="p-2 rounded-lg bg-zinc-800 w-fit mb-4">
               <Zap className="w-5 h-5 text-zinc-400" strokeWidth={1.5} />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Blazing Fast</h3>
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Blazing Fast
+            </h3>
             <p className="text-zinc-400 text-sm mb-4">
-              Edge-optimized infrastructure for sub-50ms response times globally.
+              Edge-optimized infrastructure for sub-50ms response times
+              globally.
             </p>
             <div className="flex items-center gap-2 text-emerald-500 text-sm">
               <span className="font-mono">~32ms</span>
@@ -241,21 +292,36 @@ export function BentoGrid() {
             variants={itemVariants}
             className="group relative p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-600 backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden"
           >
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-              style={{ background: "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%)" }} />
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%)",
+              }}
+            />
             <div className="p-2 rounded-lg bg-zinc-800 w-fit mb-4">
               <Shield className="w-5 h-5 text-zinc-400" strokeWidth={1.5} />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Enterprise Security</h3>
-            <p className="text-zinc-400 text-sm mb-4">SOC2 compliant with end-to-end encryption and SSO support.</p>
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Enterprise Security
+            </h3>
+            <p className="text-zinc-400 text-sm mb-4">
+              SOC2 compliant with end-to-end encryption and SSO support.
+            </p>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-1 text-xs bg-zinc-800 rounded text-zinc-400">SOC2</span>
-              <span className="px-2 py-1 text-xs bg-zinc-800 rounded text-zinc-400">GDPR</span>
-              <span className="px-2 py-1 text-xs bg-zinc-800 rounded text-zinc-400">HIPAA</span>
+              <span className="px-2 py-1 text-xs bg-zinc-800 rounded text-zinc-400">
+                SOC2
+              </span>
+              <span className="px-2 py-1 text-xs bg-zinc-800 rounded text-zinc-400">
+                GDPR
+              </span>
+              <span className="px-2 py-1 text-xs bg-zinc-800 rounded text-zinc-400">
+                HIPAA
+              </span>
             </div>
           </motion.div>
         </motion.div>
       </div>
     </section>
-  )
+  );
 }

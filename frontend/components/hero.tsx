@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { motion, cubicBezier } from "framer-motion"
-import { ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { TrishulLogo } from "@/components/TrishulLogo"
+import { motion, cubicBezier } from "framer-motion";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrishulLogo } from "@/components/TrishulLogo";
 
 const avatars = [
   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
@@ -11,7 +11,7 @@ const avatars = [
   "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
   "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-]
+];
 
 const textRevealVariants = {
   hidden: { y: "100%" },
@@ -23,7 +23,7 @@ const textRevealVariants = {
       delay: i * 0.1,
     },
   }),
-}
+};
 
 export function Hero() {
   return (
@@ -32,10 +32,20 @@ export function Hero() {
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900 pointer-events-none" />
 
       {/* Violet radial spotlight glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/4 w-[900px] h-[700px] rounded-full blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.12) 0%, rgba(59,130,246,0.06) 40%, transparent 70%)" }} />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 70%)" }} />
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/4 w-[900px] h-[700px] rounded-full blur-3xl pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse, rgba(139,92,246,0.12) 0%, rgba(59,130,246,0.06) 40%, transparent 70%)",
+        }}
+      />
+      <div
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 70%)",
+        }}
+      />
 
       <div className="relative z-10 max-w-5xl mx-auto text-center">
         {/* Logo mark — centered with glow */}
@@ -60,11 +70,15 @@ export function Hero() {
         </motion.div>
 
         {/* Headline with text mask animation */}
-        <h1
-          className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6"
-        >
+        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6">
           <span className="block overflow-hidden">
-            <motion.span className="block" variants={textRevealVariants} initial="hidden" animate="visible" custom={0}>
+            <motion.span
+              className="block"
+              variants={textRevealVariants}
+              initial="hidden"
+              animate="visible"
+              custom={0}
+            >
               Talk to care.
             </motion.span>
           </span>
@@ -88,7 +102,8 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
         >
-          Everything you need to deliver instant, intelligent healthcare through AI chat.
+          Everything you need to deliver instant, intelligent healthcare through
+          AI chat.
         </motion.p>
 
         {/* CTAs */}
@@ -140,10 +155,11 @@ export function Hero() {
             ))}
           </div>
           <p className="text-sm text-zinc-500">
-            Trusted by <span className="text-zinc-300 font-medium">2,000+</span> teams worldwide
+            Trusted by <span className="text-zinc-300 font-medium">2,000+</span>{" "}
+            teams worldwide
           </p>
         </motion.div>
       </div>
     </section>
-  )
+  );
 }

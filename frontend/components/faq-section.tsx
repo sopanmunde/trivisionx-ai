@@ -1,15 +1,17 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Plus, Minus } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState } from "react";
+import { Plus, Minus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function FAQSection() {
-  const [openItems, setOpenItems] = useState<number[]>([])
+  const [openItems, setOpenItems] = useState<number[]>([]);
 
   const toggleItem = (index: number) => {
-    setOpenItems((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]))
-  }
+    setOpenItems((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
+    );
+  };
 
   const faqs = [
     {
@@ -37,7 +39,7 @@ export function FAQSection() {
       answer:
         "Simply copy the generated code and paste it into your React project. v0 provides installation instructions for any required dependencies, and the components are designed to work seamlessly with modern React frameworks like Next.js.",
     },
-  ]
+  ];
 
   return (
     <section id="faq" className="relative overflow-hidden pb-120 pt-24">
@@ -88,8 +90,8 @@ export function FAQSection() {
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault()
-                  toggleItem(index)
+                  e.preventDefault();
+                  toggleItem(index);
                 }
               }}
               {...(index === faqs.length - 1 && { "data-faq": faq.question })}
@@ -102,9 +104,15 @@ export function FAQSection() {
                   className=""
                 >
                   {openItems.includes(index) ? (
-                    <Minus className="text-primary flex-shrink-0 transition duration-300" size={24} />
+                    <Minus
+                      className="text-primary flex-shrink-0 transition duration-300"
+                      size={24}
+                    />
                   ) : (
-                    <Plus className="text-primary flex-shrink-0 transition duration-300" size={24} />
+                    <Plus
+                      className="text-primary flex-shrink-0 transition duration-300"
+                      size={24}
+                    />
                   )}
                 </motion.div>
               </div>
@@ -130,5 +138,5 @@ export function FAQSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

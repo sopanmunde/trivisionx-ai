@@ -1,31 +1,45 @@
 services:
-  # ==========================================
-  # FastAPI Backend — Render Free Web Service
-  # ==========================================
+  # ============================================================
+  # FastAPI Backend — Render Web Service
+  # ============================================================
   - type: web
-    name: trishul-ai-backend
+    name: ai-research-copilot-backend
     runtime: python
-    rootDir: api
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn index:app --host 0.0.0.0 --port $PORT
+    startCommand: gunicorn index:app --worker-class uvicorn.workers.UvicornWorker --workers 2 --bind 0.0.0.0:$PORT --timeout 120
     envVars:
       - key: PYTHON_VERSION
-        value: 3.12.2
-      - key: MONGODB_URI
-        sync: false # You fill this in Render dashboard
-      - key: PINECONE_API_KEY
+        value: "3.11.0"
+      # ── AI Provider ────────────────────────────────────────
+      - key: GOOGLE_API_KEY
         sync: false
-      - key: PINECONE_ENV
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      # ── Vector DB ──────────────────────────────────────────
+      - key: PINECONE_API_KEY
         sync: false
       - key: PINECONE_INDEX_NAME
         sync: false
-      - key: GOOGLE_API_KEY
+      - key: PINECONE_ENVIRONMENT
+        value: us-east-1
+      # ── Database ───────────────────────────────────────────
+      - key: MONGODB_URL
         sync: false
+      - key: DATABASE_NAME
+        value: trishul_db
+      # ── Auth ───────────────────────────────────────────────
       - key: SECRET_KEY
         sync: false
       - key: ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: "30"
+        value: "1440"
+      # ── App ────────────────────────────────────────────────
       - key: FRONTEND_URL
-        sync: false # Your Vercel URL e.g. https://trishul-ai.vercel.app
+        sync: false  # e.g. https://your-app.vercel.app
+      - key: DEBUG
+        value: "false"
+      # ── Cache (optional) ───────────────────────────────────
+      - key: REDIS_URL
+        sync: false

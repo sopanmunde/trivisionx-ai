@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react"
-import { motion } from "framer-motion"
-import { Menu, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { TrishulLogo } from "@/components/TrishulLogo"
-import Link from "next/link"
+import { useState, useRef } from "react";
+import { motion } from "framer-motion";
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrishulLogo } from "@/components/TrishulLogo";
+import Link from "next/link";
 
 const navItems = [
   { label: "Features", href: "#features" },
@@ -13,12 +13,12 @@ const navItems = [
   { label: "Docs", href: "#docs" },
   { label: "Blog", href: "#blog" },
   { label: "Contact", href: "#contact" },
-]
+];
 
 export function Navbar() {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const navRef = useRef<HTMLDivElement>(null)
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
 
   return (
     <motion.header
@@ -33,7 +33,12 @@ export function Navbar() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <TrishulLogo size="sm" showWordmark wordmark="Trishul AI" animate={false} />
+          <TrishulLogo
+            size="sm"
+            showWordmark
+            wordmark="Trishul AI"
+            animate={false}
+          />
         </Link>
 
         {/* Desktop Nav Items */}
@@ -61,10 +66,19 @@ export function Navbar() {
 
         {/* CTA Buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <Button asChild variant="ghost" size="sm" className="text-zinc-400 hover:text-white hover:bg-zinc-800">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+          >
             <Link href="/login">Sign In</Link>
           </Button>
-          <Button asChild size="sm" className="relative overflow-hidden shimmer-btn bg-white text-zinc-950 hover:bg-zinc-100 rounded-full px-4 h-9 font-semibold transition-all">
+          <Button
+            asChild
+            size="sm"
+            className="relative overflow-hidden shimmer-btn bg-white text-zinc-950 hover:bg-zinc-100 rounded-full px-4 h-9 font-semibold transition-all"
+          >
             <Link href="/login">
               <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-zinc-200/40 to-transparent" />
               <span className="relative">Sign Up</span>
@@ -102,15 +116,22 @@ export function Navbar() {
               </Link>
             ))}
             <hr className="border-zinc-800 my-2" />
-            <Button asChild variant="ghost" className="justify-start text-zinc-400 hover:text-white">
+            <Button
+              asChild
+              variant="ghost"
+              className="justify-start text-zinc-400 hover:text-white"
+            >
               <Link href="/login">Sign In</Link>
             </Button>
-            <Button asChild className="shimmer-btn bg-white text-zinc-950 hover:bg-zinc-200 rounded-full">
+            <Button
+              asChild
+              className="shimmer-btn bg-white text-zinc-950 hover:bg-zinc-200 rounded-full"
+            >
               <Link href="/login">Get Started</Link>
             </Button>
           </div>
         </motion.div>
       )}
     </motion.header>
-  )
+  );
 }
