@@ -64,6 +64,30 @@ def report_node(state: AgentState) -> dict:
             f"across {len(citations)} document source(s) with GPT-4o synthesis._\n"
         )
 
+    # Generate a simple quality score based on citations
+    quality_score = {}
+    if citations:
+        # Calculate coverage (how many unique docs hit vs total queries)
+        # We can approximate for now
+        coverage = min(100, len(citations) * 15 + 40)
+        
+        # Calculate average confidence
+        conf_scores = [c.get("confidence", 0.0) for c in citations if isinstance(c.get("confidence"), (float, int))]
+        avg_conf = (sum(conf_scores) / len(conf_scores)) * 100 if conf_scores else 80
+        confidence = min(100, max(0, avg_conf))
+        
+        # Completeness based on summary length
+        completeness = min(100, max(40, len(summary) / 20))
+        
+        overall = (coverage + confidence + completeness) / 3
+        
+        quality_score = {
+            "coverage": round(coverage),
+            "confidence": round(confidence),
+            "completeness": round(completeness),
+            "overall": round(overall)
+        }
+
     logger.info(
         f"[Report Agent] Final output: {len(final_output)} chars, "
         f"{len(citations)} citations, report_mode={report_mode}"
@@ -71,5 +95,6 @@ def report_node(state: AgentState) -> dict:
 
     return {
         "final_output": final_output,
+        "quality_score": quality_score,
         "current_node": "reporter",
     }

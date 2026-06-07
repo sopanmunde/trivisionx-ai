@@ -33,7 +33,7 @@ export default function AIAssistantUI() {
       document.documentElement.setAttribute("data-theme", theme);
       document.documentElement.style.colorScheme = theme;
       localStorage.setItem("theme", theme);
-    } catch {}
+    } catch { }
   }, [theme]);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function AIAssistantUI() {
       };
       media.addEventListener("change", listener);
       return () => media.removeEventListener("change", listener);
-    } catch {}
+    } catch { }
   }, []);
 
   // Auth guard: redirect to login if no token is present
@@ -57,7 +57,7 @@ export default function AIAssistantUI() {
       if (!token) {
         window.location.href = "/login";
       }
-    } catch {}
+    } catch { }
   }, []);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -74,7 +74,7 @@ export default function AIAssistantUI() {
   useEffect(() => {
     try {
       localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
-    } catch {}
+    } catch { }
   }, [collapsed]);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -92,7 +92,7 @@ export default function AIAssistantUI() {
         "sidebar-collapsed-state",
         JSON.stringify(sidebarCollapsed),
       );
-    } catch {}
+    } catch { }
   }, [sidebarCollapsed]);
 
   const [conversations, setConversations] = useState([]);
@@ -213,14 +213,14 @@ export default function AIAssistantUI() {
               prev.map((c) =>
                 c.id === selectedId
                   ? {
-                      ...c,
-                      messages: msgs,
-                      messageCount: msgs.length,
-                      preview:
-                        msgs.length > 0
-                          ? msgs[msgs.length - 1].content.slice(0, 120)
-                          : c.preview,
-                    }
+                    ...c,
+                    messages: msgs,
+                    messageCount: msgs.length,
+                    preview:
+                      msgs.length > 0
+                        ? msgs[msgs.length - 1].content.slice(0, 120)
+                        : c.preview,
+                  }
                   : c,
               ),
             );
@@ -514,6 +514,19 @@ export default function AIAssistantUI() {
                   // Citations will be attached to the message on done
                 }
 
+                // ── Quality Score: {type: "quality_score", data: {...}} ─────
+                if (data.type === "quality_score" && data.data) {
+                  setConversations((prev) =>
+                    prev.map((c) => {
+                      if (c.id !== targetConvId) return c;
+                      const msgs = c.messages.map((m) =>
+                        m.id === asstMsgId ? { ...m, quality_score: data.data } : m,
+                      );
+                      return { ...c, messages: msgs };
+                    }),
+                  );
+                }
+
                 // ── Done: {done: true, sources: [...]} ──────────────────────
                 if (data.done) {
                   setConversations((prev) =>
@@ -547,10 +560,10 @@ export default function AIAssistantUI() {
           const msgs = c.messages.map((m) =>
             m.id === asstMsgId
               ? {
-                  ...m,
-                  content:
-                    "Sorry, I couldn't process your request. Please try again.",
-                }
+                ...m,
+                content:
+                  "Sorry, I couldn't process your request. Please try again.",
+              }
               : m,
           );
           return { ...c, messages: msgs };

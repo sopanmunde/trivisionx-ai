@@ -47,7 +47,7 @@ export function Navbar() {
           <TrishulLogo
             size="sm"
             showWordmark
-            wordmark="Trishul AI"
+            wordmark="AI Research Assistant"
             animate={false}
           />
         </Link>

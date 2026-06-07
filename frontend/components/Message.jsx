@@ -50,7 +50,7 @@ function CodeBlock({ children, className, ...props }) {
   );
 }
 
-export default function Message({ role, content, sources, children }) {
+export default function Message({ role, content, sources, quality_score, children }) {
   const isUser = role === "user";
 
   return (
@@ -142,6 +142,58 @@ export default function Message({ role, content, sources, children }) {
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+              
+              {/* Quality Score Panel */}
+              {role === "assistant" && typeof content === "string" && quality_score && (
+                <div className="mt-4 border-t border-zinc-200/60 dark:border-zinc-700/50 pt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                      Research Quality
+                    </h4>
+                    <span className={cls(
+                      "text-[10px] font-bold px-1.5 py-0.5 rounded uppercase",
+                      quality_score.overall >= 80 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                      quality_score.overall >= 60 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                      "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
+                    )}>
+                      {quality_score.overall >= 80 ? "High Reliability" :
+                       quality_score.overall >= 60 ? "Medium Reliability" : "Low Reliability"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {/* Coverage */}
+                    <div className="flex-1 flex flex-col gap-1">
+                      <div className="flex justify-between text-[11px]">
+                        <span className="text-zinc-500 dark:text-zinc-400">Coverage</span>
+                        <span className="font-semibold text-zinc-700 dark:text-zinc-300">{quality_score.coverage}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${quality_score.coverage}%` }} />
+                      </div>
+                    </div>
+                    {/* Confidence */}
+                    <div className="flex-1 flex flex-col gap-1">
+                      <div className="flex justify-between text-[11px]">
+                        <span className="text-zinc-500 dark:text-zinc-400">Confidence</span>
+                        <span className="font-semibold text-zinc-700 dark:text-zinc-300">{quality_score.confidence}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-violet-500 rounded-full" style={{ width: `${quality_score.confidence}%` }} />
+                      </div>
+                    </div>
+                    {/* Completeness */}
+                    <div className="flex-1 flex flex-col gap-1">
+                      <div className="flex justify-between text-[11px]">
+                        <span className="text-zinc-500 dark:text-zinc-400">Completeness</span>
+                        <span className="font-semibold text-zinc-700 dark:text-zinc-300">{quality_score.completeness}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${quality_score.completeness}%` }} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

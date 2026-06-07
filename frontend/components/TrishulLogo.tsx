@@ -50,7 +50,7 @@ export function TrishulLogo({
   shimmer = false,
   glow = false,
   showWordmark = false,
-  wordmark = "Trishul AI",
+  wordmark = "AI Research Assistant",
   className = "",
   animate = true,
 }: TrishulLogoProps) {
@@ -59,10 +59,10 @@ export function TrishulLogo({
   const Wrapper = animate ? motion.div : "div";
   const animateProps = animate
     ? {
-        initial: { opacity: 0, y: -6 },
-        animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.35, ease: "easeOut" },
-      }
+      initial: { opacity: 0, y: -6 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.35, ease: "easeOut" },
+    }
     : {};
 
   return (
@@ -121,11 +121,10 @@ export function TrishulLogo({
 
       {showWordmark && (
         <span
-          className={`font-semibold tracking-tight ${cfg.text} ${
-            shimmer
+          className={`font-semibold tracking-tight ${cfg.text} ${shimmer
               ? "animate-shimmer-text"
               : "text-zinc-900 dark:text-zinc-100"
-          }`}
+            }`}
         >
           {wordmark}
         </span>

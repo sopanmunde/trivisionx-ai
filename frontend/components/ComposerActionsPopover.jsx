@@ -15,6 +15,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import RagPipelineVisualizer from "./RagPipelineVisualizer";
 
 /* ── icon wrapper ───────────────────────────────────────────────────────── */
 function ActionIcon({ icon: Icon, customIcon }) {
@@ -70,42 +71,84 @@ export default function ComposerActionsPopover({ children }) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
+  const [uploadingStage, setUploadingStage] = useState(null); // 'parsing', 'chunking', etc.
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadChunks, setUploadChunks] = useState(0);
+
   const handleUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.name.endsWith(".pdf")) {
-      toast.error("Only PDF files are supported currently.");
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (!["pdf", "docx", "txt"].includes(ext)) {
+      toast.error("Unsupported file type. Please upload PDF, DOCX, or TXT.");
       return;
     }
 
+    setOpen(false); // Close popover
     setIsUploading(true);
+    setUploadingStage("parsing");
+    setUploadProgress(10);
+    setUploadChunks(0);
+
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("file", file);
 
-    const uploadPromise = fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/documents/upload`,
-      {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+      const res = await fetch(`${apiUrl}/documents/upload/stream`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
-      },
-    )
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Upload failed");
-        const result = await response.json();
-        return result;
-      })
-      .finally(() => {
-        setIsUploading(false);
-        setOpen(false);
       });
 
-    toast.promise(uploadPromise, {
-      loading: "Uploading and indexing document...",
-      success: (data) => `Upload successful! Indexed ${data.chunks} chunks.`,
-      error: "Failed to upload document.",
-    });
+      if (!res.ok) throw new Error("Upload failed");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let done = false;
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n\n");
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.stage) {
+                  setUploadingStage(data.stage);
+                  setUploadProgress(data.progress || 0);
+                  if (data.chunks) setUploadChunks(data.chunks);
+                }
+                if (data.error) throw new Error(data.error);
+                
+                if (data.stage === "done") {
+                  setTimeout(() => {
+                    setUploadingStage(null);
+                    setIsUploading(false);
+                    toast.success(`Indexed ${data.chunks} chunks successfully.`);
+                  }, 2000);
+                }
+              } catch (e) {
+                // Ignore incomplete JSON
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload document");
+      setUploadingStage(null);
+      setIsUploading(false);
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const mainActions = [
@@ -284,11 +327,31 @@ export default function ComposerActionsPopover({ children }) {
 
       <input
         type="file"
-        accept=".pdf"
+        accept=".pdf,.docx,.txt"
         className="hidden"
         ref={fileInputRef}
         onChange={handleUpload}
       />
+
+      {/* Upload Progress Modal */}
+      <AnimatePresence>
+        {isUploading && uploadingStage && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="w-full max-w-lg shadow-2xl rounded-2xl"
+            >
+              <RagPipelineVisualizer
+                currentStage={uploadingStage}
+                progress={uploadProgress}
+                chunks={uploadChunks}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </Popover>
   );
 }

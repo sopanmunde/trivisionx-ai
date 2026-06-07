@@ -61,6 +61,12 @@ class AgentState(TypedDict):
     # Final formatted markdown output (answer + references section)
     final_output: str
 
+    # Quality metrics (coverage, confidence, completeness)
+    quality_score: Dict[str, Any]
+
+    # Flag: True = fast-path termination (e.g. for greetings to skip LLM calls)
+    terminate: bool
+
     # ── Meta ─────────────────────────────────────────────────────────────────
     # Errors accumulated during execution (non-fatal warnings)
     errors: List[str]

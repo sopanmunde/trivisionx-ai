@@ -17,20 +17,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 // ─── Mode definitions ──────────────────────────────────────────────────────────
 const MODES = [
   {
-    id: "research",
-    label: "Research",
-    shortLabel: "Research",
-    icon: FlaskConical,
-    description: "Full RAG pipeline — searches your documents & cites sources",
-    gradient: "from-violet-500 to-blue-600",
-    badge: "RAG",
-    badgeColor: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-    ringColor: "ring-violet-400/30",
-    dotColor: "bg-violet-500",
-  },
-  {
     id: "simple",
-    label: "Quick Answer",
+    label: "Quick",
     shortLabel: "Quick",
     icon: Zap,
     description: "Direct LLM answer — fast response without document search",
@@ -40,39 +28,82 @@ const MODES = [
     ringColor: "ring-amber-400/30",
     dotColor: "bg-amber-400",
   },
+  {
+    id: "summary",
+    label: "Summary",
+    shortLabel: "Summary",
+    icon: BookOpen,
+    description: "Brief RAG summary without deep citation processing",
+    gradient: "from-sky-400 to-blue-500",
+    badge: "RAG-LITE",
+    badgeColor: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+    ringColor: "ring-sky-400/30",
+    dotColor: "bg-sky-500",
+  },
+  {
+    id: "research",
+    label: "Deep",
+    shortLabel: "Deep",
+    icon: FlaskConical,
+    description: "Full RAG pipeline — searches your documents & cites sources",
+    gradient: "from-violet-500 to-blue-600",
+    badge: "RAG",
+    badgeColor: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+    ringColor: "ring-violet-400/30",
+    dotColor: "bg-violet-500",
+  },
+  {
+    id: "competitive",
+    label: "Competitive",
+    shortLabel: "Compete",
+    icon: BrainCircuit,
+    description: "Cross-document comparison for competitive analysis",
+    gradient: "from-rose-400 to-red-500",
+    badge: "RAG-PRO",
+    badgeColor: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+    ringColor: "ring-rose-400/30",
+    dotColor: "bg-rose-500",
+  },
+  {
+    id: "technical",
+    label: "Technical",
+    shortLabel: "Tech",
+    icon: Hexagon,
+    description: "Detailed technical analysis and code/data extraction",
+    gradient: "from-emerald-400 to-teal-500",
+    badge: "RAG-TECH",
+    badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+    ringColor: "ring-emerald-400/30",
+    dotColor: "bg-emerald-500",
+  },
 ];
 
 // ─── Mode Selector Dropdown ───────────────────────────────────────────────────
 // ─── Shadcn UI style Mode Toggle ──────────────────────────────────────────────
 function ShadcnModeToggle({ mode, onChange }) {
   return (
-    <div className="flex items-center rounded-lg bg-zinc-100/80 p-0.5 dark:bg-zinc-800/80 border border-zinc-200/50 dark:border-zinc-700/50">
-      <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); onChange("simple"); }}
-        className={cn(
-          "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-all duration-200",
-          mode === "simple"
-            ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
-            : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-        )}
-      >
-        <Zap className="h-3 w-3" />
-        Fast
-      </button>
-      <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); onChange("research"); }}
-        className={cn(
-          "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-all duration-200",
-          mode === "research"
-            ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
-            : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-        )}
-      >
-        <FlaskConical className="h-3 w-3" />
-        Deep Research
-      </button>
+    <div className="flex items-center rounded-lg bg-zinc-100/80 p-0.5 dark:bg-zinc-800/80 border border-zinc-200/50 dark:border-zinc-700/50 max-w-full overflow-x-auto scrollbar-hide">
+      {MODES.map((m) => {
+        const Icon = m.icon;
+        const isActive = mode === m.id;
+        return (
+          <button
+            key={m.id}
+            type="button"
+            onClick={(e) => { e.preventDefault(); onChange(m.id); }}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-all duration-200 whitespace-nowrap",
+              isActive
+                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
+                : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            )}
+            title={m.description}
+          >
+            <Icon className="h-3 w-3" />
+            {m.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -85,7 +116,7 @@ const CHATBOTS = [
   {
     name: "Assistant",
     icon: <Asterisk className="h-3.5 w-3.5" />,
-    desc: "Trishul AI",
+    desc: "AI Research Assistant",
   },
 ];
 

@@ -67,9 +67,9 @@ async def planner_node(state: AgentState) -> dict:
     mode = state.get("mode", "research")
     logger.info(f"[Research Agent] Mode='{mode}' | Planning for: '{query[:80]}'")
 
-    # ── Simple mode: skip RAG entirely ───────────────────────────────────────
-    if mode == "simple":
-        logger.info("[Research Agent] Simple mode — bypassing retrieval")
+    # ── Simple/Summary mode: skip RAG planning ────────────────────────────────
+    if mode in ("simple", "summary"):
+        logger.info(f"[Research Agent] {mode} mode — bypassing retrieval planning")
         return {
             "plan": [],
             "current_node": "planner",
@@ -82,6 +82,8 @@ async def planner_node(state: AgentState) -> dict:
         logger.info("[Research Agent] Fast-path routing triggered for greeting")
         return {
             "plan": [],
+            "terminate": True,
+            "final_output": "Hello! How can I help you with your research today?",
             "current_node": "planner",
             "errors": [],
         }

@@ -58,3 +58,17 @@ def add_documents(documents: List[Document]) -> None:
     store = get_vector_store()
     store.add_documents(documents)
     logger.info(f"Indexed {len(documents)} chunks into Pinecone")
+
+
+def delete_by_filename(user_id: str, filename: str) -> bool:
+    """Delete all chunks for a specific user and filename."""
+    store = get_vector_store()
+    try:
+        # We need to access the underlying pinecone index object to delete by filter
+        index = store.get_pinecone_index(store.index_name)
+        index.delete(filter={"user_id": user_id, "filename": filename})
+        logger.info(f"Deleted chunks from Pinecone for user={user_id}, filename={filename}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to delete from Pinecone (user={user_id}, filename={filename}): {e}")
+        return False

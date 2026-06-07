@@ -40,3 +40,17 @@ async def get_user_documents(user_id: str, limit: int = 50) -> List[Dict]:
         if "uploaded_at" in d and hasattr(d["uploaded_at"], "isoformat"):
             d["uploaded_at"] = d["uploaded_at"].isoformat()
     return docs
+
+
+async def delete_document_metadata(user_id: str, document_id: str) -> bool:
+    from bson.objectid import ObjectId
+    try:
+        result = await _db()[COLLECTION_DOCUMENTS].delete_one({
+            "_id": ObjectId(document_id),
+            "user_id": user_id
+        })
+        logger.info(f"Deleted document {document_id} (deleted_count={result.deleted_count})")
+        return result.deleted_count > 0
+    except Exception as e:
+        logger.error(f"Failed to delete document {document_id}: {e}")
+        return False

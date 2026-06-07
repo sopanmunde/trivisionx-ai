@@ -22,6 +22,7 @@ def get_chat_llm(model_name: str = None, temperature: float = 0.2) -> ChatGoogle
         streaming=True,
         google_api_key=settings.GOOGLE_API_KEY,
         max_output_tokens=1024,  # Cap token output for speed
+        max_retries=1,  # Fail fast on rate limits instead of hanging
     )
 
 
@@ -34,4 +35,5 @@ def get_mini_llm() -> ChatGoogleGenerativeAI:
         streaming=False,  # No streaming needed for structured planner output
         google_api_key=settings.GOOGLE_API_KEY,
         max_output_tokens=256,  # Planner only needs short structured output
+        max_retries=1,  # Fail fast on rate limits instead of hanging
     )

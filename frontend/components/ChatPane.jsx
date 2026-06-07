@@ -269,7 +269,7 @@ const ChatPane = forwardRef(function ChatPane(
 
           {/* Footer Hint stays down of the chat panel */}
           <p className="mx-auto mt-7 text-center text-[11px] text-zinc-400/70 dark:text-zinc-600">
-            Trishul AI can make mistakes. Verify important information.
+            AI Research Assistant can make mistakes. Verify important information.
           </p>
         </div>
       ) : (
@@ -333,6 +333,7 @@ const ChatPane = forwardRef(function ChatPane(
                             role={m.role}
                             content={m.content}
                             sources={m.sources}
+                            quality_score={m.quality_score}
                           />
 
                           {/* Hover action bar */}
@@ -453,7 +454,7 @@ const ChatPane = forwardRef(function ChatPane(
 
           {/* Footer Hint below Composer */}
           <p className="mx-auto pb-4 text-center text-[11px] text-zinc-400/70 dark:text-zinc-600">
-            Trishul AI can make mistakes. Verify important information.
+            AI Research Assistant can make mistakes. Verify important information.
           </p>
         </>
       )}

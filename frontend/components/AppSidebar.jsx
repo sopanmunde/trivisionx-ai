@@ -82,12 +82,12 @@ export function AppSidebar({
   renameFolder,
   createNewChat,
   templates = [],
-  setTemplates = () => {},
-  onUseTemplate = () => {},
-  onDeleteConversation = () => {},
-  onRenameConversation = () => {},
+  setTemplates = () => { },
+  onUseTemplate = () => { },
+  onDeleteConversation = () => { },
+  onRenameConversation = () => { },
   user = null,
-  onUserUpdate = () => {},
+  onUserUpdate = () => { },
   open,
   onClose,
   theme,
@@ -132,10 +132,10 @@ export function AppSidebar({
 
   const userInitials = user
     ? (
-        (user.first_name?.[0] || "") + (user.last_name?.[0] || "")
-      ).toUpperCase() ||
-      user.username?.[0]?.toUpperCase() ||
-      "U"
+      (user.first_name?.[0] || "") + (user.last_name?.[0] || "")
+    ).toUpperCase() ||
+    user.username?.[0]?.toUpperCase() ||
+    "U"
     : "U";
   const userName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username
@@ -155,7 +155,7 @@ export function AppSidebar({
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
         <div className="flex items-center gap-1.5 px-2 py-2">
-          <TrishulLogo size="sm" showWordmark wordmark="Trishul AI" animate={false} />
+          <TrishulLogo size="sm" showWordmark wordmark="AI Research Assistant" animate={false} />
           <div className="ml-auto flex items-center gap-1">
             <button
               onClick={createNewChat}
