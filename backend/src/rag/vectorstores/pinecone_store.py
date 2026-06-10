@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import List, Optional, Dict, Any
 from langchain_pinecone import PineconeVectorStore
 from langchain_core.documents import Document
-from src.rag.embeddings.hf_embeddings import get_embeddings
+from src.rag.embeddings.google_embeddings import get_embeddings
 from src.core.config import settings
 from src.core.logger import get_logger
 

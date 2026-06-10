@@ -5,13 +5,13 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TrishulLogo } from "@/components/TrishulLogo";
 
-const avatars = [
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-];
+// const avatars = [
+//   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+//   "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
+//   "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+//   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
+//   "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+// ];
 
 const textRevealVariants = {
   hidden: { y: "100%" },
@@ -29,7 +29,7 @@ export function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-16 overflow-hidden">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-zinc-100 dark:to-zinc-900 pointer-events-none transition-colors duration-300" />
 
       {/* Violet radial spotlight glow */}
       <div
@@ -63,14 +63,14 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800 mb-8 backdrop-blur-sm"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 mb-8 backdrop-blur-sm transition-colors"
         >
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-glow" />
           <span className="text-sm text-zinc-400">Now in Public Beta</span>
         </motion.div>
 
         {/* Headline with text mask animation */}
-        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6">
+        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-zinc-950 dark:text-white mb-6 transition-colors">
           <span className="block overflow-hidden">
             <motion.span
               className="block"
@@ -118,7 +118,7 @@ export function Hero() {
             className="relative overflow-hidden shimmer-btn bg-white text-zinc-950 hover:bg-zinc-100 rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-white/10 transition-all hover:shadow-white/20"
           >
             <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-zinc-200/40 to-transparent" />
-            <span className="relative">Start Building</span>
+            <span ><a className="relative" href="/dashboard" >Start Building</a></span>
             <ArrowRight className="relative ml-2 w-4 h-4" />
           </Button>
           <Button
@@ -131,7 +131,7 @@ export function Hero() {
         </motion.div>
 
         {/* Social Proof */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.7 }}
@@ -158,7 +158,7 @@ export function Hero() {
             Trusted by <span className="text-zinc-300 font-medium">2,000+</span>{" "}
             teams worldwide
           </p>
-        </motion.div>
+        </motion.div> */}
       </div>
     </section>
   );

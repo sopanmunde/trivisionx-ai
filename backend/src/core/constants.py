@@ -1,8 +1,4 @@
 # ─── LLM Models ────────────────────────────────────────────────────────────────
-OPENAI_CHAT_MODEL = "gpt-4o"
-OPENAI_MINI_MODEL = "gpt-4o-mini"
-# text-embedding-3-large matches the image workflow spec ("OpenAI text-embed-3")
-OPENAI_EMBEDDING_MODEL = "text-embedding-3-large"
 
 GEMINI_FALLBACK_MODELS = [
     "gemini-2.5-flash",

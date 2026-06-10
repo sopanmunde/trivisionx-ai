@@ -15,7 +15,7 @@ export function Footer() {
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <footer ref={ref} className="border-t border-zinc-800 bg-zinc-950">
+    <footer ref={ref} className="border-t border-zinc-200 dark:border-zinc-800 bg-background transition-colors duration-300">
       <div className="max-w-6xl mx-auto px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -29,7 +29,7 @@ export function Footer() {
               <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
                 <span className="text-zinc-950 font-bold text-sm">AI</span>
               </div>
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-zinc-950 dark:text-white transition-colors">
                 <b>
                   <i>Trishul_AI</i>
                 </b>
@@ -39,7 +39,7 @@ export function Footer() {
               The modern platform for teams who ship fast.
             </p>
             {/* System Status */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 transition-colors">
               <span className="w-2 h-2 rounded-full bg-emerald-500 pulse-glow" />
               <span className="text-xs text-zinc-400">
                 All Systems Operational
@@ -50,13 +50,13 @@ export function Footer() {
           {/* Links */}
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h4 className="text-sm font-semibold text-white mb-4">{title}</h4>
+              <h4 className="text-sm font-semibold text-zinc-950 dark:text-white mb-4 transition-colors">{title}</h4>
               <ul className="space-y-3">
                 {links.map((link) => (
                   <li key={link}>
                     <a
                       href="#"
-                      className="text-sm text-zinc-500 hover:text-white transition-colors"
+                      className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
                     >
                       {link}
                     </a>

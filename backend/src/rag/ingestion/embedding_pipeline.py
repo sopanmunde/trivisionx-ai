@@ -3,7 +3,7 @@ src/rag/ingestion/embedding_pipeline.py — Full RAG ingestion pipeline
 ======================================================================
 Implements the complete Ingest → Embed → Index flow from the image workflow:
 
-  Parse + chunk + clean  →  OpenAI text-embed-3  →  Pinecone metadata index
+  Parse + chunk + clean  →  Google GenAI Embeddings  →  Pinecone metadata index
 
 Includes:
   - Text cleaning (null bytes, non-printable chars, whitespace normalisation)

@@ -336,18 +336,15 @@ export default function Sidebar({
       </AnimatePresence>
 
       <AnimatePresence>
-        {(open || mounted) && (
-          <motion.aside
+        {mounted && (
+          <aside
             key="sidebar"
-            initial={{ x: -260 }}
-            animate={{ x: 0 }}
-            exit={{ x: -260 }}
-            transition={{ type: "spring", stiffness: 300, damping: 32 }}
             className={cls(
               "z-50 flex h-full w-[260px] shrink-0 flex-col",
-              "border-r border-white/50 bg-white/70 backdrop-blur-xl",
+              "border-r border-white/50 bg-white/70 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
               "dark:border-white/[0.06] dark:bg-zinc-950/80 dark:backdrop-blur-xl",
-              "fixed inset-y-0 left-0 md:static md:translate-x-0",
+              "fixed inset-y-0 left-0 md:static",
+              open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
               "shadow-[1px_0_20px_rgba(0,0,0,0.06)] md:shadow-[1px_0_20px_rgba(0,0,0,0.04)]",
             )}
           >
@@ -604,7 +601,7 @@ export default function Sidebar({
                 </button>
               </SettingsPopover>
             </div>
-          </motion.aside>
+          </aside>
         )}
       </AnimatePresence>
     </>

@@ -6,10 +6,10 @@ services:
     name: ai-research-copilot-backend
     env: python
     region: ohio
-    plan: starter
+    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn index:app --worker-class uvicorn.workers.UvicornWorker --workers 2 --bind 0.0.0.0:$PORT --timeout 120
+    startCommand: uvicorn index:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.0"

@@ -8,7 +8,6 @@ import Link from "next/link"
 import { Eye, EyeOff, Loader2, Check, AlertCircle, ArrowLeft } from "lucide-react"
 import { TrishulLogo } from "@/components/TrishulLogo"
 
-/* ─── Password strength ─────────────────────────────────────────────────── */
 function PasswordStrength({ password }: { password: string }) {
   const checks = [
     password.length >= 8,
@@ -27,9 +26,8 @@ function PasswordStrength({ password }: { password: string }) {
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`h-0.5 flex-1 rounded-full transition-all duration-300 ${
-              i < score ? colors[score] : "bg-zinc-700"
-            }`}
+            className={`h-0.5 flex-1 rounded-full transition-all duration-300 ${i < score ? colors[score] : "bg-zinc-700"
+              }`}
           />
         ))}
       </div>
@@ -40,7 +38,6 @@ function PasswordStrength({ password }: { password: string }) {
   )
 }
 
-/* ─── Shadcn-style input ────────────────────────────────────────────────── */
 const inputCls =
   "flex h-9 w-full rounded-md border border-zinc-800 bg-transparent px-3 py-1 text-sm text-zinc-100 shadow-sm placeholder:text-zinc-500 outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
 
@@ -56,7 +53,7 @@ function FormItem({ children }: { children: React.ReactNode }) {
   return <div className="flex flex-col gap-1.5">{children}</div>
 }
 
-/* ─── Main page ──────────────────────────────────────────────────────────── */
+
 export default function AuthPage() {
   const router = useRouter()
   const [isSignUp, setIsSignUp] = useState(false)

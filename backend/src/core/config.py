@@ -37,11 +37,6 @@ class Settings(BaseSettings):
     PINECONE_INDEX_NAME: str = "trishul-ui"
     PINECONE_ENVIRONMENT: str = "us-east-1"
 
-    # ── OpenAI ────────────────────────────────────────────────────────────────
-    OPENAI_API_KEY: str = ""
-    OPENAI_CHAT_MODEL: str = "gpt-4o"
-    # text-embedding-3-large matches the image workflow spec (higher quality)
-    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-large"
 
     # ── Google / Gemini fallback ──────────────────────────────────────────────
     GOOGLE_API_KEY: str = ""

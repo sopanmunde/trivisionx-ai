@@ -272,7 +272,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-2 pb-2 pt-1">
+        <div className="flex flex-wrap items-center justify-between px-2 pb-2 pt-1 gap-2">
           {/* Left: Attach + Mode selector */}
           <div className="flex items-center gap-1.5">
             <Tooltip>

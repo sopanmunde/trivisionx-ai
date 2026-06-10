@@ -1,6 +1,5 @@
 fastapi
 uvicorn[standard]
-gunicorn
 python-multipart
 python-dotenv
 
@@ -10,7 +9,6 @@ pydantic-settings
 langchain
 langchain-core
 langchain-community
-langchain-openai
 langchain-google-genai
 google-api-core
 langchain-pinecone
@@ -21,7 +19,6 @@ pinecone
 motor
 pymongo
 
-redis[hiredis]
 bcrypt
 python-jose[cryptography]
 
@@ -29,7 +26,6 @@ python-jose[cryptography]
 pypdf
 docx2txt
 
-tiktoken
 
 httpx
 

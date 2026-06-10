@@ -19,15 +19,13 @@ export default function Header({
   return (
     <div className="sticky top-0 z-30 flex items-center gap-2 bg-white/80 px-4 py-2.5 backdrop-blur-xl dark:bg-[#212121]/80">
       {/* Mobile menu button */}
-      {sidebarCollapsed && (
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="md:hidden inline-flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
-          aria-label="Open sidebar"
-        >
-          <Menu className="h-4.5 w-4.5" />
-        </button>
-      )}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="md:hidden inline-flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 shrink-0"
+        aria-label="Open sidebar"
+      >
+        <Menu className="h-4.5 w-4.5" />
+      </button>
 
 
 

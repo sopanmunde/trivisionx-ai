@@ -47,5 +47,5 @@ COPY --chown=appuser:appgroup . .
 # Expose the API port
 EXPOSE 8000
 
-# Start the application using Gunicorn with Uvicorn workers
-CMD ["gunicorn", "index:app", "--worker-class", "uvicorn.workers.UvicornWorker", "--workers", "2", "--bind", "0.0.0.0:8000", "--timeout", "120"]
+# Start the application using Uvicorn directly for lower memory footprint
+CMD ["uvicorn", "index:app", "--host", "0.0.0.0", "--port", "8000"]

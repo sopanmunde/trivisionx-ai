@@ -11,7 +11,7 @@ import { TestimonialsSection } from "@/components/testimonials"
 export default function Home() {
   return (
     <SmoothScroll>
-      <main className="min-h-screen bg-zinc-950">
+      <main className="min-h-screen bg-background text-foreground transition-colors duration-300">
         <Navbar />
         <Hero />
         <LogoMarquee />

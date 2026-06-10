@@ -21,8 +21,8 @@ import RagPipelineVisualizer from "./RagPipelineVisualizer";
 function ActionIcon({ icon: Icon, customIcon }) {
   if (customIcon) return customIcon;
   return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 transition-colors group-hover:bg-zinc-200 dark:group-hover:bg-zinc-800">
-      <Icon className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100/50 border border-zinc-200/50 dark:bg-zinc-800/30 dark:border-zinc-700/50 backdrop-blur-sm transition-colors group-hover:bg-zinc-200/50 dark:group-hover:bg-zinc-700/50 shadow-sm">
+      <Icon className="h-4 w-4 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />
     </div>
   );
 }
@@ -36,12 +36,12 @@ function ActionRow({ action, index, onAction }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.15 }}
       onClick={() => onAction(action.action)}
-      className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-[13px] text-left text-zinc-700 dark:text-zinc-300 transition-all duration-150 hover:bg-zinc-100/50 dark:hover:bg-white/[0.04] active:scale-[0.98]"
+      className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-[13px] text-left text-zinc-700 dark:text-zinc-300 transition-all duration-200 hover:bg-white/40 dark:hover:bg-white/10 active:scale-[0.98] hover:shadow-sm"
     >
       <ActionIcon icon={Icon} customIcon={action.customIcon} />
-      <span className="font-semibold flex-1 leading-none">{action.label}</span>
+      <span className="font-medium flex-1 leading-none group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">{action.label}</span>
       {action.badge && (
-        <span className="rounded-md bg-zinc-900 px-1.5 py-0.5 text-[9px] font-bold text-white dark:bg-white dark:text-zinc-950">
+        <span className="rounded-md bg-zinc-900/10 px-1.5 py-0.5 text-[9px] font-bold text-zinc-700 dark:bg-white/10 dark:text-zinc-300 backdrop-blur-md border border-zinc-200 dark:border-zinc-700">
           {action.badge}
         </span>
       )}
@@ -62,7 +62,7 @@ function SectionLabel({ children }) {
 
 /* ── divider ─────────────────────────────────────────────────────────────── */
 function Divider() {
-  return <div className="mx-2.5 my-1.5 h-px bg-zinc-100 dark:bg-zinc-800/80" />;
+  return <div className="mx-2.5 my-1.5 h-px bg-gradient-to-r from-transparent via-zinc-200 dark:via-zinc-700 to-transparent opacity-50" />;
 }
 
 export default function ComposerActionsPopover({ children }) {
@@ -207,24 +207,24 @@ export default function ComposerActionsPopover({ children }) {
     },
     {
       customIcon: (
-        <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500 via-green-400 to-yellow-400 flex items-center justify-center shadow-sm shrink-0">
-          <div className="h-2.5 w-2.5 bg-white rounded" />
+        <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500/80 via-green-400/80 to-yellow-400/80 backdrop-blur-md flex items-center justify-center shadow-inner shrink-0 border border-white/20 dark:border-white/10">
+          <div className="h-2.5 w-2.5 bg-white/90 rounded shadow-sm" />
         </div>
       ),
       label: "Google Drive",
     },
     {
       customIcon: (
-        <div className="h-7 w-7 rounded-lg bg-blue-500 flex items-center justify-center shadow-sm shrink-0">
-          <div className="h-2.5 w-2.5 bg-white rounded" />
+        <div className="h-7 w-7 rounded-lg bg-blue-500/80 backdrop-blur-md flex items-center justify-center shadow-inner shrink-0 border border-white/20 dark:border-white/10">
+          <div className="h-2.5 w-2.5 bg-white/90 rounded shadow-sm" />
         </div>
       ),
       label: "OneDrive",
     },
     {
       customIcon: (
-        <div className="h-7 w-7 rounded-lg bg-teal-500 flex items-center justify-center shadow-sm shrink-0">
-          <div className="h-2.5 w-2.5 bg-white rounded" />
+        <div className="h-7 w-7 rounded-lg bg-teal-500/80 backdrop-blur-md flex items-center justify-center shadow-inner shrink-0 border border-white/20 dark:border-white/10">
+          <div className="h-2.5 w-2.5 bg-white/90 rounded shadow-sm" />
         </div>
       ),
       label: "SharePoint",
@@ -247,7 +247,7 @@ export default function ComposerActionsPopover({ children }) {
       <PopoverTrigger asChild>{children}</PopoverTrigger>
 
       <PopoverContent
-        className="p-0 w-auto overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
+        className="p-0 w-auto overflow-hidden rounded-2xl border border-white/40 bg-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/60 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]"
         align="start"
         side="top"
         sideOffset={12}
@@ -281,13 +281,13 @@ export default function ComposerActionsPopover({ children }) {
               <motion.button
                 whileHover={{ x: 2 }}
                 onClick={() => setShowMore(true)}
-                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left text-zinc-700 dark:text-zinc-300 transition-all duration-150 hover:bg-zinc-100/80 dark:hover:bg-white/[0.06] active:scale-[0.97]"
+                className="group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left text-zinc-700 dark:text-zinc-300 transition-all duration-200 hover:bg-white/40 dark:hover:bg-white/10 active:scale-[0.97] hover:shadow-sm"
               >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                  <MoreHorizontal className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-zinc-100/50 dark:bg-zinc-800/30 backdrop-blur-sm border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm group-hover:bg-zinc-200/50 dark:group-hover:bg-zinc-700/50 transition-colors">
+                  <MoreHorizontal className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />
                 </div>
-                <span className="font-medium flex-1">More</span>
-                <ChevronRight className="h-3 w-3 text-zinc-400" />
+                <span className="font-medium flex-1 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">More</span>
+                <ChevronRight className="h-3 w-3 text-zinc-400 group-hover:text-zinc-500 dark:group-hover:text-zinc-300 transition-colors" />
               </motion.button>
             </motion.div>
           ) : (
@@ -302,7 +302,7 @@ export default function ComposerActionsPopover({ children }) {
               {/* Back */}
               <button
                 onClick={() => setShowMore(false)}
-                className="mb-1 flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-[11px] font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/[0.05] transition-colors"
+                className="mb-1 flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-[11px] font-medium text-zinc-500 hover:bg-white/40 dark:hover:bg-white/10 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 active:scale-[0.97]"
               >
                 <ChevronLeft className="h-3 w-3" />
                 Back
