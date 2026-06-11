@@ -7,6 +7,7 @@ Uses the dynamically selected LLM.
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from src.agents.langgraph.state import AgentState
 from src.core.llm_factory import get_llm
+from src.agents.langgraph.nodes.utils import extract_text
 from src.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -69,7 +70,7 @@ async def data_analysis_node(state: AgentState) -> dict:
 
     try:
         response = await llm.ainvoke(messages)
-        analysis_results = response.content
+        analysis_results = extract_text(response.content)
     except Exception as e:
         logger.error(f"[DataAnalysis] LLM error: {e}")
         analysis_results = f"Analysis unavailable due to LLM error: {str(e)[:100]}"

@@ -6,6 +6,7 @@ Reviews generated code for bugs, security issues, and best practices.
 from langchain_core.messages import SystemMessage, HumanMessage
 from src.agents.langgraph.state import AgentState
 from src.core.llm_factory import get_llm
+from src.agents.langgraph.nodes.utils import extract_text
 from src.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -53,7 +54,7 @@ async def code_review_node(state: AgentState) -> dict:
 
     try:
         response = await llm.ainvoke(messages)
-        code_review = response.content
+        code_review = extract_text(response.content)
     except Exception as e:
         logger.error(f"[CodeReview] LLM error: {e}")
         code_review = f"Review unavailable due to LLM error: {str(e)[:100]}"

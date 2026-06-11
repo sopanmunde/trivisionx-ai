@@ -10,7 +10,7 @@ from src.core.logger import get_logger
 logger = get_logger(__name__)
 
 
-def report_node(state: AgentState) -> dict:
+async def report_node(state: AgentState) -> dict:
     """
     Report Agent — assembles final output from the upstream node's result.
     Handles research, coding, and data_analysis workflow outputs.

@@ -10,7 +10,7 @@ from src.core.logger import get_logger
 logger = get_logger(__name__)
 
 
-def citation_node(state: AgentState) -> dict:
+async def citation_node(state: AgentState) -> dict:
     """
     Citation Agent — enriches, deduplicates, and ranks citation metadata.
     Respects workflow_type: coding and data_analysis skip citation processing.

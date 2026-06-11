@@ -6,6 +6,7 @@ Generates unit tests and test results for the generated code.
 from langchain_core.messages import SystemMessage, HumanMessage
 from src.agents.langgraph.state import AgentState
 from src.core.llm_factory import get_llm
+from src.agents.langgraph.nodes.utils import extract_text
 from src.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -47,7 +48,7 @@ async def testing_node(state: AgentState) -> dict:
 
     try:
         response = await llm.ainvoke(messages)
-        test_results = response.content
+        test_results = extract_text(response.content)
     except Exception as e:
         logger.error(f"[Testing] LLM error: {e}")
         test_results = f"Tests unavailable due to LLM error: {str(e)[:100]}"

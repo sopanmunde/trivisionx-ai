@@ -19,6 +19,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from src.agents.langgraph.graphs.factory import get_workflow_for_mode
 from src.core.llm_factory import get_llm
+from src.agents.langgraph.nodes.utils import extract_text
 from src.rag.memory.conversation_memory import get_conversation_history
 from src.database.mongodb.repositories.chat_repository import (
     insert_message,
@@ -98,9 +99,7 @@ async def stream_chat_response(
             try:
                 async for chunk in llm.astream(langchain_messages):
                     if hasattr(chunk, "content") and chunk.content:
-                        token = chunk.content
-                        if isinstance(token, list):
-                            token = "".join(b.get("text", "") if isinstance(b, dict) else str(b) for b in token)
+                        token = extract_text(chunk.content)
                         if not token:
                             continue
                         streamed_text += token
@@ -213,9 +212,7 @@ async def stream_chat_response(
             elif kind == "on_chat_model_stream":
                 chunk = data.get("chunk")
                 if chunk and hasattr(chunk, "content") and chunk.content:
-                    token = chunk.content
-                    if isinstance(token, list):
-                        token = "".join(b.get("text", "") if isinstance(b, dict) else str(b) for b in token)
+                    token = extract_text(chunk.content)
                     if not token:
                         continue
                     streamed_text += token

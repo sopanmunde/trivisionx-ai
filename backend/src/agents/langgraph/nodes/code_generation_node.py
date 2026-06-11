@@ -7,6 +7,7 @@ Uses the dynamically selected LLM.
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from src.agents.langgraph.state import AgentState
 from src.core.llm_factory import get_llm
+from src.agents.langgraph.nodes.utils import extract_text
 from src.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -60,7 +61,7 @@ async def code_generation_node(state: AgentState) -> dict:
 
     try:
         response = await llm.ainvoke(messages)
-        generated_code = response.content
+        generated_code = extract_text(response.content)
     except Exception as e:
         logger.error(f"[CodeGen] LLM error: {e}")
         generated_code = f"// Error generating code: {str(e)[:100]}"

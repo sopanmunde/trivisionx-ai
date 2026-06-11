@@ -158,8 +158,9 @@ async def planner_node(state: AgentState) -> dict:
             messages.append(AIMessage(content=content))
     messages.append(HumanMessage(content=query))
 
+    decision = None
     try:
-        decision: PlannerDecision = await structured_llm.ainvoke(messages)
+        decision = await structured_llm.ainvoke(messages)
         plan = decision.queries if decision.requires_context else []
         requires_context = decision.requires_context
     except Exception as e:
@@ -167,9 +168,10 @@ async def planner_node(state: AgentState) -> dict:
         plan = []
         requires_context = False
 
+    reasoning = (decision.reasoning[:60] if decision and hasattr(decision, 'reasoning') else 'fallback')
     logger.info(
         f"[Planner] requires_context={requires_context}, "
-        f"queries={len(plan)}, reasoning='{decision.reasoning[:60] if hasattr(decision, 'reasoning') else 'fallback'}'"
+        f"queries={len(plan)}, reasoning='{reasoning}'"
     )
 
     return {

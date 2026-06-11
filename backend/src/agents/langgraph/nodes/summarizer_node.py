@@ -7,6 +7,7 @@ well-cited markdown answer using the dynamically selected LLM.
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from src.agents.langgraph.state import AgentState
 from src.core.llm_factory import get_llm
+from src.agents.langgraph.nodes.utils import extract_text
 from src.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -136,7 +137,7 @@ async def summarizer_node(state: AgentState) -> dict:
 
     try:
         response = await llm.ainvoke(messages)
-        summary_text = response.content
+        summary_text = extract_text(response.content)
     except Exception as e:
         logger.error(f"LLM error in summarizer: {e}")
         if "quota" in str(e).lower() or "429" in str(e):
