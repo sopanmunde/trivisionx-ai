@@ -2,8 +2,8 @@
   "version": 2,
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "outputDirectory": "frontend/.next",
+  "installCommand": "npm install --legacy-peer-deps",
+  "outputDirectory": ".next",
   "rewrites": [
     {
       "source": "/api/:path*",
