@@ -3,7 +3,7 @@
 import { motion, cubicBezier } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TrishulLogo } from "@/components/TrishulLogo";
+import { TriVisionXLogo } from "@/components/TriVisionXLogo";
 
 // const avatars = [
 //   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
@@ -55,7 +55,7 @@ export function Hero() {
           transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="flex justify-center mb-8"
         >
-          <TrishulLogo size="xl" glow animate={false} />
+          <TriVisionXLogo size="xl" glow animate={false} />
         </motion.div>
 
         {/* Badge */}
@@ -66,7 +66,7 @@ export function Hero() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 mb-8 backdrop-blur-sm transition-colors"
         >
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-glow" />
-          <span className="text-sm text-zinc-400">Now in Public Beta</span>
+          <span className="text-sm text-zinc-600 dark:text-zinc-400">Now in Public Beta</span>
         </motion.div>
 
         {/* Headline with text mask animation */}
@@ -84,7 +84,7 @@ export function Hero() {
           </span>
           <span className="block overflow-hidden">
             <motion.span
-              className="block text-zinc-500"
+              className="block text-zinc-500 dark:text-zinc-400"
               variants={textRevealVariants}
               initial="hidden"
               animate="visible"
@@ -100,7 +100,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
+          className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
         >
           Everything you need to deliver instant, intelligent healthcare through
           AI chat.
@@ -115,7 +115,7 @@ export function Hero() {
         >
           <Button
             size="lg"
-            className="relative overflow-hidden shimmer-btn bg-white text-zinc-950 hover:bg-zinc-100 rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-white/10 transition-all hover:shadow-white/20"
+            className="relative overflow-hidden shimmer-btn bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-zinc-900/5 dark:shadow-white/10 transition-all hover:shadow-zinc-900/10 dark:hover:shadow-white/20"
           >
             <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-zinc-200/40 to-transparent" />
             <span ><a className="relative" href="/dashboard" >Start Building</a></span>
@@ -124,7 +124,7 @@ export function Hero() {
           <Button
             variant="outline"
             size="lg"
-            className="rounded-full px-8 h-12 text-base font-medium border-zinc-800 text-zinc-300 hover:bg-zinc-900 hover:text-white hover:border-zinc-700 bg-transparent transition-all duration-200"
+            className="rounded-full px-8 h-12 text-base font-medium border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-zinc-700 bg-transparent transition-all duration-200"
           >
             View Demo
           </Button>

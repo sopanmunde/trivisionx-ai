@@ -5,8 +5,8 @@ on:
     branches:
       - master
     paths:
-      - 'api/**'
-      - '.github/workflows/azure-deploy.yml'
+      - "api/**"
+      - ".github/workflows/azure-deploy.yml"
 
 jobs:
   build-and-deploy:
@@ -36,9 +36,7 @@ jobs:
       - name: Deploy Container App
         uses: azure/container-apps-deploy-action@v2
         with:
-          acrName: trishulprodregistry
-          containerAppName: trishul-backend
-          resourceGroup: trishul-production-rg
+          acrName: trivisionxprodregistry
+          containerAppName: trivisionx-backend
+          resourceGroup: trivisionx-production-rg
           imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }}
-
-

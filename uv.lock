@@ -4024,7 +4024,7 @@ wheels = [
 ]
 
 [[package]]
-name = "trishul-ai"
+name = "trivisionx-ai"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="docs/screenshots/logo-placeholder.png" alt="AI Research Copilot" width="120" />
+  <img src="docs/screenshots/logo-placeholder.png" alt="TriVisionX AI" width="120" />
 
-  <h1>🚀 AI Research Copilot Platform</h1>
+  <h1>🚀 TriVisionX AI Platform</h1>
 
   <p>
     <strong>Enterprise-grade AI research automation with LangGraph multi-agent orchestration,<br/>
@@ -29,7 +29,7 @@
 
 ## 🌟 Overview
 
-The **AI Research Copilot** is a production-ready AI SaaS platform that transforms how researchers and knowledge workers interact with document corpora. It brings together a **5-node LangGraph multi-agent pipeline**, **Pinecone MMR semantic retrieval**, **real-time SSE streaming**, and **citation-aware generation** to deliver an enterprise AI assistant.
+The **TriVisionX AI** is a production-ready AI SaaS platform that transforms how researchers and knowledge workers interact with document corpora. It brings together a **5-node LangGraph multi-agent pipeline**, **Pinecone MMR semantic retrieval**, **real-time SSE streaming**, and **citation-aware generation** to deliver an enterprise AI assistant.
 
 > *Built to demonstrate advanced AI systems engineering—suitable for production deployment and seamless scalability.*
 
@@ -96,8 +96,8 @@ The easiest way to get started is using the pre-configured `docker-compose.yml`.
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-org/ai-research-copilot
-cd ai-research-copilot
+git clone https://github.com/your-org/trivisionx-ai
+cd trivisionx-ai
 ```
 
 ### 2. Configure Environment Variables
@@ -109,12 +109,12 @@ GEMINI_MODEL=gemini-2.5-flash
 
 # Vector DB
 PINECONE_API_KEY=your_pinecone_key_here
-PINECONE_INDEX_NAME=trishul-ui
+PINECONE_INDEX_NAME=trivisionx-ui
 PINECONE_ENVIRONMENT=us-east-1
 
 # Database
 MONGODB_URL=mongodb+srv://user:pass@cluster.mongodb.net/
-DATABASE_NAME=trishul_db
+DATABASE_NAME=trivisionx_db
 
 # Security & App
 SECRET_KEY=your-secret-256bit-key-here
@@ -130,8 +130,8 @@ docker-compose up --build -d
 | Service | URL |
 |---|---|
 | **Web App** | [http://localhost:3000](http://localhost:3000) |
-| **API Docs (Swagger)** | [https://ai-research-copilot-v3ot.onrender.com/docs](https://ai-research-copilot-v3ot.onrender.com/docs) |
-| **System Health** | [https://ai-research-copilot-v3ot.onrender.com/api/health/](https://ai-research-copilot-v3ot.onrender.com/api/health/) |
+| **API Docs (Swagger)** | [https://trivisionx-ai-v3ot.onrender.com/docs](https://trivisionx-ai-v3ot.onrender.com/docs) |
+| **System Health** | [https://trivisionx-ai-v3ot.onrender.com/api/health/](https://trivisionx-ai-v3ot.onrender.com/api/health/) |
 
 ---
 

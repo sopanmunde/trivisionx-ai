@@ -94,7 +94,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.PROJECT_NAME,
         description=(
-            "AI Research Copilot — LangGraph 5-agent pipeline · "
+            "TriVisionX AI — LangGraph 5-agent pipeline · "
             "Pinecone MMR retrieval · GPT-4o synthesis · MongoDB + Redis"
         ),
         version=settings.VERSION,
@@ -108,7 +108,7 @@ def create_app() -> FastAPI:
     origins = [
         settings.FRONTEND_URL,
         "http://localhost:3000",
-       "https://ai-research-copilot-rosy.vercel.app",
+       "https://trivisionx-ai-rosy.vercel.app",
     ]
     # Deduplicate while preserving order
     origins = list(dict.fromkeys(o for o in origins if o))

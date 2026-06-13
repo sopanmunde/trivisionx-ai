@@ -3,7 +3,7 @@ services:
   # Frontend — Render Web Service (Docker)
   # ============================================================
   - type: web
-    name: ai-research-copilot-frontend
+    name: trivisionx-ai-frontend
     env: docker
     region: ohio
     plan: free
@@ -11,13 +11,13 @@ services:
     dockerfilePath: ./Dockerfile
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: "https://ai-research-copilot-backend.onrender.com/api"
+        value: "https://trivisionx-ai-backend.onrender.com/api"
 
   # ============================================================
   # Backend — Render Web Service (Docker)
   # ============================================================
   - type: web
-    name: ai-research-copilot-backend
+    name: trivisionx-ai-backend
     env: docker
     region: ohio
     plan: free
@@ -40,7 +40,7 @@ services:
       - key: MONGODB_URL
         sync: false
       - key: DATABASE_NAME
-        value: "trishul_db"
+        value: "trivisionx_db"
       # ── Auth ───────────────────────────────────────────────
       - key: SECRET_KEY
         sync: false
@@ -51,6 +51,6 @@ services:
         value: "1440"
       # ── App ────────────────────────────────────────────────
       - key: FRONTEND_URL
-        value: "https://ai-research-copilot-frontend.onrender.com"
+        value: "https://trivisionx-ai-frontend.onrender.com"
       - key: DEBUG
         value: "false"

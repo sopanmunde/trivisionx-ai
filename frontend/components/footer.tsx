@@ -27,11 +27,11 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <a href="#" className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-                <span className="text-zinc-950 font-bold text-sm">AI</span>
+                <span className="text-zinc-950 font-bold text-sm">T</span>
               </div>
               <span className="font-semibold text-zinc-950 dark:text-white transition-colors">
                 <b>
-                  <i>Trishul_AI</i>
+                  <i>TriVisionX</i>
                 </b>
               </span>
             </a>
@@ -72,28 +72,28 @@ export function Footer() {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-16 pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4"
+          className="mt-16 pt-8 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4"
         >
           <p className="text-sm text-zinc-500">
-            &copy; {new Date().getFullYear()} Trishul_AI, Inc. All rights
+            &copy; {new Date().getFullYear()} trivisionx_AI, Inc. All rights
             reserved.
           </p>
           <div className="flex items-center gap-6">
             <a
               href="#"
-              className="text-sm text-zinc-500 hover:text-white transition-colors"
+              className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
             >
               Twitter
             </a>
             <a
               href="#"
-              className="text-sm text-zinc-500 hover:text-white transition-colors"
+              className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
             >
               GitHub
             </a>
             <a
               href="#"
-              className="text-sm text-zinc-500 hover:text-white transition-colors"
+              className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
             >
               Discord
             </a>

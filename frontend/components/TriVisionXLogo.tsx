@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 type LogoSize = "xs" | "sm" | "md" | "lg" | "xl";
 
-interface TrishulLogoProps {
+interface TriVisionXLogoProps {
   size?: LogoSize;
   shimmer?: boolean;
   glow?: boolean;
@@ -45,15 +45,15 @@ const sizeConfig: Record<
   },
 };
 
-export function TrishulLogo({
+export function TriVisionXLogo({
   size = "md",
   shimmer = false,
   glow = false,
   showWordmark = false,
-  wordmark = "AI Research Assistant",
+  wordmark = "TriVisionX",
   className = "",
   animate = true,
-}: TrishulLogoProps) {
+}: TriVisionXLogoProps) {
   const cfg = sizeConfig[size];
 
   const Wrapper = animate ? motion.div : "div";
@@ -122,8 +122,8 @@ export function TrishulLogo({
       {showWordmark && (
         <span
           className={`font-semibold tracking-tight ${cfg.text} ${shimmer
-              ? "animate-shimmer-text"
-              : "text-zinc-900 dark:text-zinc-100"
+            ? "animate-shimmer-text"
+            : "text-zinc-900 dark:text-zinc-100"
             }`}
         >
           {wordmark}

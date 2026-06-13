@@ -21,7 +21,7 @@ import {
   BookOpen,
   FileText,
 } from "lucide-react";
-import { TrishulLogo } from "./TrishulLogo";
+import { TriVisionXLogo } from "./TriVisionXLogo";
 import { motion, AnimatePresence } from "framer-motion";
 import Message from "./Message";
 import Composer from "./Composer";
@@ -216,7 +216,7 @@ const ChatPane = forwardRef(function ChatPane(
                   }}
                   className="mb-4"
                 >
-                  <TrishulLogo size="xl" glow animate={false} />
+                  <TriVisionXLogo size="xl" glow animate={false} />
                 </motion.div>
 
                 <motion.h2
@@ -285,7 +285,7 @@ const ChatPane = forwardRef(function ChatPane(
 
           {/* Footer Hint stays down of the chat panel */}
           <p className="mx-auto mt-7 text-center text-[11px] text-zinc-400/70 dark:text-zinc-600">
-            AI Research Assistant can make mistakes. Verify important information.
+            trivisionx-ai can make mistakes. Verify important information.
           </p>
         </div>
       ) : (
@@ -496,7 +496,7 @@ const ChatPane = forwardRef(function ChatPane(
 
           {/* Footer Hint below Composer */}
           <p className="mx-auto pb-4 text-center text-[11px] text-zinc-400/70 dark:text-zinc-600">
-            AI Research Assistant can make mistakes. Verify important information.
+            trivisionx-aican make mistakes. Verify important information.
           </p>
         </>
       )}

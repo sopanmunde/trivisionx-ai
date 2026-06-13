@@ -5,8 +5,8 @@ on:
     branches:
       - master
     paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-deploy.yml'
+      - "frontend/**"
+      - ".github/workflows/frontend-deploy.yml"
 
 jobs:
   build-and-deploy:
@@ -35,7 +35,7 @@ jobs:
       - name: Deploy Container App
         uses: azure/container-apps-deploy-action@v2
         with:
-          acrName: trishulprodregistry
-          containerAppName: trishul-frontend
-          resourceGroup: trishul-production-rg
+          acrName: trivisionxprodregistry
+          containerAppName: trivisionx-frontend
+          resourceGroup: trivisionx-production-rg
           imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/frontend:${{ github.sha }}

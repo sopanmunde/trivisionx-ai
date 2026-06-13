@@ -121,7 +121,7 @@ export default function AIAssistantUI() {
       const token = localStorage.getItem("token");
       if (!token) return;
       const apiUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api";
+        process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
       const res = await fetch(`${apiUrl}/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -163,7 +163,7 @@ export default function AIAssistantUI() {
       if (!token) return;
       try {
         const apiUrl =
-          process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api";
+          process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
         const res = await fetch(`${apiUrl}/conversations`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -207,7 +207,7 @@ export default function AIAssistantUI() {
         if (!token) return;
         try {
           const apiUrl =
-            process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api";
+            process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
           const res = await fetch(
             `${apiUrl}/conversations/${selectedId}/messages`,
             {
@@ -282,7 +282,7 @@ export default function AIAssistantUI() {
     if (!token) return;
     try {
       const apiUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api";
+        process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
       const res = await fetch(`${apiUrl}/conversations/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -301,7 +301,7 @@ export default function AIAssistantUI() {
     if (!token) return;
     try {
       const apiUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api";
+        process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
       const res = await fetch(`${apiUrl}/conversations/${id}`, {
         method: "PUT",
         headers: {
@@ -371,7 +371,7 @@ export default function AIAssistantUI() {
     if (convId === "new") {
       try {
         const apiUrl =
-          process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api";
+          process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
         const res = await fetch(`${apiUrl}/conversations`, {
           method: "POST",
           headers: {
@@ -438,7 +438,7 @@ export default function AIAssistantUI() {
 
     try {
       const apiUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api";
+        process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
       const response = await fetch(`${apiUrl}/chat`, {
         method: "POST",
         headers: {

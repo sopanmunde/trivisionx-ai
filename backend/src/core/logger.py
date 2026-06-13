@@ -25,4 +25,4 @@ def get_logger(name: str) -> logging.Logger:
 
 
 # Root application logger
-logger = get_logger("trishul_ai")
+logger = get_logger("trivisionx_ai")

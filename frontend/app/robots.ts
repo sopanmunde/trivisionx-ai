@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: "/",
             disallow: ["/api/", "/_next/", "/public/"],
         },
-        sitemap: "https://ai-research-copilot-v3ot.onrender.com",
+        sitemap: "https://trivisionx-ai-v3ot.onrender.com",
     }
 }

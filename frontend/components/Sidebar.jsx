@@ -12,7 +12,7 @@ import {
   ChevronRight,
   ChevronDown,
 } from "lucide-react";
-import { TrishulLogo } from "./TrishulLogo";
+import { TriVisionXLogo } from "./TriVisionXLogo";
 import ConversationRow from "./ConversationRow";
 import FolderRow from "./FolderRow";
 import TemplateRow from "./TemplateRow";
@@ -351,7 +351,7 @@ export default function Sidebar({
             {/* ── HEADER: Logo + actions ──────────────────────────────────── */}
             <div className="flex items-center gap-2 px-3 pt-3 pb-2 shrink-0">
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <TrishulLogo size="sm" showWordmark wordmark="AI Research Assistant" animate={false} />
+                <TriVisionXLogo size="sm" showWordmark wordmark="TriVisionX AI" animate={false} />
               </div>
               <div className="flex items-center gap-1">
                 <button
@@ -539,7 +539,7 @@ export default function Sidebar({
               {(!recent || recent.length === 0) && (!pinned || pinned.length === 0) && (
                 <div className="mt-6 select-none rounded-2xl border border-dashed border-white/[0.06] px-4 py-8 text-center text-[12px] text-zinc-600">
                   <div className="mb-3 flex justify-center opacity-20">
-                    <TrishulLogo size="lg" glow animate={false} />
+                    <TriVisionXLogo size="lg" glow animate={false} />
                   </div>
                   No conversations yet.
                   <br />

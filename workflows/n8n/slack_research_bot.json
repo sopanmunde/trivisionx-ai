@@ -12,7 +12,10 @@
       "name": "Slack Slash Command Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "slack-research-bot"
     },
     {
@@ -23,7 +26,10 @@
       "name": "Parse Slash Command",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 300]
+      "position": [
+        460,
+        300
+      ]
     },
     {
       "parameters": {
@@ -32,8 +38,14 @@
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "email", "value": "={{ $env.COPILOT_BOT_EMAIL }}" },
-            { "name": "password", "value": "={{ $env.COPILOT_BOT_PASSWORD }}" }
+            {
+              "name": "email",
+              "value": "={{ $env.COPILOT_BOT_EMAIL }}"
+            },
+            {
+              "name": "password",
+              "value": "={{ $env.COPILOT_BOT_PASSWORD }}"
+            }
           ]
         }
       },
@@ -41,7 +53,10 @@
       "name": "Authenticate Bot",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [680, 300]
+      "position": [
+        680,
+        300
+      ]
     },
     {
       "parameters": {
@@ -50,14 +65,23 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{ $('Authenticate Bot').item.json.access_token }}" }
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Authenticate Bot').item.json.access_token }}"
+            }
           ]
         },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "query", "value": "={{ $('Parse Slash Command').item.json.query }}" },
-            { "name": "top_k", "value": 6 }
+            {
+              "name": "query",
+              "value": "={{ $('Parse Slash Command').item.json.query }}"
+            },
+            {
+              "name": "top_k",
+              "value": 6
+            }
           ]
         }
       },
@@ -65,17 +89,23 @@
       "name": "Query AI Copilot",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [900, 300]
+      "position": [
+        900,
+        300
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const report = $input.first().json;\nconst query = $('Parse Slash Command').item.json.query;\nconst preview = report.report ? report.report.substring(0, 800).trim() : 'No content generated.';\nconst citationCount = report.citations ? report.citations.length : 0;\nconst message = `🤖 *AI Research Copilot Result*\\n*Query:* ${query}\\n\\n${preview}\\n\\n_${citationCount} source(s) cited. Full report available in dashboard._`;\nreturn [{ json: { text: message, response_type: 'in_channel' } }];"
+        "jsCode": "const report = $input.first().json;\nconst query = $('Parse Slash Command').item.json.query;\nconst preview = report.report ? report.report.substring(0, 800).trim() : 'No content generated.';\nconst citationCount = report.citations ? report.citations.length : 0;\nconst message = `🤖 *TriVisionX AI Result*\\n*Query:* ${query}\\n\\n${preview}\\n\\n_${citationCount} source(s) cited. Full report available in dashboard._`;\nreturn [{ json: { text: message, response_type: 'in_channel' } }];"
       },
       "id": "format-response",
       "name": "Format Slack Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1120, 300]
+      "position": [
+        1120,
+        300
+      ]
     },
     {
       "parameters": {
@@ -86,33 +116,66 @@
       "name": "Reply to Slack",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1340, 300]
+      "position": [
+        1340,
+        300
+      ]
     }
   ],
   "connections": {
     "Slack Slash Command Webhook": {
       "main": [
-        [{ "node": "Parse Slash Command", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Parse Slash Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Parse Slash Command": {
       "main": [
-        [{ "node": "Authenticate Bot", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Authenticate Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Authenticate Bot": {
       "main": [
-        [{ "node": "Query AI Copilot", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Query AI Copilot",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Query AI Copilot": {
       "main": [
-        [{ "node": "Format Slack Response", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Format Slack Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Format Slack Response": {
       "main": [
-        [{ "node": "Reply to Slack", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Reply to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },

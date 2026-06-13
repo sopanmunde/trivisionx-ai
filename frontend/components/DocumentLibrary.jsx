@@ -42,7 +42,7 @@ export default function DocumentLibrary({ open, onClose }) {
     if (!token) return;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api";
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
       const res = await fetch(`${apiUrl}/documents`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -62,7 +62,7 @@ export default function DocumentLibrary({ open, onClose }) {
 
     const token = localStorage.getItem("token");
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api";
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
       const res = await fetch(`${apiUrl}/documents/${doc.id}?filename=${encodeURIComponent(doc.filename)}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -99,7 +99,7 @@ export default function DocumentLibrary({ open, onClose }) {
     setUploadChunks(0);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api";
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
       const res = await fetch(`${apiUrl}/documents/upload/stream`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },

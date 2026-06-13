@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import Link from "next/link"
 import { Eye, EyeOff, Loader2, Check, AlertCircle, ArrowLeft } from "lucide-react"
-import { TrishulLogo } from "@/components/TrishulLogo"
+import { TriVisionXLogo } from "@/components/TriVisionXLogo"
 
 function PasswordStrength({ password }: { password: string }) {
   const checks = [
@@ -85,7 +85,7 @@ function AuthPageContent() {
       else setIsGoogleLoading(true)
       setError("")
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api"
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
         const res = await fetch(`${apiUrl}/auth/${provider}/callback`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -133,7 +133,7 @@ function AuthPageContent() {
     setIsGoogleLoading(true)
     setError("")
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api"
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
       const res = await fetch(`${apiUrl}/auth/google/login`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || "Failed to get Google login URL")
@@ -149,7 +149,7 @@ function AuthPageContent() {
     setIsGitHubLoading(true)
     setError("")
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api"
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
       const res = await fetch(`${apiUrl}/auth/github/login`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || "Failed to get GitHub login URL")
@@ -171,7 +171,7 @@ function AuthPageContent() {
     setIsLoading(true)
     try {
       if (isSignUp) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api"
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
         const res = await fetch(`${apiUrl}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -193,7 +193,7 @@ function AuthPageContent() {
           setForm((p) => ({ ...p, password: "", confirmPassword: "" }))
         }, 1600)
       } else {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-research-copilot-v3ot.onrender.com/api"
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
         const res = await fetch(`${apiUrl}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -248,7 +248,7 @@ function AuthPageContent() {
           transition={{ duration: 0.4 }}
           className="flex justify-center mb-6"
         >
-          <TrishulLogo size="lg" animate={false} />
+          <TriVisionXLogo size="lg" animate={false} />
         </motion.div>
 
         {/* ── Card ── */}

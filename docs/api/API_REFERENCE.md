@@ -1,9 +1,9 @@
-# API Reference — AI Research Copilot Platform
+# API Reference — TriVisionX AI Platform
 
-> **Base URL (local):** `https://ai-research-copilot-v3ot.onrender.com`  
+> **Base URL (local):** `https://trivisionx-ai-v3ot.onrender.com`  
 > **Authentication:** Bearer JWT token in `Authorization` header  
-> **OpenAPI UI:** `https://ai-research-copilot-v3ot.onrender.com/docs`  
-> **ReDoc:** `https://ai-research-copilot-v3ot.onrender.com/redoc`
+> **OpenAPI UI:** `https://trivisionx-ai-v3ot.onrender.com/docs`  
+> **ReDoc:** `https://trivisionx-ai-v3ot.onrender.com/redoc`
 
 ---
 
@@ -311,7 +311,7 @@ Get active AI model configuration and agent descriptions.
   },
   "vector_store": {
     "provider": "Pinecone",
-    "index": "trishul-ui"
+    "index": "trivisionx-ui"
   },
   "agents": [
     { "name": "Research Planner", "node": "planner", "role": "..." },
@@ -337,11 +337,11 @@ Comprehensive dependency health check.
 {
   "status": "healthy",
   "version": "3.0.0",
-  "project": "AI Research Copilot",
+  "project": "TriVisionX AI",
   "total_check_ms": 45.2,
   "dependencies": {
     "mongodb": { "status": "healthy", "latency_ms": 12.3 },
-    "pinecone": { "status": "healthy", "index": "trishul-ui", "latency_ms": 8.1 },
+    "pinecone": { "status": "healthy", "index": "trivisionx-ui", "latency_ms": 8.1 },
     "langgraph": { "status": "healthy", "nodes": ["planner","retriever","citation","summarizer","reporter"], "latency_ms": 0.3 },
     "redis": { "status": "disabled", "note": "REDIS_URL not configured" }
   }

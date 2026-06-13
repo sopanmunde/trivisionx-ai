@@ -16,7 +16,10 @@
       "name": "Every 6 Hours",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
@@ -26,7 +29,10 @@
       "name": "Load Alert Keywords",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 300]
+      "position": [
+        460,
+        300
+      ]
     },
     {
       "parameters": {
@@ -35,8 +41,14 @@
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "email", "value": "={{ $env.COPILOT_BOT_EMAIL }}" },
-            { "name": "password", "value": "={{ $env.COPILOT_BOT_PASSWORD }}" }
+            {
+              "name": "email",
+              "value": "={{ $env.COPILOT_BOT_EMAIL }}"
+            },
+            {
+              "name": "password",
+              "value": "={{ $env.COPILOT_BOT_PASSWORD }}"
+            }
           ]
         }
       },
@@ -44,7 +56,10 @@
       "name": "Authenticate",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [680, 300]
+      "position": [
+        680,
+        300
+      ]
     },
     {
       "parameters": {
@@ -53,14 +68,23 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{ $('Authenticate').item.json.access_token }}" },
-            { "name": "Accept", "value": "text/event-stream" }
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Authenticate').item.json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "text/event-stream"
+            }
           ]
         },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "msg", "value": "=What are the latest findings about {{ $json.keyword }}? Summarize key insights from indexed documents." }
+            {
+              "name": "msg",
+              "value": "=What are the latest findings about {{ $json.keyword }}? Summarize key insights from indexed documents."
+            }
           ]
         },
         "options": {
@@ -75,7 +99,10 @@
       "name": "Query Keyword",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [900, 300]
+      "position": [
+        900,
+        300
+      ]
     },
     {
       "parameters": {
@@ -85,7 +112,10 @@
       "name": "Check for New Content",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1120, 300]
+      "position": [
+        1120,
+        300
+      ]
     },
     {
       "parameters": {
@@ -94,7 +124,10 @@
             {
               "leftValue": "={{ $json.has_new_content }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true" }
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
             }
           ]
         }
@@ -103,50 +136,92 @@
       "name": "Has Relevant Content?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1340, 300]
+      "position": [
+        1340,
+        300
+      ]
     },
     {
       "parameters": {
         "channel": "={{ $env.SLACK_ALERT_CHANNEL_ID }}",
-        "text": "🔔 *Research Alert — New Content Detected*\n\n📡 *Keywords monitored:* {{ $env.ALERT_KEYWORDS }}\n🕐 *Checked at:* {{ $now.format('YYYY-MM-DD HH:mm') }}\n\nNew relevant documents have been indexed in your AI Research Copilot. Visit your dashboard to explore the latest findings.\n\n👉 {{ $env.COPILOT_DASHBOARD_URL }}/dashboard",
+        "text": "🔔 *Research Alert — New Content Detected*\n\n📡 *Keywords monitored:* {{ $env.ALERT_KEYWORDS }}\n🕐 *Checked at:* {{ $now.format('YYYY-MM-DD HH:mm') }}\n\nNew relevant documents have been indexed in your TriVisionX AI. Visit your dashboard to explore the latest findings.\n\n👉 {{ $env.COPILOT_DASHBOARD_URL }}/dashboard",
         "otherOptions": {}
       },
       "id": "slack-alert",
       "name": "Send Slack Alert",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2,
-      "position": [1560, 200]
+      "position": [
+        1560,
+        200
+      ]
     }
   ],
   "connections": {
     "Every 6 Hours": {
       "main": [
-        [{ "node": "Load Alert Keywords", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Load Alert Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Load Alert Keywords": {
       "main": [
-        [{ "node": "Authenticate", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Authenticate",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Authenticate": {
       "main": [
-        [{ "node": "Query Keyword", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Query Keyword",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Query Keyword": {
       "main": [
-        [{ "node": "Check for New Content", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Check for New Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Check for New Content": {
       "main": [
-        [{ "node": "Has Relevant Content?", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Has Relevant Content?",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Has Relevant Content?": {
       "main": [
-        [{ "node": "Send Slack Alert", "type": "main", "index": 0 }],
+        [
+          {
+            "node": "Send Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
         []
       ]
     }

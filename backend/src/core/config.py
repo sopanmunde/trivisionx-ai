@@ -10,14 +10,14 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # ── App ──────────────────────────────────────────────────────────────────
-    PROJECT_NAME: str = "AI Research Copilot"
+    PROJECT_NAME: str = "TriVisionX AI"
     VERSION: str = "3.0.0"
     DEBUG: bool = False
     DEFAULT_LLM_PROVIDER: str = "google"
 
     # ── MongoDB ───────────────────────────────────────────────────────────────
     MONGODB_URL: str = "mongodb://localhost:27017"
-    DATABASE_NAME: str = "trishul_ai"
+    DATABASE_NAME: str = "trivisionx_ai"
 
     @property
     def MONGO_URI(self) -> str:
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
 
     # ── Pinecone ──────────────────────────────────────────────────────────────
     PINECONE_API_KEY: str = ""
-    PINECONE_INDEX_NAME: str = "trishul-ui"
+    PINECONE_INDEX_NAME: str = "trivisionx-ui"
     PINECONE_ENVIRONMENT: str = "us-east-1"
 
     # ── Anthropic ─────────────────────────────────────────────────────────────

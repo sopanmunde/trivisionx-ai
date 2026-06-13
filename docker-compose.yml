@@ -14,7 +14,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-    container_name: ai-research-copilot-backend
+    container_name: trivisionx-ai-backend
     restart: always
     ports:
       - "8000:8000"
@@ -27,7 +27,7 @@ services:
     networks:
       - copilot-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://ai-research-copilot-v3ot.onrender.com/api/health/"]
+      test: ["CMD", "curl", "-f", "https://trivisionx-ai-v3ot.onrender.com/api/health/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -43,7 +43,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: ai-research-copilot-frontend
+    container_name: trivisionx-ai-frontend
     restart: always
     ports:
       - "3000:3000"
@@ -51,7 +51,7 @@ services:
       - ./frontend/.env
     environment:
       - PORT=3000
-      - NEXT_PUBLIC_API_BASE_URL=https://ai-research-copilot-v3ot.onrender.com
+      - NEXT_PUBLIC_API_BASE_URL=https://trivisionx-ai-v3ot.onrender.com
     depends_on:
       backend:
         condition: service_healthy

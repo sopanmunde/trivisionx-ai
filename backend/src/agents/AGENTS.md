@@ -1,6 +1,6 @@
 # Agent Architecture Documentation
 
-> AI Research Copilot — LangGraph Multi-Agent System
+> TriVisionX AI — LangGraph Multi-Agent System
 
 This directory contains the documentation for all agents in the LangGraph workflow system.
 

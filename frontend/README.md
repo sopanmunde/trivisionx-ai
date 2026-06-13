@@ -1,4 +1,4 @@
-# trishul-ai
+# trivisionx-ai
 
 To install dependencies:
 

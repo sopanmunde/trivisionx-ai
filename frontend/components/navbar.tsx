@@ -4,10 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TrishulLogo } from "@/components/TrishulLogo";
+import { TriVisionXLogo } from "@/components/TriVisionXLogo";
 import Link from "next/link";
-import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
-import { useTheme } from "next-themes";
 
 const navItems = [
   { label: "Features", href: "#features" },
@@ -22,14 +20,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
-  const { theme, setTheme, systemTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const resolvedTheme = theme === "system" ? systemTheme : theme;
 
   return (
     <motion.header
@@ -40,14 +31,14 @@ export function Navbar() {
     >
       <nav
         ref={navRef}
-        className="relative flex items-center justify-between px-4 py-3 rounded-full bg-zinc-900/40 backdrop-blur-md border border-zinc-800"
+        className="relative flex items-center justify-between px-4 py-3 rounded-full bg-white/60 dark:bg-zinc-900/40 backdrop-blur-md border border-zinc-200 dark:border-zinc-800"
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <TrishulLogo
+          <TriVisionXLogo
             size="sm"
             showWordmark
-            wordmark="AI Research Assistant"
+            wordmark="TriVisionX"
             animate={false}
           />
         </Link>
@@ -58,14 +49,14 @@ export function Navbar() {
             <Link
               key={item.label}
               href={item.href}
-              className="relative px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors"
+              className="relative px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
               {hoveredIndex === index && (
                 <motion.div
                   layoutId="navbar-hover"
-                  className="absolute inset-0 bg-zinc-800 rounded-full"
+                  className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800 rounded-full"
                   initial={false}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
@@ -81,14 +72,14 @@ export function Navbar() {
             asChild
             variant="ghost"
             size="sm"
-            className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+            className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             <Link href="/login">Sign In</Link>
           </Button>
           <Button
             asChild
             size="sm"
-            className="relative overflow-hidden shimmer-btn bg-white text-zinc-950 hover:bg-zinc-100 rounded-full px-4 h-9 font-semibold transition-all"
+            className="relative overflow-hidden shimmer-btn bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 rounded-full px-4 h-9 font-semibold transition-all"
           >
             <Link href="/login">
               <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-zinc-200/40 to-transparent" />
@@ -96,20 +87,11 @@ export function Navbar() {
             </Link>
           </Button>
         </div>
-        <div className="flex justify-center p-1">
-          {mounted ? (
-            <AnimatedThemeToggler
-              theme={resolvedTheme as "light" | "dark"}
-              onThemeChange={(newTheme) => setTheme(newTheme)}
-            />
-          ) : (
-            <div className="w-8 h-8" /> /* Placeholder to prevent layout shift */
-          )}
-        </div>
+
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden p-2 text-zinc-400 hover:text-white"
+          className="md:hidden p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -123,30 +105,30 @@ export function Navbar() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="absolute top-full left-0 right-0 mt-2 p-4 rounded-2xl bg-zinc-900/95 backdrop-blur-md border border-zinc-800"
+          className="absolute top-full left-0 right-0 mt-2 p-4 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800"
         >
           <div className="flex flex-col gap-2">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="px-4 py-3 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.label}
               </Link>
             ))}
-            <hr className="border-zinc-800 my-2" />
+            <hr className="border-zinc-200 dark:border-zinc-800 my-2" />
             <Button
               asChild
               variant="ghost"
-              className="justify-start text-zinc-400 hover:text-white"
+              className="justify-start text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
             >
               <Link href="/login">Sign In</Link>
             </Button>
             <Button
               asChild
-              className="shimmer-btn bg-white text-zinc-950 hover:bg-zinc-200 rounded-full"
+              className="shimmer-btn bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-full"
             >
               <Link href="/login">Get Started</Link>
             </Button>
