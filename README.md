@@ -5,7 +5,7 @@
 
   <p>
     <strong>Enterprise-grade AI research automation with LangGraph multi-agent orchestration,<br/>
-    Pinecone semantic retrieval, and real-time streaming responses.</strong>
+    Pinecone semantic retrieval, real-time streaming responses, and beautiful Magic UI animations.</strong>
   </p>
 
   <p>
@@ -19,7 +19,7 @@
   <p>
     <img alt="Python" src="https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge&logo=python&logoColor=white" />
     <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
-    <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js" />
+    <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=next.js" />
     <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
     <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
   </p>
@@ -29,7 +29,9 @@
 
 ## 🌟 Overview
 
-The **TriVisionX AI** is a production-ready AI SaaS platform that transforms how researchers and knowledge workers interact with document corpora. It brings together a **5-node LangGraph multi-agent pipeline**, **Pinecone MMR semantic retrieval**, **real-time SSE streaming**, and **citation-aware generation** to deliver an enterprise AI assistant.
+The **TriVisionX AI** is a production-ready AI SaaS platform that transforms how researchers and knowledge workers interact with document corpora. It brings together a **5-node LangGraph multi-agent pipeline**, **Pinecone MMR semantic retrieval**, **real-time SSE streaming**, and **citation-aware generation** to deliver an enterprise AI assistant. 
+
+With a newly upgraded frontend leveraging **Framer Motion**, **Magic UI components**, and full mobile responsiveness, the platform offers an unparalleled, beautiful user experience.
 
 > *Built to demonstrate advanced AI systems engineering—suitable for production deployment and seamless scalability.*
 
@@ -39,7 +41,7 @@ The **TriVisionX AI** is a production-ready AI SaaS platform that transforms how
 
 ```mermaid
 graph TD
-    UI[Next.js 16 Chat UI] -- HTTPS + SSE --> API[FastAPI Gateway]
+    UI[Next.js 15 Chat UI] -- HTTPS + SSE --> API[FastAPI Gateway]
     API -- /api/documents --> DB[(MongoDB Atlas)]
     API -- /api/chat --> Graph[LangGraph 5-Agent Pipeline]
     
@@ -68,31 +70,32 @@ graph TD
 - **5-Agent Pipeline** — specialized LangGraph nodes for reliable outputs.
 - **Real-time SSE Streaming** — token-level streaming directly to the UI.
 - **Citation-Aware** — every claim is traced back to a specific source document + page.
-- **Research Reports** — generates structured 5-section reports exportable to Markdown.
+- **Quality Scoring** — built-in metrics evaluating coverage, confidence, and completeness.
 
 ### 📚 Enterprise Document Intelligence
 - **Multi-format Ingestion** — native support for PDF, DOCX, and TXT files.
 - **Semantic Chunking** — paragraph-aware recursive splitting.
 - **Metadata-Rich Vectors** — tagged with `user_id`, `filename`, `chunk_index`, and `timestamp`.
-- **Duplicate Prevention** — guards against re-indexing identical documents per user.
+
+### 🎨 Stunning, Responsive UI
+- **Magic UI & Framer Motion** — smooth micro-interactions, blur-in text effects, and skeleton loaders.
+- **Glassmorphism & Theming** — fully supports elegant dark/light modes.
+- **Mobile First** — fully responsive slide-out sidebars and dynamic composer layouts.
 
 ### 🏭 Production-Grade Backend
 - **JWT Authentication** — secure registration, login, and profile management.
-- **Rate Limiting** — customizable limits per endpoint.
 - **Async Architecture** — built entirely on Motor (MongoDB async) and FastAPI.
-- **Multi-stage Docker Builds** — non-root users, gunicorn workers, and optimized images.
+- **Automated Deployments** — `render.yaml` Blueprints and Dockerfile optimization.
 
 ---
 
-## 🚀 Quick Start (Docker Compose)
-
-The easiest way to get started is using the pre-configured `docker-compose.yml`.
+## 🚀 Quick Start (Local Development)
 
 ### Prerequisites
-- Docker & Docker Compose
+- [Bun](https://bun.sh/) (Frontend package manager)
+- Python 3.11+ (Backend)
 - Google AI Studio API Key (Gemini)
-- Pinecone Account (Free Tier)
-- MongoDB Atlas URL (Free Tier)
+- Pinecone Account & MongoDB Atlas
 
 ### 1. Clone the Repository
 ```bash
@@ -101,55 +104,60 @@ cd trivisionx-ai
 ```
 
 ### 2. Configure Environment Variables
-Create a `.env` file in the root of the project:
+Create `.env` files in both `/backend` and `/frontend`.
+
+**backend/.env**
 ```env
-# AI Providers
 GOOGLE_API_KEY=your_gemini_key_here
 GEMINI_MODEL=gemini-2.5-flash
-
-# Vector DB
 PINECONE_API_KEY=your_pinecone_key_here
-PINECONE_INDEX_NAME=trivisionx-ui
+PINECONE_INDEX_NAME=trivisionx
 PINECONE_ENVIRONMENT=us-east-1
-
-# Database
 MONGODB_URL=mongodb+srv://user:pass@cluster.mongodb.net/
 DATABASE_NAME=trivisionx_db
-
-# Security & App
-SECRET_KEY=your-secret-256bit-key-here
+SECRET_KEY=your-secret-key
 FRONTEND_URL=http://localhost:3000
 ```
 
-### 3. Spin Up the Stack
-```bash
-docker-compose up --build -d
+**frontend/.env**
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
 ```
 
-### 4. Access the Application
-| Service | URL |
-|---|---|
-| **Web App** | [http://localhost:3000](http://localhost:3000) |
-| **API Docs (Swagger)** | [https://trivisionx-ai-v3ot.onrender.com/docs](https://trivisionx-ai-v3ot.onrender.com/docs) |
-| **System Health** | [https://trivisionx-ai-v3ot.onrender.com/api/health/](https://trivisionx-ai-v3ot.onrender.com/api/health/) |
+### 3. Start the Backend
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # (or .venv\Scripts\activate on Windows)
+pip install -r requirements.txt
+python index.py
+```
+
+### 4. Start the Frontend
+```bash
+cd frontend
+bun install
+bun dev
+```
+
+The Web App will be available at [http://localhost:3000](http://localhost:3000) and the API docs at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 ---
 
 ## ☁️ Deployment
 
-This project is built to deploy natively to the cloud using robust CI/CD integration.
-
-### Vercel (Frontend)
+### Frontend (Vercel)
 The Next.js frontend is optimized for **Vercel**.
 1. Import the project into Vercel.
 2. Select `frontend` as your Root Directory.
-3. The included `vercel.json` will automatically proxy `/api/*` requests to your backend.
+3. Set the `NEXT_PUBLIC_API_BASE_URL` environment variable to your deployed Render URL (e.g., `https://trivisionx-ai.onrender.com/api`).
 
-### Render (Backend)
+### Backend (Render)
 The FastAPI backend is pre-configured for **Render**.
-1. Create a new Web Service on Render and point it to your repository.
-2. The included `render.yaml` blueprint will handle the build and deployment automatically.
-3. Add your secrets (`MONGODB_URL`, `GOOGLE_API_KEY`, etc.) in the Render dashboard.
+1. Create a new Blueprint on Render and connect this repository.
+2. The included `render.yaml` handles the Docker build and service creation.
+3. Render will use the default `CMD` in `backend/Dockerfile` automatically.
+4. *(Remember to update your Backend CORS `FRONTEND_URL` in `src/main.py` or `.env` to match your Vercel URL!)*
 
 ---
 
@@ -160,23 +168,9 @@ The FastAPI backend is pre-configured for **Render**.
 | `POST` | `/api/auth/login` | Get JWT token |
 | `POST` | `/api/chat/` | **SSE** streaming research chat |
 | `POST` | `/api/documents/upload` | Ingest PDF/DOCX/TXT |
-| `GET` | `/api/reports/{id}/export` | Download report as Markdown |
+| `GET` | `/api/conversations/{id}/messages` | Fetch chat history |
 
 *For the complete API reference, visit the auto-generated Swagger UI at `/docs` when running the backend.*
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technology |
-|---|---|
-| **LLM** | Google Gemini 2.5 Flash |
-| **Orchestration** | LangGraph |
-| **Vector DB** | Pinecone |
-| **Backend** | FastAPI (Python 3.11) |
-| **Database** | MongoDB Atlas (Motor) |
-| **Frontend** | Next.js 16 + React 19 + Tailwind CSS 4 |
-| **Deployment** | Docker Compose |
 
 ---
 

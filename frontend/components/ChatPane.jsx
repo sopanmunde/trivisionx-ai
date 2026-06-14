@@ -100,7 +100,6 @@ function ThinkingMessage({ onPause, agentState }) {
 // ─── Suggestion Chips ────────────────────────────────────────────────────────
 const SUGGESTIONS = [
   { label: "Explain a diagnosis", icon: Stethoscope },
-  { label: "Drug interactions", icon: Pill },
   { label: "Summarize research", icon: BookOpen },
   { label: "Write a report", icon: FileText },
 ];
@@ -223,7 +222,7 @@ const ChatPane = forwardRef(function ChatPane(
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15, duration: 0.4 }}
-                  className="mb-2 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
+                  className="mb-2 text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
                 >
                   <span className="animate-shimmer-text">
                     How can I help you?

@@ -4,7 +4,7 @@ import { motion, cubicBezier } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TriVisionXLogo } from "@/components/TriVisionXLogo";
-
+import { TextAnimate } from "@/components/ui/text-animate"
 // const avatars = [
 //   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
 //   "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
@@ -79,7 +79,9 @@ export function Hero() {
               animate="visible"
               custom={0}
             >
-              Talk to care.
+              <TextAnimate animation="blurInUp" by="character" duration={5}>
+                Unlock the Next Dimension of Intelligence
+              </TextAnimate>
             </motion.span>
           </span>
           <span className="block overflow-hidden">
@@ -102,8 +104,7 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
         >
-          Everything you need to deliver instant, intelligent healthcare through
-          AI chat.
+          Everything you need to discover knowledge, generate insights, and make smarter decisions with AI-powered research automation.
         </motion.p>
 
         {/* CTAs */}
@@ -118,7 +119,7 @@ export function Hero() {
             className="relative overflow-hidden shimmer-btn bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-zinc-900/5 dark:shadow-white/10 transition-all hover:shadow-zinc-900/10 dark:hover:shadow-white/20"
           >
             <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-zinc-200/40 to-transparent" />
-            <span ><a className="relative" href="/dashboard" >Start Building</a></span>
+            <span ><a className="relative" href="/dashboard" >Get Started</a></span>
             <ArrowRight className="relative ml-2 w-4 h-4" />
           </Button>
           <Button

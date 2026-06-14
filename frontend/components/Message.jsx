@@ -83,7 +83,7 @@ export default function Message({ role, content, sources, quality_score, childre
 
       <div
         className={cls(
-          "max-w-[85%] text-[14.5px] leading-relaxed relative group/msg transition-all duration-300",
+          "max-w-[95%] sm:max-w-[85%] text-[14.5px] leading-relaxed relative group/msg transition-all duration-300",
           isUser
             ? "rounded-2xl rounded-tr-sm bg-zinc-100/80 px-4 py-3 text-zinc-900 shadow-sm border border-zinc-200/60 dark:bg-zinc-800/40 dark:text-zinc-100 dark:border-zinc-700/50 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md transition-all duration-300"
             : "rounded-2xl rounded-tl-sm bg-white px-4 py-3 text-zinc-900 shadow-sm border border-zinc-200/80 dark:bg-zinc-900/60 dark:text-zinc-100 dark:border-zinc-800/80 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all duration-300",
@@ -173,7 +173,7 @@ export default function Message({ role, content, sources, quality_score, childre
                        quality_score.overall >= 60 ? "Medium Reliability" : "Low Reliability"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                     {/* Coverage */}
                     <div className="flex-1 flex flex-col gap-1">
                       <div className="flex justify-between text-[11px]">

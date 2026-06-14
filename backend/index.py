@@ -22,6 +22,26 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     except Exception:
         pass
 
+# Fix asyncio Proactor connection reset errors on Windows
+if sys.platform == "win32":
+    import asyncio
+    from functools import wraps
+    try:
+        from asyncio.proactor_events import _ProactorBasePipeTransport
+        def silence_connection_reset(func):
+            @wraps(func)
+            def wrapper(self, *args, **kwargs):
+                try:
+                    return func(self, *args, **kwargs)
+                except (ConnectionResetError, BrokenPipeError):
+                    pass
+            return wrapper
+        _ProactorBasePipeTransport._call_connection_lost = silence_connection_reset(
+            _ProactorBasePipeTransport._call_connection_lost
+        )
+    except ImportError:
+        pass
+
 PORT = 8000
 
 def _free_port(port: int) -> None:
