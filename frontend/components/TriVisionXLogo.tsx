@@ -56,20 +56,8 @@ export function TriVisionXLogo({
 }: TriVisionXLogoProps) {
   const cfg = sizeConfig[size];
 
-  const Wrapper = animate ? motion.div : "div";
-  const animateProps = animate
-    ? {
-      initial: { opacity: 0, y: -6 },
-      animate: { opacity: 1, y: 0 },
-      transition: { duration: 0.35, ease: "easeOut" },
-    }
-    : {};
-
-  return (
-    <Wrapper
-      className={`flex items-center gap-2.5 ${className}`}
-      {...animateProps}
-    >
+  const logoInner = (
+    <>
       <div className="relative flex-shrink-0">
         {/* Subtle glow ring — only when glow prop is true */}
         {glow && (
@@ -129,6 +117,25 @@ export function TriVisionXLogo({
           {wordmark}
         </span>
       )}
-    </Wrapper>
+    </>
+  );
+
+  if (animate) {
+    return (
+      <motion.div
+        className={`flex items-center gap-2.5 ${className}`}
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      >
+        {logoInner}
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className={`flex items-center gap-2.5 ${className}`}>
+      {logoInner}
+    </div>
   );
 }

@@ -66,7 +66,7 @@ export function Hero() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 mb-8 backdrop-blur-sm transition-colors"
         >
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-glow" />
-          <span className="text-sm text-zinc-600 dark:text-zinc-400">Now in Public Beta</span>
+          <span className="text-sm text-zinc-600 dark:text-zinc-400">LangGraph 5-Agent Pipeline Active</span>
         </motion.div>
 
         {/* Headline with text mask animation */}
@@ -80,7 +80,7 @@ export function Hero() {
               custom={0}
             >
               <TextAnimate animation="blurInUp" by="character" duration={5}>
-                Unlock the Next Dimension of Intelligence
+                Autonomous Agentic AI Platform
               </TextAnimate>
             </motion.span>
           </span>
@@ -92,7 +92,7 @@ export function Hero() {
               animate="visible"
               custom={1}
             >
-              Get help instantly.
+              Orchestrated by LangGraph.
             </motion.span>
           </span>
         </h1>
@@ -104,7 +104,7 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
         >
-          Everything you need to discover knowledge, generate insights, and make smarter decisions with AI-powered research automation.
+          Empower your enterprise with dynamic multi-agent research automation. Instantly retrieve vector contexts via Pinecone, verify sources with citation auditing, and synthesize structured intelligence using any major LLM.
         </motion.p>
 
         {/* CTAs */}

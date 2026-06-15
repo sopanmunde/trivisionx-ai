@@ -5,7 +5,7 @@ import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import Link from "next/link"
-import { Eye, EyeOff, Loader2, Check, AlertCircle, ArrowLeft } from "lucide-react"
+import { Eye, EyeOff, Loader2, Check, AlertCircle, ArrowLeft, Brain, Database, GitMerge, Terminal, CheckCircle2, Webhook } from "lucide-react"
 import { TriVisionXLogo } from "@/components/TriVisionXLogo"
 
 function PasswordStrength({ password }: { password: string }) {
@@ -54,6 +54,150 @@ function FormItem({ children }: { children: React.ReactNode }) {
 }
 
 
+interface FlowNodeProps {
+  label: string
+  icon: React.ElementType
+  className: string
+  activeColor: string
+}
+
+function FlowNode({ label, icon: Icon, className, activeColor }: FlowNodeProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 0.65, scale: 1 }}
+      whileHover={{ opacity: 1, scale: 1.03, borderColor: "rgba(168,85,247,0.35)", boxShadow: "0 0 15px rgba(168,85,247,0.15)" }}
+      transition={{ duration: 0.5 }}
+      className={`absolute hidden lg:flex items-center gap-2 px-3 py-2.5 rounded-xl border border-zinc-850 bg-zinc-900/40 backdrop-blur-md shadow-lg font-mono text-[10px] text-zinc-300 pointer-events-auto transition-all ${className}`}
+    >
+      <div className="p-1.5 rounded-lg bg-zinc-950/80 border border-zinc-800 text-zinc-400">
+        <Icon className="w-3.5 h-3.5" />
+      </div>
+      <div className="flex flex-col">
+        <span className="font-bold text-zinc-200">{label}</span>
+        <span className="text-[8px] text-zinc-500 flex items-center gap-1">
+          <span className={`w-1.5 h-1.5 rounded-full ${activeColor} animate-pulse`} />
+          FLOW ACTIVE
+        </span>
+      </div>
+    </motion.div>
+  )
+}
+
+function BackgroundFlows() {
+  return (
+    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+      {/* SVG Connections */}
+      <svg
+        viewBox="0 0 1000 800"
+        preserveAspectRatio="none"
+        className="absolute inset-0 w-full h-full opacity-[0.12] hidden lg:block"
+      >
+        {/* Base Connections */}
+        <path d="M 80 120 L 120 360" stroke="#3f3f46" strokeWidth="2" fill="none" />
+        <path d="M 120 360 L 80 600" stroke="#3f3f46" strokeWidth="2" fill="none" />
+        <path d="M 80 600 L 920 144" stroke="#3f3f46" strokeWidth="1.5" fill="none" strokeDasharray="5 5" />
+        <path d="M 920 144 L 880 400" stroke="#3f3f46" strokeWidth="2" fill="none" />
+        <path d="M 880 400 L 920 640" stroke="#3f3f46" strokeWidth="2" fill="none" />
+
+        {/* Glowing flow pulses */}
+        <motion.path
+          d="M 80 120 L 120 360"
+          stroke="url(#flowGradient)"
+          strokeWidth="2.5"
+          fill="none"
+          strokeDasharray="12 18"
+          animate={{ strokeDashoffset: [-60, 0] }}
+          transition={{ repeat: Infinity, ease: "linear", duration: 3 }}
+        />
+        <motion.path
+          d="M 120 360 L 80 600"
+          stroke="url(#flowGradient)"
+          strokeWidth="2.5"
+          fill="none"
+          strokeDasharray="12 18"
+          animate={{ strokeDashoffset: [-60, 0] }}
+          transition={{ repeat: Infinity, ease: "linear", duration: 3, delay: 1 }}
+        />
+        <motion.path
+          d="M 80 600 L 920 144"
+          stroke="url(#flowGradient)"
+          strokeWidth="2"
+          fill="none"
+          strokeDasharray="8 12"
+          animate={{ strokeDashoffset: [-40, 0] }}
+          transition={{ repeat: Infinity, ease: "linear", duration: 5 }}
+        />
+        <motion.path
+          d="M 920 144 L 880 400"
+          stroke="url(#flowGradient)"
+          strokeWidth="2.5"
+          fill="none"
+          strokeDasharray="12 18"
+          animate={{ strokeDashoffset: [-60, 0] }}
+          transition={{ repeat: Infinity, ease: "linear", duration: 3, delay: 0.5 }}
+        />
+        <motion.path
+          d="M 880 400 L 920 640"
+          stroke="url(#flowGradient)"
+          strokeWidth="2.5"
+          fill="none"
+          strokeDasharray="12 18"
+          animate={{ strokeDashoffset: [-60, 0] }}
+          transition={{ repeat: Infinity, ease: "linear", duration: 3, delay: 1.5 }}
+        />
+
+        <defs>
+          <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a78bfa" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      {/* Scattered Flow Node Cards */}
+      <FlowNode
+        label="Webhook Trigger"
+        icon={Webhook}
+        className="left-[6%] top-[15%]"
+        activeColor="bg-purple-500"
+      />
+      <FlowNode
+        label="NLP Classifier"
+        icon={Brain}
+        className="left-[10%] top-[45%]"
+        activeColor="bg-blue-500"
+      />
+      <FlowNode
+        label="Pinecone Search"
+        icon={Database}
+        className="left-[6%] top-[75%]"
+        activeColor="bg-blue-400"
+      />
+
+      <FlowNode
+        label="Router Branch"
+        icon={GitMerge}
+        className="right-[6%] top-[18%]"
+        activeColor="bg-pink-500"
+      />
+      <FlowNode
+        label="Python Sandbox"
+        icon={Terminal}
+        className="right-[10%] top-[50%]"
+        activeColor="bg-amber-500"
+      />
+      <FlowNode
+        label="Slack Dispatch"
+        icon={CheckCircle2}
+        className="right-[6%] top-[80%]"
+        activeColor="bg-emerald-500"
+      />
+    </div>
+  )
+}
+
 function AuthPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -75,7 +219,7 @@ function AuthPageContent() {
     // Determine provider from state param (set during login redirect)
     const state = searchParams.get("state")
     let provider = typeof window !== "undefined" ? localStorage.getItem("oauth_provider") : null
-    
+
     if (!provider && state) {
       try {
         const parts = state.split(".")
@@ -87,7 +231,7 @@ function AuthPageContent() {
         console.error("Failed to parse state payload", e)
       }
     }
-    
+
     if (!provider) {
       provider = state === "github" ? "github" : "google"
     }
@@ -250,6 +394,8 @@ function AuthPageContent() {
           backgroundSize: "28px 28px",
         }}
       />
+
+      <BackgroundFlows />
 
       {/* Home button — top left */}
       <Link

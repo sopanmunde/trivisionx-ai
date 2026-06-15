@@ -2,55 +2,58 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Bot, Zap, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const plans = [
   {
-    name: "Starter",
-    description: "Perfect for side projects and small teams",
+    name: "Developer",
+    description: "Ideal for building and testing agent logic locally",
     price: { monthly: 0, yearly: 0 },
     features: [
-      "3 team members",
-      "10 projects",
-      "Basic analytics",
-      "Community support",
-      "1GB storage",
+      "10,000 execution runs/month",
+      "Single active agent pipeline",
+      "Shared Pinecone retriever",
+      "Standard OpenAI & Anthropic routing",
+      "Community forum support",
     ],
-    cta: "Get Started",
+    cta: "Start Building Free",
     highlighted: false,
+    icon: Bot,
   },
   {
-    name: "Pro",
-    description: "For growing teams that need more power",
-    price: { monthly: 29, yearly: 24 },
+    name: "Production",
+    description: "For production deployments requiring scalable orchestration",
+    price: { monthly: 49, yearly: 39 },
     features: [
-      "Unlimited team members",
-      "Unlimited projects",
-      "Advanced analytics",
-      "Priority support",
-      "100GB storage",
-      "Custom domains",
-      "API access",
+      "1,000,000 execution runs/month",
+      "16 concurrent agent pipelines",
+      "Dynamic model routing (Claude, Gemini, DeepSeek)",
+      "Self-correcting code execution logs",
+      "Dedicated vector store connections",
+      "Priority developer Slack support",
+      "API & webhook web triggers",
     ],
-    cta: "Start Free Trial",
+    cta: "Deploy Production Scale",
     highlighted: true,
+    icon: Zap,
   },
   {
     name: "Enterprise",
-    description: "For organizations with advanced needs",
-    price: { monthly: 99, yearly: 79 },
+    description: "For organizations requiring isolated execution runtimes",
+    price: { monthly: 299, yearly: 239 },
     features: [
-      "Everything in Pro",
-      "SSO & SAML",
-      "Dedicated support",
-      "SLA guarantee",
-      "Unlimited storage",
-      "Custom integrations",
-      "Audit logs",
+      "Unlimited execution runs",
+      "Unlimited concurrency & sub-graphs",
+      "Isolated sovereign runtime hosting",
+      "Anti-CSRF SSO & SAML enforcement",
+      "99.9% runtime uptime SLA",
+      "Custom LLM finetuning & adapters",
+      "Dedicated agent solution engineers",
     ],
-    cta: "Contact Sales",
+    cta: "Request Demo",
     highlighted: false,
+    icon: ShieldAlert,
   },
 ];
 
@@ -75,26 +78,26 @@ export function Pricing() {
   );
 
   return (
-    <section id="pricing" className="py-24 px-4">
+    <section id="pricing" className="py-24 px-4 bg-zinc-950/40 relative border-t border-zinc-900/50">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Simple, transparent pricing
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 tracking-tight">
+            Predictable pricing built for agent execution
           </h2>
-          <p className="text-zinc-400 max-w-2xl mx-auto mb-8">
-            Start free, scale as you grow. No hidden fees, no surprises.
+          <p className="text-zinc-400 max-w-2xl mx-auto mb-8 text-sm sm:text-base">
+            Choose a plan that fits your computational throughput. Scale concurrency and agent steps dynamically as you grow.
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center p-1 rounded-full bg-zinc-900 border border-zinc-800">
+          <div className="inline-flex items-center p-1 rounded-full bg-zinc-900 border border-zinc-800/80">
             <button
               onClick={() => setBillingCycle("monthly")}
-              className={`relative px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+              className={`relative px-4 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer ${
                 billingCycle === "monthly" ? "text-white" : "text-zinc-400"
               }`}
             >
@@ -109,7 +112,7 @@ export function Pricing() {
             </button>
             <button
               onClick={() => setBillingCycle("yearly")}
-              className={`relative px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+              className={`relative px-4 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer ${
                 billingCycle === "yearly" ? "text-white" : "text-zinc-400"
               }`}
             >
@@ -133,77 +136,85 @@ export function Pricing() {
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch"
         >
-          {plans.map((plan, index) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
-              className={`relative p-6 rounded-2xl border transition-all duration-300 hover:scale-[1.02] ${
-                plan.highlighted
-                  ? "bg-zinc-900 border-zinc-700"
-                  : "bg-zinc-900/50 border-zinc-800 hover:border-zinc-600"
-              }`}
-            >
-              {plan.highlighted && <BorderBeam />}
-
-              {plan.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-white text-zinc-950 text-xs font-medium rounded-full">
-                  Most Popular
-                </div>
-              )}
-
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {plan.name}
-                </h3>
-                <p className="text-zinc-400 text-sm">{plan.description}</p>
-              </div>
-
-              <div className="mb-6">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-white">
-                    ${plan.price[billingCycle]}
-                  </span>
-                  {plan.price.monthly > 0 && (
-                    <span className="text-zinc-400 text-sm">/month</span>
-                  )}
-                </div>
-                {billingCycle === "yearly" && plan.price.yearly > 0 && (
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Billed annually (${plan.price.yearly * 12}/year)
-                  </p>
-                )}
-              </div>
-
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center gap-3 text-sm text-zinc-300"
-                  >
-                    <Check
-                      className="w-4 h-4 text-emerald-500 shrink-0"
-                      strokeWidth={1.5}
-                    />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                className={`w-full rounded-full ${
+          {plans.map((plan, index) => {
+            const Icon = plan.icon;
+            return (
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                className={`relative p-6 md:p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.01] flex flex-col justify-between ${
                   plan.highlighted
-                    ? "shimmer-btn bg-white text-zinc-950 hover:bg-zinc-200"
-                    : "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700"
+                    ? "bg-zinc-900/60 border-purple-500/30 shadow-[0_0_30px_rgba(139,92,246,0.05)]"
+                    : "bg-zinc-900/20 border-zinc-800 hover:border-zinc-700"
                 }`}
               >
-                {plan.cta}
-              </Button>
-            </motion.div>
-          ))}
+                {plan.highlighted && <BorderBeam />}
+
+                {plan.highlighted && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-purple-500 text-white text-[10px] font-mono font-bold uppercase tracking-wider rounded-full shadow-lg">
+                    Recommended
+                  </div>
+                )}
+
+                <div>
+                  <div className="mb-6 flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                        <Icon className="w-5 h-5 text-purple-400" />
+                        {plan.name}
+                      </h3>
+                      <p className="text-zinc-400 text-xs leading-relaxed">{plan.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="mb-8">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-extrabold text-white">
+                        ${plan.price[billingCycle]}
+                      </span>
+                      {plan.price.monthly > 0 && (
+                        <span className="text-zinc-500 text-xs font-mono">/month</span>
+                      )}
+                    </div>
+                    {billingCycle === "yearly" && plan.price.yearly > 0 && (
+                      <p className="text-[10px] text-zinc-500 mt-1 font-mono">
+                        Billed annually (${plan.price.yearly * 12}/yr)
+                      </p>
+                    )}
+                  </div>
+
+                  <ul className="space-y-3.5 mb-8">
+                    {plan.features.map((feature) => (
+                      <li
+                        key={feature}
+                        className="flex items-start gap-3 text-xs text-zinc-300 leading-relaxed"
+                      >
+                        <Check
+                          className="w-4 h-4 text-purple-400 shrink-0 mt-0.5"
+                          strokeWidth={2}
+                        />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <Button
+                  className={`w-full rounded-xl h-11 text-xs font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer ${
+                    plan.highlighted
+                      ? "bg-zinc-100 hover:bg-zinc-200 text-zinc-950 shadow-lg"
+                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700/80"
+                  }`}
+                >
+                  {plan.cta}
+                </Button>
+              </motion.div>
+            );
+          })}
         </motion.div>
       </div>
     </section>
