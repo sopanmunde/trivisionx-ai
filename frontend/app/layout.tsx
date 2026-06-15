@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'trivisionx-ai',
-  description: 'Created by Sopan',
+  title: 'trivisionx.ai',
+  description: 'Created by Sopan\n TriVisionX AI is an enterprise-grade AI research platform that combines multi-agent intelligence, semantic search, and automated knowledge discovery to transform information into actionable insights.',
   generator: 'Next.js',
   icons: {
     icon: [
