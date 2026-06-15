@@ -6,21 +6,48 @@ Flow:
   2. POST /callback → exchanges auth code for tokens, upserts user, returns JWT
 """
 import urllib.parse
+import time
 from datetime import datetime
 
-import httpx
 from fastapi import APIRouter, HTTPException, status
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+from jose import jwt, JWTError
 
 from src.core.config import settings
 from src.core.security import create_access_token
 from src.core.constants import COLLECTION_USERS
 from src.core.logger import get_logger
 from src.database.mongodb.connection import get_database
+from src.core.http import get_http_client
 
 logger = get_logger(__name__)
 router = APIRouter()
+
+
+class CachedGoogleRequest(google_requests.Request):
+    def __init__(self, cache_timeout=86400):
+        super().__init__()
+        self._cache = {}
+        self._cache_timeout = cache_timeout
+
+    def __call__(self, url, method="GET", body=None, headers=None, timeout=None, **kwargs):
+        if method == "GET" and "oauth2/v3/certs" in url:
+            now = time.time()
+            if url in self._cache:
+                cached_time, response = self._cache[url]
+                if now - cached_time < self._cache_timeout:
+                    return response
+            
+            response = super().__call__(url, method, body, headers, timeout, **kwargs)
+            self._cache[url] = (now, response)
+            return response
+            
+        return super().__call__(url, method, body, headers, timeout, **kwargs)
+
+
+# In-memory cached request to prevent fetching certificates on every SSO callback
+cached_google_request = CachedGoogleRequest()
 
 # Google OAuth2 endpoints
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -43,6 +70,16 @@ async def google_login():
             detail="Google OAuth is not configured (GOOGLE_CLIENT_ID missing)",
         )
 
+    # Generate a cryptographically signed state parameter to prevent CSRF
+    from datetime import timedelta
+    import os
+    state_payload = {
+        "provider": "google",
+        "exp": datetime.utcnow() + timedelta(minutes=15),
+        "nonce": os.urandom(16).hex(),
+    }
+    signed_state = jwt.encode(state_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
     params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
         "redirect_uri": settings.REDIRECT_URI,
@@ -50,7 +87,7 @@ async def google_login():
         "scope": "openid email profile",
         "access_type": "offline",
         "prompt": "consent",
-        "state": "google",
+        "state": signed_state,
     }
     url = f"{GOOGLE_AUTH_URL}?{urllib.parse.urlencode(params)}"
     return {"authorization_url": url}
@@ -63,10 +100,30 @@ async def google_callback(payload: dict):
     upserts the user in MongoDB, and returns a JWT.
     """
     code = payload.get("code")
+    state = payload.get("state")
     if not code:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Authorization code is required",
+        )
+    if not state:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="State parameter is required to prevent CSRF",
+        )
+
+    # Verify signed state parameter to prevent CSRF
+    try:
+        decoded_state = jwt.decode(state, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if decoded_state.get("provider") != "google":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid state provider",
+            )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired OAuth state parameter (anti-CSRF failure)",
         )
 
     # ── Exchange code for tokens ──────────────────────────────────────────
@@ -78,8 +135,8 @@ async def google_callback(payload: dict):
         "grant_type": "authorization_code",
     }
 
-    async with httpx.AsyncClient() as client:
-        token_response = await client.post(GOOGLE_TOKEN_URL, data=token_data)
+    client = get_http_client()
+    token_response = await client.post(GOOGLE_TOKEN_URL, data=token_data)
 
     if token_response.status_code != 200:
         logger.error(f"Google token exchange failed: {token_response.text}")
@@ -101,7 +158,7 @@ async def google_callback(payload: dict):
     try:
         id_info = id_token.verify_oauth2_token(
             id_token_str,
-            google_requests.Request(),
+            cached_google_request,
             settings.GOOGLE_CLIENT_ID,
         )
     except ValueError as e:
@@ -116,6 +173,13 @@ async def google_callback(payload: dict):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email not provided by Google",
+        )
+
+    # Verify that the Google email is verified to prevent account takeover hijacking
+    if not id_info.get("email_verified"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google account email is not verified",
         )
 
     # ── Upsert user in MongoDB ────────────────────────────────────────────

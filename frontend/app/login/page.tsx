@@ -74,7 +74,23 @@ function AuthPageContent() {
 
     // Determine provider from state param (set during login redirect)
     const state = searchParams.get("state")
-    const provider = state === "github" ? "github" : "google"
+    let provider = typeof window !== "undefined" ? localStorage.getItem("oauth_provider") : null
+    
+    if (!provider && state) {
+      try {
+        const parts = state.split(".")
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")))
+          provider = payload.provider
+        }
+      } catch (e) {
+        console.error("Failed to parse state payload", e)
+      }
+    }
+    
+    if (!provider) {
+      provider = state === "github" ? "github" : "google"
+    }
 
     // Clean the URL immediately
     window.history.replaceState({}, "", "/login")
@@ -89,7 +105,7 @@ function AuthPageContent() {
         const res = await fetch(`${apiUrl}/auth/${provider}/callback`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
+          body: JSON.stringify({ code, state }),
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.detail || `${provider} sign-in failed`)
@@ -133,6 +149,9 @@ function AuthPageContent() {
     setIsGoogleLoading(true)
     setError("")
     try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("oauth_provider", "google")
+      }
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
       const res = await fetch(`${apiUrl}/auth/google/login`)
       const data = await res.json()
@@ -149,6 +168,9 @@ function AuthPageContent() {
     setIsGitHubLoading(true)
     setError("")
     try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("oauth_provider", "github")
+      }
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
       const res = await fetch(`${apiUrl}/auth/github/login`)
       const data = await res.json()

@@ -8,8 +8,9 @@ Flow:
 import urllib.parse
 from datetime import datetime
 
-import httpx
 from fastapi import APIRouter, HTTPException, status
+from src.core.http import get_http_client
+from jose import jwt, JWTError
 
 from src.core.config import settings
 from src.core.security import create_access_token
@@ -43,11 +44,21 @@ async def github_login():
             detail="GitHub OAuth is not configured (GITHUB_CLIENT_ID missing)",
         )
 
+    # Generate a cryptographically signed state parameter to prevent CSRF
+    from datetime import timedelta
+    import os
+    state_payload = {
+        "provider": "github",
+        "exp": datetime.utcnow() + timedelta(minutes=15),
+        "nonce": os.urandom(16).hex(),
+    }
+    signed_state = jwt.encode(state_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
     params = {
         "client_id": settings.GITHUB_CLIENT_ID,
         "redirect_uri": settings.REDIRECT_URI,
         "scope": "read:user user:email",
-        "state": "github",  # Used by frontend to route callback to the right provider
+        "state": signed_state,  # Signed state token used by callback and frontend
     }
     url = f"{GITHUB_AUTH_URL}?{urllib.parse.urlencode(params)}"
     return {"authorization_url": url}
@@ -60,10 +71,30 @@ async def github_callback(payload: dict):
     from GitHub API, upserts the user in MongoDB, and returns a JWT.
     """
     code = payload.get("code")
+    state = payload.get("state")
     if not code:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Authorization code is required",
+        )
+    if not state:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="State parameter is required to prevent CSRF",
+        )
+
+    # Verify signed state parameter to prevent CSRF
+    try:
+        decoded_state = jwt.decode(state, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if decoded_state.get("provider") != "github":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid state provider",
+            )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired OAuth state parameter (anti-CSRF failure)",
         )
 
     # ── Exchange code for access token ────────────────────────────────────
@@ -74,12 +105,12 @@ async def github_callback(payload: dict):
         "redirect_uri": settings.REDIRECT_URI,
     }
 
-    async with httpx.AsyncClient() as client:
-        token_response = await client.post(
-            GITHUB_TOKEN_URL,
-            data=token_data,
-            headers={"Accept": "application/json"},
-        )
+    client = get_http_client()
+    token_response = await client.post(
+        GITHUB_TOKEN_URL,
+        data=token_data,
+        headers={"Accept": "application/json"},
+    )
 
     if token_response.status_code != 200:
         logger.error(f"GitHub token exchange failed: {token_response.text}")
@@ -105,8 +136,7 @@ async def github_callback(payload: dict):
         "Accept": "application/json",
     }
 
-    async with httpx.AsyncClient() as client:
-        user_response = await client.get(GITHUB_USER_URL, headers=headers)
+    user_response = await client.get(GITHUB_USER_URL, headers=headers)
 
     if user_response.status_code != 200:
         logger.error(f"GitHub user info fetch failed: {user_response.text}")
@@ -117,31 +147,28 @@ async def github_callback(payload: dict):
 
     github_user = user_response.json()
 
-    # ── Get email (may be private) ────────────────────────────────────────
-    email = github_user.get("email")
-    if not email:
-        # Fetch from /user/emails endpoint
-        async with httpx.AsyncClient() as client:
-            emails_response = await client.get(GITHUB_EMAILS_URL, headers=headers)
+    # ── Get verified email from GitHub API ────────────────────────────────
+    email = None
+    emails_response = await client.get(GITHUB_EMAILS_URL, headers=headers)
 
-        if emails_response.status_code == 200:
-            emails = emails_response.json()
-            # Prefer primary verified email
+    if emails_response.status_code == 200:
+        emails = emails_response.json()
+        # Prefer primary verified email
+        for e in emails:
+            if e.get("primary") and e.get("verified"):
+                email = e["email"]
+                break
+        # Fallback to any verified email
+        if not email:
             for e in emails:
-                if e.get("primary") and e.get("verified"):
+                if e.get("verified"):
                     email = e["email"]
                     break
-            # Fallback to any verified email
-            if not email:
-                for e in emails:
-                    if e.get("verified"):
-                        email = e["email"]
-                        break
 
     if not email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Could not retrieve email from GitHub. Please make your email public in GitHub settings.",
+            detail="Could not retrieve a verified email from GitHub. Please verify your email address on GitHub.",
         )
 
     # ── Upsert user in MongoDB ────────────────────────────────────────────

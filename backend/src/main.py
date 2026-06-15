@@ -86,6 +86,12 @@ async def lifespan(app: FastAPI):
 
     logger.info("Application ready [OK]")
     yield
+    try:
+        from src.core.http import close_http_client
+        await close_http_client()
+        logger.info("[OK] Shared HTTP client closed")
+    except Exception as e:
+        logger.warning(f"Failed to close shared HTTP client: {e}")
     logger.info("Application shutdown complete")
 
 
