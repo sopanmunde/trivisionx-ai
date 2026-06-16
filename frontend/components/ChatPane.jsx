@@ -198,7 +198,7 @@ const ChatPane = forwardRef(function ChatPane(
   if (!conversation) return null;
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col bg-white dark:bg-[#212121]">
+    <div className="flex h-full min-h-0 flex-1 flex-col bg-white dark:bg-zinc-950">
       {messages.length === 0 ? (
         /* ── ChatGPT Style Centered Empty State ── */
         <div className="flex flex-1 flex-col justify-between overflow-y-auto px-4 py-8">
@@ -267,7 +267,7 @@ const ChatPane = forwardRef(function ChatPane(
                     <Button
                       variant="outline"
                       onClick={() => handleSuggestion(s.label)}
-                      className="group rounded-full bg-background/50 backdrop-blur-sm shadow-sm transition-all hover:bg-background border-border h-9"
+                      className="group rounded-full bg-background/50 backdrop-blur-sm shadow-sm transition-all hover:bg-background border-border dark:bg-zinc-900/40 dark:border-zinc-800/80 dark:hover:bg-zinc-900/80 h-9"
                     >
                       {s.icon && (
                         <s.icon className="mr-2 h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />

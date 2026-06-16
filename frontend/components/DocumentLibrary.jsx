@@ -17,6 +17,7 @@ import { Button } from "./ui/button";
 import { toast } from "sonner";
 import { createPortal } from "react-dom";
 import RagPipelineVisualizer from "./RagPipelineVisualizer";
+import ModernConfirmDialog from "./ModernConfirmDialog";
 
 export default function DocumentLibrary({ open, onClose }) {
   const [documents, setDocuments] = useState([]);
@@ -28,6 +29,8 @@ export default function DocumentLibrary({ open, onClose }) {
   const fileInputRef = React.useRef(null);
 
   const [mounted, setMounted] = useState(false);
+  const [deleteDocConfirmOpen, setDeleteDocConfirmOpen] = useState(false);
+  const [docToDelete, setDocToDelete] = useState(null);
 
   useEffect(() => {
     setMounted(true);
@@ -57,8 +60,16 @@ export default function DocumentLibrary({ open, onClose }) {
     }
   };
 
-  const handleDelete = async (doc) => {
-    if (!confirm(`Are you sure you want to delete ${doc.filename}?`)) return;
+  const triggerDeleteConfirm = (doc) => {
+    setDocToDelete(doc);
+    setDeleteDocConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!docToDelete) return;
+    const doc = docToDelete;
+    setDeleteDocConfirmOpen(false);
+    setDocToDelete(null);
 
     const token = localStorage.getItem("token");
     try {
@@ -177,7 +188,7 @@ export default function DocumentLibrary({ open, onClose }) {
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            className="fixed inset-y-0 right-0 z-50 h-full w-full sm:w-[400px] sm:max-w-[400px] gap-4 border-l bg-background p-4 sm:p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right flex flex-col"
+            className="fixed inset-y-0 right-0 z-50 h-full w-full sm:w-[400px] sm:max-w-[400px] gap-4 border-l bg-background dark:border-zinc-900/80 dark:bg-zinc-950/95 dark:backdrop-blur-xl p-4 sm:p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right flex flex-col"
           >
             {/* Close Button */}
             <button
@@ -220,7 +231,7 @@ export default function DocumentLibrary({ open, onClose }) {
                     placeholder="Search documents..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 pl-8 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-9 w-full rounded-xl border border-input dark:border-zinc-800 bg-transparent px-3 py-1 pl-8 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:bg-zinc-900/20 dark:hover:border-zinc-700/80 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
                 <button
@@ -246,9 +257,9 @@ export default function DocumentLibrary({ open, onClose }) {
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : documents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                    <FileIcon className="h-5 w-5 text-muted-foreground" />
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800/80 p-8 text-center animate-in fade-in-50">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted dark:bg-zinc-900">
+                    <FileIcon className="h-5 w-5 text-muted-foreground dark:text-zinc-400" />
                   </div>
                   <h3 className="mt-4 text-sm font-semibold">No documents uploaded</h3>
                   <p className="mt-2 text-sm text-muted-foreground max-w-[250px]">
@@ -262,10 +273,10 @@ export default function DocumentLibrary({ open, onClose }) {
                       key={doc.id}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="group flex items-center justify-between rounded-xl border bg-card text-card-foreground shadow-sm p-4 transition-colors hover:bg-accent hover:text-accent-foreground"
+                      className="group flex items-center justify-between rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-card dark:bg-zinc-900/40 text-card-foreground shadow-sm p-4 transition-colors hover:bg-accent dark:hover:bg-zinc-900/80 hover:text-accent-foreground"
                     >
                       <div className="flex items-center gap-4 overflow-hidden">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-background">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border dark:border-zinc-800 bg-background dark:bg-zinc-950">
                           <FileText className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div className="overflow-hidden">
@@ -283,8 +294,8 @@ export default function DocumentLibrary({ open, onClose }) {
                         </div>
                       </div>
                       <button
-                        onClick={() => handleDelete(doc)}
-                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-destructive hover:text-destructive-foreground h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100"
+                        onClick={() => triggerDeleteConfirm(doc)}
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-destructive hover:text-destructive-foreground h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete</span>
@@ -300,6 +311,16 @@ export default function DocumentLibrary({ open, onClose }) {
               )}
             </div>
           </motion.div>
+          
+          <ModernConfirmDialog
+            isOpen={deleteDocConfirmOpen}
+            onClose={() => { setDeleteDocConfirmOpen(false); setDocToDelete(null); }}
+            onConfirm={confirmDelete}
+            title="Delete Document?"
+            description={`Are you sure you want to permanently delete "${docToDelete?.filename || "this document"}"? This will remove all parsed text chunks.`}
+            confirmText="Delete"
+            variant="destructive"
+          />
         </div>
       )}
     </AnimatePresence>,

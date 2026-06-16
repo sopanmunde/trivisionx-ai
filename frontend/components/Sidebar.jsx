@@ -67,7 +67,7 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
       initial={{ width: 260 }}
       animate={{ width: 52 }}
       transition={{ type: "spring", stiffness: 300, damping: 32 }}
-      className="z-50 flex h-full shrink-0 flex-col border-r border-white/40 bg-white/60 backdrop-blur-xl dark:border-white/[0.06] dark:bg-zinc-950/80"
+      className="z-50 flex h-full shrink-0 flex-col border-r border-white/40 bg-white/60 backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/90"
     >
       <div className="flex items-center justify-center border-b border-white/[0.06] px-1.5 py-3">
         <button
@@ -116,7 +116,7 @@ function AccordionSection({ id, icon, title, badge, isOpen, onToggle, addAction,
           aria-expanded={isOpen}
           aria-controls={`acc-panel-${id}`}
           onClick={onToggle}
-          className="group relative flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-150 select-none hover:bg-zinc-100 dark:hover:bg-white/[0.05] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-violet-500/50"
+          className="group relative flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-150 select-none hover:bg-zinc-100 dark:hover:bg-zinc-900/60 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-violet-500/50"
         >
           {/* Icon */}
           <span className="shrink-0 text-zinc-500 group-hover:text-zinc-300 transition-colors">
@@ -130,7 +130,7 @@ function AccordionSection({ id, icon, title, badge, isOpen, onToggle, addAction,
 
           {/* Count badge */}
           {badge > 0 && (
-            <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-zinc-200/50 dark:bg-white/[0.08] px-1 text-[9px] font-bold tabular-nums text-zinc-500 group-hover:bg-zinc-200 group-hover:text-zinc-600 dark:group-hover:bg-white/[0.12] dark:group-hover:text-zinc-400 transition-colors">
+            <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-zinc-200/50 dark:bg-zinc-900/40 px-1 text-[9px] font-bold tabular-nums text-zinc-500 group-hover:bg-zinc-200 group-hover:text-zinc-600 dark:group-hover:bg-zinc-800/60 dark:group-hover:text-zinc-400 transition-colors">
               {badge}
             </span>
           )}
@@ -220,7 +220,7 @@ const AddBtn = forwardRef(({ title, ...props }, ref) => {
       {...props}
       aria-label={title}
       title={title}
-      className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-zinc-600 transition-all hover:bg-zinc-200 hover:text-zinc-800 dark:hover:bg-white/[0.08] dark:hover:text-zinc-300 active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-violet-500/50"
+      className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-zinc-600 transition-all hover:bg-zinc-200 hover:text-zinc-800 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-300 active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-violet-500/50"
     >
       <Plus className="h-3 w-3" />
     </button>
@@ -341,8 +341,8 @@ export default function Sidebar({
             key="sidebar"
             className={cls(
               "z-50 flex h-full w-[260px] shrink-0 flex-col",
-              "border-r border-white/50 bg-white/70 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-              "dark:border-white/[0.06] dark:bg-zinc-950/80 dark:backdrop-blur-xl",
+               "border-r border-white/50 bg-white/70 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              "dark:border-zinc-900/80 dark:bg-zinc-950/90 dark:backdrop-blur-xl",
               "fixed inset-y-0 left-0 md:static",
               open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
               "shadow-[1px_0_20px_rgba(0,0,0,0.06)] md:shadow-[1px_0_20px_rgba(0,0,0,0.04)]",
@@ -385,7 +385,7 @@ export default function Sidebar({
               <button
                 onClick={createNewChat}
                 aria-label="Start new chat"
-                className="group relative flex w-full items-center gap-2.5 overflow-hidden rounded-xl border border-zinc-200/50 bg-white/50 px-3 py-2 text-left transition-all duration-200 hover:border-zinc-300 hover:bg-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-violet-500/50 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:border-white/[0.12] dark:hover:bg-white/[0.07]"
+                className="group relative flex w-full items-center gap-2.5 overflow-hidden rounded-xl border border-zinc-200/50 bg-white/50 px-3 py-2 text-left transition-all duration-200 hover:border-zinc-300 hover:bg-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-violet-500/50 dark:border-zinc-800/80 dark:bg-zinc-900/40 dark:hover:border-zinc-700/80 dark:hover:bg-zinc-900/80"
               >
                 <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" />
                 <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-violet-500/80 to-blue-500/80 text-white shadow-sm shrink-0">
@@ -413,7 +413,7 @@ export default function Sidebar({
                     onChange={e => setQuery(e.target.value)}
                     placeholder="Search chats…"
                     aria-label="Search conversations"
-                    className="w-full cursor-pointer rounded-xl border border-zinc-200/50 bg-white/50 py-1.5 pl-8 pr-3 text-[12.5px] text-zinc-600 placeholder:text-zinc-400 outline-none transition-all hover:border-zinc-300 hover:bg-white focus:border-violet-300 focus:bg-white focus:text-zinc-800 dark:border-white/[0.06] dark:bg-white/[0.03] dark:text-zinc-400 dark:placeholder:text-zinc-600 dark:hover:border-white/[0.10] dark:hover:bg-white/[0.05] dark:focus:border-white/[0.10] dark:focus:bg-white/[0.05] dark:focus:text-zinc-300 dark:focus:placeholder:text-zinc-500"
+                    className="w-full cursor-pointer rounded-xl border border-zinc-200/50 bg-white/50 py-1.5 pl-8 pr-3 text-[12.5px] text-zinc-600 placeholder:text-zinc-400 outline-none transition-all hover:border-zinc-300 hover:bg-white focus:border-violet-300 focus:bg-white focus:text-zinc-800 dark:border-zinc-800/80 dark:bg-zinc-900/20 dark:text-zinc-400 dark:placeholder:text-zinc-600 dark:hover:border-zinc-700/80 dark:hover:bg-zinc-900/40 dark:focus:border-zinc-700 dark:focus:bg-zinc-900/50 dark:focus:text-zinc-300 dark:focus:placeholder:text-zinc-500"
                     readOnly
                   />
                 </div>
@@ -560,13 +560,13 @@ export default function Sidebar({
                     "border border-zinc-200/50 bg-white/50 [backdrop-filter:blur(20px)]",
                     "shadow-[0_1px_3px_rgba(0,0,0,0.05)]",
                     // Dark
-                    "dark:border-white/[0.08] dark:bg-white/[0.04]",
+                    "dark:border-zinc-800/80 dark:bg-zinc-900/40",
                     "dark:shadow-[0_1px_0_0_rgba(255,255,255,0.04),inset_0_1px_0_rgba(255,255,255,0.04)]",
                     // Hover
                     "transition-all duration-300",
                     "hover:-translate-y-px hover:border-zinc-300/80 hover:bg-white",
                     "hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]",
-                    "dark:hover:border-white/[0.12] dark:hover:bg-white/[0.07]",
+                    "dark:hover:border-zinc-700/80 dark:hover:bg-zinc-900/80",
                     "dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06)]",
                     "active:scale-[0.98] active:translate-y-0",
                     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-violet-500/50",

@@ -70,7 +70,7 @@ export default function SearchPopover({
         side="right"
         align="start"
         sideOffset={12}
-        className="p-0 w-[360px] overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/95 shadow-2xl backdrop-blur-xl dark:border-white/[0.08] dark:bg-zinc-900/95 z-[9999]"
+        className="p-0 w-[360px] overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/95 shadow-2xl backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/95 z-[9999]"
       >
         <AnimatePresence>
           {open && (
@@ -80,7 +80,7 @@ export default function SearchPopover({
               exit={{ opacity: 0, scale: 0.96, x: -8 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
             >
-              <div className="p-3 border-b border-zinc-200/50 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50">
+              <div className="p-3 border-b border-zinc-200/50 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/20">
                 <div className="relative group">
                   <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 transition-colors group-focus-within:text-violet-500 dark:group-focus-within:text-violet-400" />
                   <input
@@ -98,7 +98,7 @@ export default function SearchPopover({
                 {/* New Chat Quick Action */}
                 <button
                   onClick={handleNewChat}
-                  className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-all hover:bg-zinc-100 dark:hover:bg-white/[0.06] active:scale-[0.98]"
+                  className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900/60 active:scale-[0.98]"
                 >
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white border border-zinc-200/80 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 group-hover:text-violet-500 dark:group-hover:text-violet-400 transition-colors">
                     <Plus className="h-3.5 w-3.5" />
@@ -119,7 +119,7 @@ export default function SearchPopover({
                           <button
                             key={conv.id}
                             onClick={() => handleSelectConversation(conv.id)}
-                            className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-all hover:bg-zinc-100 dark:hover:bg-white/[0.06] active:scale-[0.98]"
+                            className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900/60 active:scale-[0.98]"
                           >
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-50 border border-zinc-100 dark:border-zinc-800 dark:bg-zinc-800/50 text-zinc-400 transition-colors group-hover:bg-white group-hover:border-zinc-200 dark:group-hover:bg-zinc-800">
                               <Clock className="h-3.5 w-3.5" />

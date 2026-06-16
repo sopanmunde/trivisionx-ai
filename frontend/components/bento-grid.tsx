@@ -2,9 +2,9 @@
 
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
-import { 
-  Bot, Search, Brain, FileText, Code, Sparkles, Cpu, Database, 
-  GitMerge, Terminal, FileCheck, Activity, Play, CheckCircle2 
+import {
+  Bot, Search, Brain, FileText, Code, Sparkles, Cpu, Database,
+  GitMerge, Terminal, FileCheck, Activity, Play, CheckCircle2
 } from "lucide-react";
 
 // ── 1. Advanced Agent Graph Orchestration (SVG Animated) ─────────────────
@@ -112,7 +112,7 @@ function AgentWorkflowVisual() {
 
           {/* Node Circles and Labels */}
           {nodes.map((node) => {
-            const isActive = 
+            const isActive =
               (node.id === "planner" && step === 1) ||
               (node.id === "retriever" && step === 2) ||
               (node.id === "coder" && step === 3) ||
@@ -149,9 +149,8 @@ function AgentWorkflowVisual() {
                   x={node.x}
                   y={node.y + 20}
                   textAnchor="middle"
-                  className={`text-[9px] font-mono select-none font-medium transition-colors duration-300 ${
-                    isActive ? node.color + " font-bold" : "fill-zinc-500"
-                  }`}
+                  className={`text-[9px] font-mono select-none font-medium transition-colors duration-300 ${isActive ? node.color + " font-bold" : "fill-zinc-500"
+                    }`}
                   fill={isActive ? "currentColor" : "#71717a"}
                 >
                   {node.label}
@@ -233,11 +232,10 @@ function RetrievalVisual() {
           <motion.div
             key={chunk.id}
             animate={active === i ? { opacity: 1, x: 4 } : { opacity: 0.4, x: 0 }}
-            className={`p-2 rounded border transition-all ${
-              active === i
+            className={`p-2 rounded border transition-all ${active === i
                 ? "border-purple-500/30 bg-purple-500/5 text-purple-400"
                 : "border-zinc-800 bg-transparent text-zinc-500"
-            }`}
+              }`}
           >
             <div className="flex justify-between items-center text-[10px]">
               <span className="font-bold flex items-center gap-1">
@@ -317,11 +315,11 @@ function ReportVisual() {
           <span>100% (4/4)</span>
         </div>
         <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
-          <motion.div 
+          <motion.div
             initial={{ width: 0 }}
             animate={{ width: "100%" }}
             transition={{ duration: 1.5 }}
-            className="h-full bg-purple-500" 
+            className="h-full bg-purple-500"
           />
         </div>
         <div className="flex flex-wrap gap-1 mt-2 pt-1 border-t border-zinc-900">
@@ -373,7 +371,7 @@ function CodingLoopVisual() {
           <Terminal className="w-2.5 h-2.5 text-purple-400" />
           agent_test.py
         </div>
-        <pre className="text-purple-400/90 whitespace-pre leading-relaxed">{codeSnippet}</pre>
+        <pre className="text-purple-400/90 whitespace-pre leading-relaxed h-[56px]">{codeSnippet}</pre>
         <span className="w-1 h-3 bg-purple-400 inline-block animate-pulse" />
       </div>
 

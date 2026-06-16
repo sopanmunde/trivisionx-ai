@@ -56,7 +56,7 @@ function MenuItem({
       className={`group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left transition-all duration-150 ${Component === motion.button ? "active:scale-[0.98]" : ""}
         ${danger
           ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
-          : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/80 dark:hover:bg-white/[0.06]"
+          : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/80 dark:hover:bg-zinc-900/60"
         } ${className}`}
     >
       <div
@@ -140,7 +140,7 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
         <PopoverTrigger asChild>{children}</PopoverTrigger>
 
         <PopoverContent
-          className="w-64 p-0 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
+          className="w-64 p-0 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800/80 dark:bg-zinc-950"
           align="start"
           side="top"
           sideOffset={10}
@@ -155,7 +155,7 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                 transition={{ duration: 0.15, ease: "easeOut" }}
               >
                 {/* ── Profile header ── */}
-                <div className="px-3.5 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div className="px-3.5 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/20">
                   <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 dark:bg-zinc-800 text-[14px] font-bold text-white shadow-sm border border-zinc-200 dark:border-zinc-700">

@@ -12,7 +12,7 @@ import { Footer } from "@/components/footer"
 export default function Home() {
   return (
     <SmoothScroll>
-      <main className="min-h-screen bg-background text-foreground transition-colors duration-300">
+      <main className="dark min-h-screen bg-background text-foreground transition-colors duration-300">
         <Navbar />
         <Hero />
         <LogoMarquee />

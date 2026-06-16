@@ -20,7 +20,7 @@ function CodeBlock({ children, className, ...props }) {
   };
 
   return (
-    <div className="group/code relative my-3 overflow-hidden rounded-xl border border-zinc-200/80 bg-zinc-950 shadow-sm dark:border-zinc-700/60">
+    <div className="group/code relative my-3 overflow-hidden rounded-xl border border-zinc-200/80 bg-zinc-950 shadow-sm dark:border-zinc-800/80">
       {/* Language tag + Copy button */}
       <div className="flex items-center justify-between border-b border-zinc-800/60 bg-zinc-900 px-4 py-2">
         <span className="text-[11px] font-medium text-zinc-500">
@@ -85,8 +85,8 @@ export default function Message({ role, content, sources, quality_score, childre
         className={cls(
           "max-w-[95%] sm:max-w-[85%] text-[14.5px] leading-relaxed relative group/msg transition-all duration-300",
           isUser
-            ? "rounded-2xl rounded-tr-sm bg-zinc-100/80 px-4 py-3 text-zinc-900 shadow-sm border border-zinc-200/60 dark:bg-zinc-800/40 dark:text-zinc-100 dark:border-zinc-700/50 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md transition-all duration-300"
-            : "rounded-2xl rounded-tl-sm bg-white px-4 py-3 text-zinc-900 shadow-sm border border-zinc-200/80 dark:bg-zinc-900/60 dark:text-zinc-100 dark:border-zinc-800/80 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all duration-300",
+            ? "rounded-2xl rounded-tr-sm bg-zinc-100/80 px-4 py-3 text-zinc-900 shadow-sm border border-zinc-200/60 dark:bg-zinc-900/20 dark:text-zinc-100 dark:border-zinc-800/60 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all duration-300"
+            : "rounded-2xl rounded-tl-sm bg-white px-4 py-3 text-zinc-900 shadow-sm border border-zinc-200/80 dark:bg-zinc-900/40 dark:text-zinc-100 dark:border-zinc-800/80 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all duration-300",
         )}
       >
         {content !== undefined ? (
@@ -141,7 +141,7 @@ export default function Message({ role, content, sources, quality_score, childre
                     {sources.map((src, i) => (
                       <li
                         key={i}
-                        className="text-[12px] text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/60 px-2.5 py-1.5 rounded-md border border-zinc-100 dark:border-zinc-800 flex items-start gap-2"
+                        className="text-[12px] text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900/40 px-2.5 py-1.5 rounded-md border border-zinc-100 dark:border-zinc-900/80 flex items-start gap-2"
                       >
                         <span className="shrink-0 mt-0.5 w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
                           {i + 1}

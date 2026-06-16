@@ -12,6 +12,7 @@ import {
 import ConversationRow from "./ConversationRow";
 import { motion, AnimatePresence } from "framer-motion";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import ModernConfirmDialog from "./ModernConfirmDialog";
 
 export default function FolderRow({
   name,
@@ -32,6 +33,7 @@ export default function FolderRow({
 
   // Support both controlled (isExpanded/onToggle) and local state
   const [localExpanded, setLocalExpanded] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const expanded = isExpanded !== undefined ? isExpanded : localExpanded;
   const handleToggle = () => {
     if (onToggle) onToggle();
@@ -47,21 +49,20 @@ export default function FolderRow({
     setOpen(false);
   };
 
-  const handleDelete = (e) => {
+  const handleDeleteTrigger = (e) => {
     e.stopPropagation();
-    if (
-      confirm(
-        `Are you sure you want to delete the folder "${name}"? This will move all conversations to the root level.`,
-      )
-    ) {
-      onDeleteFolder?.(name);
-    }
     setOpen(false);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    setDeleteConfirmOpen(false);
+    onDeleteFolder?.(name);
   };
 
   return (
     <div className="group">
-      <div className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-all duration-200 border border-transparent hover:bg-white/40 hover:border-white/50 hover:shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:hover:bg-white/[0.04] dark:hover:border-white/[0.06]">
+      <div className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-all duration-200 border border-transparent hover:bg-white/40 hover:border-white/50 hover:shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:hover:bg-zinc-900/60 dark:hover:border-zinc-800/80">
         <button
           onClick={handleToggle}
           className="group/btn flex items-center gap-2 flex-1 text-left min-w-0"
@@ -98,20 +99,20 @@ export default function FolderRow({
               side="right"
               align="start"
               sideOffset={12}
-              className="w-40 p-1.5 rounded-2xl border-zinc-200/80 bg-white/95 shadow-2xl backdrop-blur-xl dark:border-white/[0.08] dark:bg-zinc-900/95 z-[9999]"
+              className="w-40 p-1.5 rounded-2xl border-zinc-200/80 bg-white/95 shadow-2xl backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/95 z-[9999]"
             >
               <div className="space-y-0.5">
                 <button
                   onClick={handleRename}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/[0.06]"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
                   Rename
                 </button>
-                <div className="my-1 h-px bg-zinc-100 dark:bg-white/[0.05]" />
+                <div className="my-1 h-px bg-zinc-100 dark:bg-zinc-800/50" />
                 <button
-                  onClick={handleDelete}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                  onClick={handleDeleteTrigger}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 cursor-pointer"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete
@@ -152,6 +153,16 @@ export default function FolderRow({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ModernConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Folder?"
+        description={`Are you sure you want to delete the folder "${name}"? This will move all conversations to the root level.`}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

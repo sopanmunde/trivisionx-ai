@@ -638,63 +638,81 @@ export default function AIAssistantUI() {
   }, [selectedId, conversations]);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-white text-zinc-900 dark:bg-[#212121] dark:text-zinc-100">
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-        sidebarCollapsed={sidebarCollapsed}
-        setSidebarCollapsed={setSidebarCollapsed}
-        conversations={conversations}
-        pinned={pinned}
-        recent={recent}
-        folders={folders}
-        folderCounts={folderCounts}
-        selectedId={selectedId}
-        onSelect={(id) => setSelectedId(id)}
-        togglePin={togglePin}
-        query={query}
-        setQuery={setQuery}
-        searchRef={searchRef}
-        createFolder={createFolder}
-        deleteFolder={deleteFolder}
-        renameFolder={renameFolder}
-        createNewChat={createNewChat}
-        templates={templates}
-        setTemplates={setTemplates}
-        onUseTemplate={handleUseTemplate}
-        onDeleteConversation={deleteConversation}
-        onRenameConversation={renameConversation}
-        user={user}
-        onUserUpdate={fetchUser}
+    <div className="relative flex h-screen w-full overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      {/* Background radial glows to match landing page */}
+      <div
+        className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none opacity-0 dark:opacity-[0.06] transition-opacity duration-300 z-0"
+        style={{
+          background:
+            "radial-gradient(ellipse, rgba(139,92,246,1) 0%, rgba(59,130,246,0.5) 40%, transparent 70%)",
+        }}
+      />
+      <div
+        className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[120px] pointer-events-none opacity-0 dark:opacity-[0.04] transition-opacity duration-300 z-0"
+        style={{
+          background:
+            "radial-gradient(ellipse, rgba(59,130,246,1) 0%, rgba(139,92,246,0.5) 40%, transparent 70%)",
+        }}
       />
 
-      <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Header
-          createNewChat={createNewChat}
+      <div className="relative z-10 flex h-full w-full overflow-hidden">
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
           sidebarCollapsed={sidebarCollapsed}
-          setSidebarOpen={setSidebarOpen}
+          setSidebarCollapsed={setSidebarCollapsed}
+          conversations={conversations}
+          pinned={pinned}
+          recent={recent}
+          folders={folders}
+          folderCounts={folderCounts}
+          selectedId={selectedId}
+          onSelect={(id) => setSelectedId(id)}
+          togglePin={togglePin}
+          query={query}
+          setQuery={setQuery}
+          searchRef={searchRef}
+          createFolder={createFolder}
+          deleteFolder={deleteFolder}
+          renameFolder={renameFolder}
+          createNewChat={createNewChat}
+          templates={templates}
+          setTemplates={setTemplates}
+          onUseTemplate={handleUseTemplate}
+          onDeleteConversation={deleteConversation}
+          onRenameConversation={renameConversation}
           user={user}
           onUserUpdate={fetchUser}
         />
-        <ChatPane
-          ref={composerRef}
-          conversation={selected}
-          onSend={(content, mode) => selected && sendMessage(selected.id, content, mode)}
-          onEditMessage={(messageId, newContent) =>
-            selected && editMessage(selected.id, messageId, newContent)
-          }
-          onResendMessage={(messageId) =>
-            selected && resendMessage(selected.id, messageId)
-          }
-          isThinking={isThinking && thinkingConvId === selected?.id}
-          onPauseThinking={pauseThinking}
-          agentState={agentState}
-          providerSwitchEvent={providerSwitchEvent}
-          onDismissProviderSwitch={() => setProviderSwitchEvent(null)}
-        />
-      </main>
+
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+          <Header
+            createNewChat={createNewChat}
+            sidebarCollapsed={sidebarCollapsed}
+            setSidebarOpen={setSidebarOpen}
+            user={user}
+            onUserUpdate={fetchUser}
+          />
+          <ChatPane
+            ref={composerRef}
+            conversation={selected}
+            onSend={(content, mode) => selected && sendMessage(selected.id, content, mode)}
+            onEditMessage={(messageId, newContent) =>
+              selected && editMessage(selected.id, messageId, newContent)
+            }
+            onResendMessage={(messageId) =>
+              selected && resendMessage(selected.id, messageId)
+            }
+            isThinking={isThinking && thinkingConvId === selected?.id}
+            onPauseThinking={pauseThinking}
+            agentState={agentState}
+            providerSwitchEvent={providerSwitchEvent}
+            onDismissProviderSwitch={() => setProviderSwitchEvent(null)}
+          />
+        </main>
+      </div>
     </div>
   );
 }

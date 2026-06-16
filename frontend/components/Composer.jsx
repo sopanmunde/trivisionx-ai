@@ -46,7 +46,7 @@ const MODES = [
 // ─── Shadcn UI style Mode Toggle ──────────────────────────────────────────────
 function ShadcnModeToggle({ mode, onChange }) {
   return (
-    <div className="flex items-center rounded-lg bg-zinc-100/80 p-0.5 dark:bg-zinc-800/80 border border-zinc-200/50 dark:border-zinc-700/50 max-w-full overflow-x-auto scrollbar-hide">
+    <div className="flex items-center rounded-lg bg-zinc-100/80 p-0.5 dark:bg-zinc-950/80 border border-zinc-200/50 dark:border-zinc-800/80 max-w-full overflow-x-auto scrollbar-hide">
       {MODES.map((m) => {
         const Icon = m.icon;
         const isActive = mode === m.id;
@@ -58,7 +58,7 @@ function ShadcnModeToggle({ mode, onChange }) {
             className={cn(
               "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-all duration-200 whitespace-nowrap",
               isActive
-                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
+                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
                 : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
             )}
             title={m.description}
@@ -104,7 +104,7 @@ function ModelSelector() {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex h-8 w-auto sm:w-[140px] max-w-[140px] items-center justify-between whitespace-nowrap rounded-md border border-transparent bg-transparent px-2.5 py-2 text-[11.5px] font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 dark:focus-visible:ring-zinc-300"
+        className="flex h-8 w-auto sm:w-[140px] max-w-[140px] items-center justify-between whitespace-nowrap rounded-md border border-transparent bg-transparent px-2.5 py-2 text-[11.5px] font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-zinc-50 dark:focus-visible:ring-zinc-300"
       >
         <span className="flex items-center gap-2 truncate">
           {typeof current?.icon === "string" ? (
@@ -126,7 +126,7 @@ function ModelSelector() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 2 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-[calc(100%+4px)] right-0 z-[9999] min-w-[12rem] overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+            className="absolute bottom-[calc(100%+4px)] right-0 z-[9999] min-w-[12rem] overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md dark:border-zinc-800/80 dark:bg-zinc-950/95 dark:text-zinc-50"
           >
             <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
               Select a model
@@ -139,7 +139,7 @@ function ModelSelector() {
                   setSelectedBot(bot.name);
                   setOpen(false);
                 }}
-                className="relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 outline-none transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                className="relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 outline-none transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-900/60 dark:hover:text-zinc-50"
               >
                 <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
                   {selectedBot === bot.name && (
@@ -237,8 +237,8 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
         className={cn(
           "mx-auto max-w-3xl rounded-2xl border bg-background transition-all duration-200",
           isFocused
-            ? "border-primary/50 shadow-[0_0_0_3px_rgba(var(--primary),0.1)]"
-            : "border-border shadow-sm",
+            ? "border-primary/50 shadow-[0_0_0_3px_rgba(var(--primary),0.1)] dark:border-zinc-700/80"
+            : "border-border shadow-sm dark:bg-zinc-900/40 dark:border-zinc-800/80 dark:backdrop-blur-sm",
         )}
       >
         {/* Top focus highlight bar */}

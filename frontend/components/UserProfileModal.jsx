@@ -25,6 +25,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "./ui/dialog";
+import ModernConfirmDialog from "./ModernConfirmDialog";
+import { toast } from "sonner";
 
 export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
   const [formData, setFormData] = useState({
@@ -39,6 +41,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
   const [success, setSuccess] = useState("");
   const [focusedField, setFocusedField] = useState(null);
   const [activeTab, setActiveTab] = useState("general");
+  const [deleteAccountConfirmOpen, setDeleteAccountConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -111,6 +114,16 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
     }
   };
 
+  const confirmDeleteAccount = () => {
+    setDeleteAccountConfirmOpen(false);
+    localStorage.removeItem("token");
+    document.cookie = "auth_token=; path=/; max-age=0";
+    toast.success("Account permanently deleted");
+    setTimeout(() => {
+      window.location.href = "/signup";
+    }, 1200);
+  };
+
   const initials =
     (
       (formData.first_name?.[0] || "") + (formData.last_name?.[0] || "")
@@ -119,9 +132,9 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
     "U";
 
   const inputClass = (field) =>
-    `w-full rounded-xl border bg-zinc-50/50 px-4 py-2.5 text-[14px] text-zinc-900 outline-none transition-all duration-200 placeholder:text-zinc-400 dark:bg-zinc-900/50 dark:text-white ${
+    `w-full rounded-xl border bg-zinc-50/50 px-4 py-2.5 text-[14px] text-zinc-900 outline-none transition-all duration-200 placeholder:text-zinc-400 dark:bg-zinc-900/20 dark:text-white ${
       focusedField === field
-        ? "border-zinc-900 ring-1 ring-zinc-900 dark:border-white dark:ring-white"
+        ? "border-zinc-900 ring-1 ring-zinc-900 dark:border-violet-500 dark:ring-violet-500/50"
         : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700"
     }`;
 
@@ -147,7 +160,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
 
 
               <div className="px-8 mb-6">
-                <div className="flex p-1 gap-1 rounded-xl bg-zinc-100/50 border border-zinc-200 dark:bg-zinc-900/50 dark:border-zinc-800">
+                <div className="flex p-1 gap-1 rounded-xl bg-zinc-100/50 border border-zinc-200 dark:bg-zinc-900/20 dark:border-zinc-800/80">
                   {tabs.map((tab) => (
                     <button
                       key={tab.id}
@@ -161,7 +174,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                       {activeTab === tab.id && (
                         <motion.div
                           layoutId="activeTabCompact"
-                          className="absolute inset-0 rounded-lg bg-white border border-zinc-200 shadow-sm dark:bg-zinc-800 dark:border-zinc-700"
+                          className="absolute inset-0 rounded-lg bg-white border border-zinc-200 shadow-sm dark:bg-zinc-800/60 dark:border-zinc-700/60"
                           transition={{
                             type: "spring",
                             stiffness: 400,
@@ -192,7 +205,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                       >
                         <div className="flex flex-col items-center py-4">
                           <div className="relative group/avatar mb-4">
-                            <div className="flex h-24 w-24 items-center justify-center rounded-[28px] bg-zinc-900 text-3xl font-bold text-white shadow-xl dark:bg-white dark:text-zinc-900">
+                            <div className="flex h-24 w-24 items-center justify-center rounded-[28px] bg-zinc-900 text-3xl font-bold text-white shadow-xl dark:bg-zinc-900 dark:border-zinc-800/80 border">
                               {initials}
                             </div>
                             <button
@@ -282,10 +295,10 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                             <button
                               key={idx}
                               type="button"
-                              className="flex w-full items-center justify-between rounded-xl px-4 py-3 hover:bg-white dark:hover:bg-zinc-800 transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 shadow-sm hover:shadow-md transition-all"
+                              className="flex w-full items-center justify-between rounded-xl px-4 py-3 hover:bg-white dark:hover:bg-zinc-900/60 transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800/80 shadow-sm hover:shadow-md transition-all"
                             >
                               <div className="flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-lg bg-white border border-zinc-200 flex items-center justify-center dark:bg-zinc-900 dark:border-zinc-700">
+                                <div className="h-9 w-9 rounded-lg bg-white border border-zinc-200 flex items-center justify-center dark:bg-zinc-950 dark:border-zinc-850">
                                   <item.icon className="h-4.5 w-4.5 text-zinc-500" />
                                 </div>
                                 <span className="text-[14px] font-bold text-zinc-800 dark:text-zinc-200">
@@ -304,7 +317,8 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                         <div className="pt-6">
                           <button
                             type="button"
-                            className="group flex w-full items-center justify-between rounded-2xl border border-red-200 bg-red-50/50 px-5 py-4 hover:bg-red-100/50 transition-all dark:border-red-900/30 dark:bg-red-950/20"
+                            onClick={() => setDeleteAccountConfirmOpen(true)}
+                            className="group flex w-full items-center justify-between rounded-2xl border border-red-200 bg-red-50/50 px-5 py-4 hover:bg-red-100/50 transition-all dark:border-red-900/30 dark:bg-red-950/20 cursor-pointer"
                           >
                             <div className="flex items-center gap-3">
                               <Trash2 className="h-4.5 w-4.5 text-red-500" />
@@ -335,14 +349,14 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                       <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 rounded-xl border border-zinc-200 bg-white py-3 text-[13px] font-bold text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 transition-all dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                        className="flex-1 rounded-xl border border-zinc-200 bg-white py-3 text-[13px] font-bold text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 transition-all dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:bg-zinc-900/80"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={isSaving}
-                        className="relative flex-[1.5] group overflow-hidden rounded-xl bg-zinc-900 py-3 text-[13px] font-bold text-white shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                        className="relative flex-[1.5] group overflow-hidden rounded-xl bg-zinc-900 py-3 text-[13px] font-bold text-white shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100"
                       >
                         <span className="relative flex items-center justify-center gap-2">
                           {isSaving ? (
@@ -360,6 +374,16 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
             </div>
         </div>
       </DialogContent>
+      
+      <ModernConfirmDialog
+        isOpen={deleteAccountConfirmOpen}
+        onClose={() => setDeleteAccountConfirmOpen(false)}
+        onConfirm={confirmDeleteAccount}
+        title="Delete Account permanently?"
+        description="Are you absolutely sure you want to delete your TriVisionX account? This action cannot be undone and you will lose all conversations and documents."
+        confirmText="Delete Account"
+        variant="destructive"
+      />
     </Dialog>
   );
 }
