@@ -68,7 +68,7 @@ async def run_rag_pipeline(
     Returns:
         {"answer": str, "citations": List[Dict], "docs": List[Document]}
     """
-    docs, citations = retrieve_with_citations(
+    docs, citations = await retrieve_with_citations(
         query=query, top_k=top_k, filter=user_filter
     )
     context_str = build_context_string(docs)
@@ -86,7 +86,7 @@ async def run_rag_pipeline(
 
     messages.append(HumanMessage(content=query))
 
-    response = llm.invoke(messages)
+    response = await llm.ainvoke(messages)
     logger.info(
         f"RAG pipeline complete: '{query[:60]}' → "
         f"{len(docs)} docs, {len(citations)} citations"

@@ -72,7 +72,7 @@ async def generate_report(
     """
     logger.info(f"Generating research report for: '{query[:60]}'")
 
-    docs, citations = retrieve_with_citations(
+    docs, citations = await retrieve_with_citations(
         query=query, top_k=top_k, filter=user_filter
     )
 
@@ -97,7 +97,7 @@ async def generate_report(
         HumanMessage(content=f"Generate the research report for: {query}"),
     ]
 
-    response = llm.invoke(messages)
+    response = await llm.ainvoke(messages)
 
     logger.info(
         f"Report generated: {len(response.content)} chars, "

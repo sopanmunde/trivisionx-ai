@@ -24,7 +24,7 @@ async def stream_rag_response(
       {"type": "done"}                         — signals completion
     """
     # Step 1: Retrieve (blocking but fast)
-    docs, citations = retrieve_with_citations(query=query, top_k=top_k, filter=user_filter)
+    docs, citations = await retrieve_with_citations(query=query, top_k=top_k, filter=user_filter)
     context_str = build_context_string(docs)
 
     # Step 2: Emit citations immediately so frontend can show them early

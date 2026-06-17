@@ -57,7 +57,7 @@ def format_citation(doc: Document, index: int) -> Dict[str, Any]:
     }
 
 
-def retrieve_with_citations(
+async def retrieve_with_citations(
     query: str,
     top_k: int = 6,
     filter: Optional[Dict] = None,
@@ -68,7 +68,7 @@ def retrieve_with_citations(
     Returns:
         (documents, citations) — parallel lists, same order as retrieval.
     """
-    docs = semantic_search(query=query, top_k=top_k, filter=filter)
+    docs = await semantic_search(query=query, top_k=top_k, filter=filter)
     citations = [format_citation(doc, i) for i, doc in enumerate(docs)]
     logger.info(
         f"Retrieved {len(docs)} docs with citations for '{query[:60]}'"

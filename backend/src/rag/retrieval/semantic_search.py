@@ -15,7 +15,7 @@ from src.core.logger import get_logger
 logger = get_logger(__name__)
 
 
-def semantic_search(
+async def semantic_search(
     query: str,
     top_k: int = 6,
     filter: Optional[Dict] = None,
@@ -36,7 +36,7 @@ def semantic_search(
         List of LangChain Documents ranked by MMR score.
     """
     retriever = get_mmr_retriever(top_k=top_k, filter=filter)
-    docs = retriever.invoke(query)
+    docs = await retriever.ainvoke(query)
     logger.info(
         f"MMR semantic search '{query[:60]}' → {len(docs)} results "
         f"(top_k={top_k}, filter={'set' if filter else 'none'})"
