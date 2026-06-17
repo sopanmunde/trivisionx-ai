@@ -130,13 +130,17 @@ async def github_callback(payload: dict):
             detail=f"GitHub OAuth error: {error_desc}",
         )
 
-    # ── Fetch user profile from GitHub API ────────────────────────────────
+    # ── Fetch user profile and emails concurrently from GitHub API ────────
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
     }
 
-    user_response = await client.get(GITHUB_USER_URL, headers=headers)
+    import asyncio
+    user_task = client.get(GITHUB_USER_URL, headers=headers)
+    emails_task = client.get(GITHUB_EMAILS_URL, headers=headers)
+
+    user_response, emails_response = await asyncio.gather(user_task, emails_task)
 
     if user_response.status_code != 200:
         logger.error(f"GitHub user info fetch failed: {user_response.text}")
@@ -149,8 +153,6 @@ async def github_callback(payload: dict):
 
     # ── Get verified email from GitHub API ────────────────────────────────
     email = None
-    emails_response = await client.get(GITHUB_EMAILS_URL, headers=headers)
-
     if emails_response.status_code == 200:
         emails = emails_response.json()
         # Prefer primary verified email

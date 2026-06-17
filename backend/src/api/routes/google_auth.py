@@ -156,10 +156,15 @@ async def google_callback(payload: dict):
 
     # ── Verify ID token ───────────────────────────────────────────────────
     try:
-        id_info = id_token.verify_oauth2_token(
-            id_token_str,
-            cached_google_request,
-            settings.GOOGLE_CLIENT_ID,
+        import asyncio
+        loop = asyncio.get_running_loop()
+        id_info = await loop.run_in_executor(
+            None,
+            lambda: id_token.verify_oauth2_token(
+                id_token_str,
+                cached_google_request,
+                settings.GOOGLE_CLIENT_ID,
+            )
         )
     except ValueError as e:
         logger.error(f"Google ID token verification failed: {e}")
