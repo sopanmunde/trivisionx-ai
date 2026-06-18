@@ -3,7 +3,7 @@ import sys
 import os
 
 # Add the backend root to the Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../../backend")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../backend")))
 
 from src.rag.embeddings.google_embeddings import get_embeddings
 
