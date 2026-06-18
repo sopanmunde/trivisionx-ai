@@ -1,10 +1,11 @@
 """Auth routes — register, login, profile management."""
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from datetime import datetime
 from src.core.security import authenticate_user, create_access_token, get_password_hash, get_current_user
 from src.schemas.user import UserCreate, UserLogin, UserUpdate, Token
 from src.database.mongodb.connection import get_database
 from src.core.constants import COLLECTION_USERS
+from src.core.limiter import limiter
 
 router = APIRouter()
 
@@ -14,7 +15,8 @@ def _users():
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(user: UserCreate):
+@limiter.limit("5/minute")
+async def register(request: Request, user: UserCreate):
     if await _users().find_one({"email": user.email}):
         raise HTTPException(status_code=409, detail="Email already registered")
 
@@ -29,7 +31,8 @@ async def register(user: UserCreate):
 
 
 @router.post("/login", response_model=Token)
-async def login(user: UserLogin):
+@limiter.limit("5/minute")
+async def login(request: Request, user: UserLogin):
     authenticated_user = await authenticate_user(user.email, user.password)
     if not authenticated_user:
         raise HTTPException(

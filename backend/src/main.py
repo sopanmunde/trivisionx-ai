@@ -24,6 +24,9 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from starlette.responses import Response
 
 from src.middleware.fastapi_compression import CompressionMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+from src.core.limiter import limiter
 
 in_flight_requests = 0
 shutdown_started = False
@@ -235,6 +238,9 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
         openapi_url="/openapi.json",
     )
+
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # ── CORS ──────────────────────────────────────────────────────────────────
     origins = [
