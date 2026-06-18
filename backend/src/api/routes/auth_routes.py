@@ -21,7 +21,7 @@ async def register(user: UserCreate):
     user_dict = user.model_dump()
     user_dict.pop("password")
     user_dict.pop("confirm_password")
-    user_dict["hashed_password"] = get_password_hash(user.password)
+    user_dict["hashed_password"] = await get_password_hash(user.password)
     user_dict["created_at"] = datetime.utcnow()
 
     await _users().insert_one(user_dict)

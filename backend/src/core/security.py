@@ -15,18 +15,24 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 def _users():
     return get_database()[COLLECTION_USERS]
 
-def get_password_hash(password: str) -> str:
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(password_hash.encode('utf-8'), salt)
-    return hashed.decode('utf-8')
+async def get_password_hash(password: str) -> str:
+    import asyncio
+    def _hash():
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password_hash.encode('utf-8'), salt)
+        return hashed.decode('utf-8')
+    return await asyncio.to_thread(_hash)
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    plain_password_hash = hashlib.sha256(plain_password.encode()).hexdigest()
-    try:
-        return bcrypt.checkpw(plain_password_hash.encode('utf-8'), hashed_password.encode('utf-8'))
-    except ValueError:
-        return False
+async def verify_password(plain_password: str, hashed_password: str) -> bool:
+    import asyncio
+    def _verify():
+        plain_password_hash = hashlib.sha256(plain_password.encode()).hexdigest()
+        try:
+            return bcrypt.checkpw(plain_password_hash.encode('utf-8'), hashed_password.encode('utf-8'))
+        except ValueError:
+            return False
+    return await asyncio.to_thread(_verify)
 
 async def get_user(email: str):
     import asyncio
@@ -42,7 +48,7 @@ async def authenticate_user(email: str, password: str):
     user = await get_user(email)
     if not user:
         return False
-    if not verify_password(password, user["hashed_password"]):
+    if not await verify_password(password, user["hashed_password"]):
         return False
     return user
 
