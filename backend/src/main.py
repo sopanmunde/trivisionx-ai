@@ -19,6 +19,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
+from src.middleware.fastapi_compression import CompressionMiddleware
+
 print("Importing config...")
 from src.core.config import settings
 from src.core.logger import get_logger
@@ -128,6 +130,11 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
     app.add_middleware(RequestLoggerMiddleware)
+    app.add_middleware(
+        CompressionMiddleware,
+        minimum_size=1000,
+        exclude_paths=["/api/chat/"],
+    )
 
     # ── Routers ───────────────────────────────────────────────────────────────
     app.include_router(auth_router,          prefix="/api/auth",                tags=["auth"])
