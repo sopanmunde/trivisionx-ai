@@ -79,7 +79,7 @@ const CHATBOTS = [
   {
     name: "Assistant",
     icon: <Asterisk className="h-3.5 w-3.5" />,
-    desc: "TriVisionX AI",
+    desc: "TriVisionX",
   },
 ];
 

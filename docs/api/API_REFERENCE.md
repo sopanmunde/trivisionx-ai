@@ -1,4 +1,4 @@
-# API Reference — TriVisionX AI Platform
+# API Reference — TriVisionX Platform
 
 > **Base URL (local):** `https://trivisionx-ai-v3ot.onrender.com`  
 > **Authentication:** Bearer JWT token in `Authorization` header  
@@ -337,7 +337,7 @@ Comprehensive dependency health check.
 {
   "status": "healthy",
   "version": "3.0.0",
-  "project": "TriVisionX AI",
+  "project": "TriVisionX",
   "total_check_ms": 45.2,
   "dependencies": {
     "mongodb": { "status": "healthy", "latency_ms": 12.3 },

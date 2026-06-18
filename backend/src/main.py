@@ -100,7 +100,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.PROJECT_NAME,
         description=(
-            "TriVisionX AI — LangGraph 5-agent pipeline · "
+            "TriVisionX — LangGraph 5-agent pipeline · "
             "Pinecone MMR retrieval · GPT-4o synthesis · MongoDB + Redis"
         ),
         version=settings.VERSION,

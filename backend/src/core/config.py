@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # ── App ──────────────────────────────────────────────────────────────────
-    PROJECT_NAME: str = "TriVisionX AI"
+    PROJECT_NAME: str = "TriVisionX"
     VERSION: str = "3.0.0"
     DEBUG: bool = False
     DEFAULT_LLM_PROVIDER: str = "google"

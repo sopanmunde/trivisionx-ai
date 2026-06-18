@@ -16,7 +16,7 @@ def build_markdown_report(
 
 **Query:** {query}  
 **Generated:** {ts}  
-**Platform:** trivisionx-TriVisionX AI
+**Platform:** trivisionx-TriVisionX
 
 ---
 

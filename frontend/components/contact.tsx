@@ -2,8 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { 
-  Mail, MessageSquare, Send, User, Check, Zap, Bot, 
+import {
+  Mail, MessageSquare, Send, User, Check, Zap, Bot,
   ArrowRight, ShieldCheck, Activity, Cpu, HelpCircle,
   Brain, GitMerge, FileText, Terminal
 } from "lucide-react";
@@ -115,7 +115,7 @@ export function ContactSection() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4"
           >
-            Connect with TriVisionX AI
+            Connect with TriVisionX
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -261,9 +261,9 @@ export function ContactSection() {
             <div className="relative w-full h-20 bg-zinc-950/40 rounded-xl border border-zinc-900 px-4 overflow-hidden flex items-center justify-between">
               {/* Connector line background */}
               <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-[2px] bg-zinc-900" />
-              
+
               {/* Connector line active progression */}
-              <div 
+              <div
                 className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-[2px]"
                 style={{ transformOrigin: "left", width: "calc(100% - 64px)" }}
               >
@@ -280,11 +280,10 @@ export function ContactSection() {
 
               {/* Node 1: Ingestion */}
               <div className="relative flex flex-col items-center gap-1 z-10">
-                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${
-                  isSubmitting 
-                    ? "border-purple-500 bg-purple-500/10 text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.25)]" 
-                    : "border-zinc-800 bg-zinc-950 text-zinc-600"
-                }`}>
+                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isSubmitting
+                  ? "border-purple-500 bg-purple-500/10 text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.25)]"
+                  : "border-zinc-800 bg-zinc-950 text-zinc-600"
+                  }`}>
                   <Mail className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-[9px] font-mono text-zinc-500 font-medium">Ingest</span>
@@ -292,11 +291,10 @@ export function ContactSection() {
 
               {/* Node 2: Classification */}
               <div className="relative flex flex-col items-center gap-1 z-10">
-                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${
-                  submitStep >= 1 
-                    ? "border-purple-500 bg-purple-500/10 text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.25)]" 
-                    : "border-zinc-800 bg-zinc-950 text-zinc-600"
-                }`}>
+                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${submitStep >= 1
+                  ? "border-purple-500 bg-purple-500/10 text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.25)]"
+                  : "border-zinc-800 bg-zinc-950 text-zinc-600"
+                  }`}>
                   <Brain className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-[9px] font-mono text-zinc-500 font-medium">Classify</span>
@@ -304,11 +302,10 @@ export function ContactSection() {
 
               {/* Node 3: Routing */}
               <div className="relative flex flex-col items-center gap-1 z-10">
-                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${
-                  submitStep >= 2 
-                    ? "border-purple-500 bg-purple-500/10 text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.25)]" 
-                    : "border-zinc-800 bg-zinc-950 text-zinc-600"
-                }`}>
+                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${submitStep >= 2
+                  ? "border-purple-500 bg-purple-500/10 text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.25)]"
+                  : "border-zinc-800 bg-zinc-950 text-zinc-600"
+                  }`}>
                   <GitMerge className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-[9px] font-mono text-zinc-500 font-medium">Route</span>
@@ -316,11 +313,10 @@ export function ContactSection() {
 
               {/* Node 4: Auto-Draft */}
               <div className="relative flex flex-col items-center gap-1 z-10">
-                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${
-                  submitStep >= 3 
-                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]" 
-                    : "border-zinc-800 bg-zinc-950 text-zinc-600"
-                }`}>
+                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${submitStep >= 3
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+                  : "border-zinc-800 bg-zinc-950 text-zinc-600"
+                  }`}>
                   <FileText className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-[9px] font-mono text-zinc-500 font-medium">Draft</span>
@@ -331,9 +327,8 @@ export function ContactSection() {
             <div className="space-y-4 font-mono text-[11px]">
               {/* Ingestion step */}
               <div className="flex items-start gap-4">
-                <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
-                  isSubmitting ? "border-purple-400 bg-purple-500/10 text-purple-400" : "border-zinc-800 text-zinc-600"
-                }`}>
+                <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${isSubmitting ? "border-purple-400 bg-purple-500/10 text-purple-400" : "border-zinc-800 text-zinc-600"
+                  }`}>
                   <span className="text-[9px]">1</span>
                 </div>
                 <div className="flex-1">
@@ -353,9 +348,8 @@ export function ContactSection() {
 
               {/* Classification step */}
               <div className="flex items-start gap-4">
-                <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
-                  submitStep >= 1 ? "border-purple-400 bg-purple-500/10 text-purple-400" : "border-zinc-800 text-zinc-600"
-                }`}>
+                <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${submitStep >= 1 ? "border-purple-400 bg-purple-500/10 text-purple-400" : "border-zinc-800 text-zinc-600"
+                  }`}>
                   <span className="text-[9px]">2</span>
                 </div>
                 <div className="flex-1">
@@ -386,9 +380,8 @@ export function ContactSection() {
 
               {/* Dispatching step */}
               <div className="flex items-start gap-4">
-                <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
-                  submitStep >= 2 ? "border-purple-400 bg-purple-500/10 text-purple-400" : "border-zinc-800 text-zinc-600"
-                }`}>
+                <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${submitStep >= 2 ? "border-purple-400 bg-purple-500/10 text-purple-400" : "border-zinc-800 text-zinc-600"
+                  }`}>
                   <span className="text-[9px]">3</span>
                 </div>
                 <div className="flex-1">
@@ -412,7 +405,7 @@ export function ContactSection() {
                       <div className="flex justify-between text-zinc-500">
                         <span>Destination Resolved:</span>
                         <span className="text-purple-400 font-bold">
-                          {intent.includes("Sales") ? "sales@trivisionx.ai" : "support@trivisionx.ai"}
+                          {intent.includes("Sales") ? "sales@trivisionx" : "support@trivisionx"}
                         </span>
                       </div>
                       <div className="flex justify-between text-zinc-500">
@@ -426,9 +419,8 @@ export function ContactSection() {
 
               {/* Auto reply draft step */}
               <div className="flex items-start gap-4">
-                <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
-                  submitStep >= 3 ? "border-purple-400 bg-purple-500/10 text-purple-400" : "border-zinc-800 text-zinc-600"
-                }`}>
+                <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${submitStep >= 3 ? "border-purple-400 bg-purple-500/10 text-purple-400" : "border-zinc-800 text-zinc-600"
+                  }`}>
                   <span className="text-[9px]">4</span>
                 </div>
                 <div className="flex-1">
@@ -494,7 +486,7 @@ export function ContactSection() {
                 )}
                 {submitStep >= 2 && (
                   <div className="text-blue-400">
-                    [ENDPOINT] Directed message to database query engine ➜ {intent.includes("Sales") ? "sales@trivisionx.ai" : "support@trivisionx.ai"}
+                    [ENDPOINT] Directed message to database query engine ➜ {intent.includes("Sales") ? "sales@trivisionx" : "support@trivisionx"}
                   </div>
                 )}
                 {submitStep >= 3 && (

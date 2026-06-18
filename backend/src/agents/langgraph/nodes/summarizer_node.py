@@ -30,7 +30,7 @@ STRICT RULES:
 CONTEXT (retrieved document chunks):
 {context}"""
 
-SUMMARIZER_SYSTEM_SIMPLE = """You are TriVisionX AI, a helpful and knowledgeable AI assistant.
+SUMMARIZER_SYSTEM_SIMPLE = """You are TriVisionX, a helpful and knowledgeable AI assistant.
 
 Answer the user's question directly and clearly based on your own knowledge.
 Do not mention documents or retrieval — just give a helpful, well-structured response.

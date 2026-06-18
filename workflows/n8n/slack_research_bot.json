@@ -96,7 +96,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const report = $input.first().json;\nconst query = $('Parse Slash Command').item.json.query;\nconst preview = report.report ? report.report.substring(0, 800).trim() : 'No content generated.';\nconst citationCount = report.citations ? report.citations.length : 0;\nconst message = `🤖 *TriVisionX AI Result*\\n*Query:* ${query}\\n\\n${preview}\\n\\n_${citationCount} source(s) cited. Full report available in dashboard._`;\nreturn [{ json: { text: message, response_type: 'in_channel' } }];"
+        "jsCode": "const report = $input.first().json;\nconst query = $('Parse Slash Command').item.json.query;\nconst preview = report.report ? report.report.substring(0, 800).trim() : 'No content generated.';\nconst citationCount = report.citations ? report.citations.length : 0;\nconst message = `🤖 *TriVisionX Result*\\n*Query:* ${query}\\n\\n${preview}\\n\\n_${citationCount} source(s) cited. Full report available in dashboard._`;\nreturn [{ json: { text: message, response_type: 'in_channel' } }];"
       },
       "id": "format-response",
       "name": "Format Slack Response",

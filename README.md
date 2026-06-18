@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="docs/screenshots/logo-placeholder.png" alt="TriVisionX AI" width="120" />
+  <img src="docs/screenshots/logo-placeholder.png" alt="TriVisionX" width="120" />
 
-  <h1>🚀 TriVisionX AI Platform</h1>
+  <h1>🚀 TriVisionX Platform</h1>
 
   <p>
     <strong>Enterprise-grade AI research automation with LangGraph multi-agent orchestration,<br/>
@@ -29,7 +29,7 @@
 
 ## 🌟 Overview
 
-The **TriVisionX AI** is a production-ready AI SaaS platform that transforms how researchers and knowledge workers interact with document corpora. It brings together a **5-node LangGraph multi-agent pipeline**, **Pinecone MMR semantic retrieval**, **real-time SSE streaming**, and **citation-aware generation** to deliver an enterprise AI assistant. 
+The **TriVisionX** is a production-ready AI SaaS platform that transforms how researchers and knowledge workers interact with document corpora. It brings together a **5-node LangGraph multi-agent pipeline**, **Pinecone MMR semantic retrieval**, **real-time SSE streaming**, and **citation-aware generation** to deliver an enterprise AI assistant. 
 
 With a newly upgraded frontend leveraging **Framer Motion**, **Magic UI components**, and full mobile responsiveness, the platform offers an unparalleled, beautiful user experience.
 

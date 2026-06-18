@@ -78,7 +78,7 @@ export function Footer() {
           className="mt-16 pt-8 border-t border-zinc-900/60 flex flex-col sm:flex-row items-center justify-between gap-4"
         >
           <p className="text-xs text-zinc-500 font-mono">
-            &copy; {new Date().getFullYear()} TriVisionX AI, Inc. All rights
+            &copy; {new Date().getFullYear()} TriVisionX, Inc. All rights
             reserved.
           </p>
           <div className="flex items-center gap-6">

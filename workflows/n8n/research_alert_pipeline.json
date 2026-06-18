@@ -144,7 +144,7 @@
     {
       "parameters": {
         "channel": "={{ $env.SLACK_ALERT_CHANNEL_ID }}",
-        "text": "🔔 *Research Alert — New Content Detected*\n\n📡 *Keywords monitored:* {{ $env.ALERT_KEYWORDS }}\n🕐 *Checked at:* {{ $now.format('YYYY-MM-DD HH:mm') }}\n\nNew relevant documents have been indexed in your TriVisionX AI. Visit your dashboard to explore the latest findings.\n\n👉 {{ $env.COPILOT_DASHBOARD_URL }}/dashboard",
+        "text": "🔔 *Research Alert — New Content Detected*\n\n📡 *Keywords monitored:* {{ $env.ALERT_KEYWORDS }}\n🕐 *Checked at:* {{ $now.format('YYYY-MM-DD HH:mm') }}\n\nNew relevant documents have been indexed in your TriVisionX. Visit your dashboard to explore the latest findings.\n\n👉 {{ $env.COPILOT_DASHBOARD_URL }}/dashboard",
         "otherOptions": {}
       },
       "id": "slack-alert",
