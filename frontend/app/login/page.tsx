@@ -198,6 +198,14 @@ function BackgroundFlows() {
   )
 }
 
+function getFriendlyErrorMessage(err: Error, defaultMsg: string): string {
+  const msg = err.message || "";
+  if (msg.includes("Failed to fetch") || msg.includes("Load failed") || msg.includes("fetch failed")) {
+    return "Unable to connect to the server. Please check if the API backend is running.";
+  }
+  return msg || defaultMsg;
+}
+
 function AuthPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -259,7 +267,7 @@ function AuthPageContent() {
         router.push("/dashboard")
       } catch (err) {
         const e = err as Error
-        setError(e.message || `${provider} sign-in failed. Please try again.`)
+        setError(getFriendlyErrorMessage(e, `${provider} sign-in failed. Please try again.`))
       } finally {
         setIsSsoLoading(false)
         setIsGoogleLoading(false)
@@ -303,7 +311,7 @@ function AuthPageContent() {
       window.location.href = data.authorization_url
     } catch (err) {
       const e = err as Error
-      setError(e.message || "Google sign-in failed. Please try again.")
+      setError(getFriendlyErrorMessage(e, "Google sign-in failed. Please try again."))
       setIsGoogleLoading(false)
     }
   }
@@ -322,7 +330,7 @@ function AuthPageContent() {
       window.location.href = data.authorization_url
     } catch (err) {
       const e = err as Error
-      setError(e.message || "GitHub sign-in failed. Please try again.")
+      setError(getFriendlyErrorMessage(e, "GitHub sign-in failed. Please try again."))
       setIsGitHubLoading(false)
     }
   }
@@ -373,7 +381,7 @@ function AuthPageContent() {
       }
     } catch (err) {
       const error = err as Error
-      setError(error.message || "Something went wrong. Please try again.")
+      setError(getFriendlyErrorMessage(error, "Something went wrong. Please try again."))
     } finally {
       setIsLoading(false)
     }
