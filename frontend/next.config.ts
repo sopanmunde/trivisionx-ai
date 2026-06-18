@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+
   },
   output: "standalone", // Uncomment to enable standalone mode for Docker
   turbopack: {
