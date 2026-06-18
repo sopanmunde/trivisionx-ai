@@ -96,7 +96,7 @@ export default function ComposerActionsPopover({ children }) {
     formData.append("file", file);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api";
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
       const res = await fetch(`${apiUrl}/documents/upload/stream`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },

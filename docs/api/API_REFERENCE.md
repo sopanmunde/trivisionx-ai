@@ -1,9 +1,9 @@
 # API Reference — TriVisionX Platform
 
-> **Base URL (local):** `https://trivisionx-ai-v3ot.onrender.com`  
+> **Base URL (local):** `https://trivisionx-ai.onrender.com`  
 > **Authentication:** Bearer JWT token in `Authorization` header  
-> **OpenAPI UI:** `https://trivisionx-ai-v3ot.onrender.com/docs`  
-> **ReDoc:** `https://trivisionx-ai-v3ot.onrender.com/redoc`
+> **OpenAPI UI:** `https://trivisionx-ai.onrender.com/docs`  
+> **ReDoc:** `https://trivisionx-ai.onrender.com/redoc`
 
 ---
 

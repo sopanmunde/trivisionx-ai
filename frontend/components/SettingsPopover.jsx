@@ -99,7 +99,7 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (!token) return;
     fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"}/me`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api"}/me`,
       {
         headers: { Authorization: `Bearer ${token}` },
       },

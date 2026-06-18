@@ -19,7 +19,7 @@ async def get_password_hash(password: str) -> str:
     import asyncio
     def _hash():
         password_hash = hashlib.sha256(password.encode()).hexdigest()
-        salt = bcrypt.gensalt()
+        salt = bcrypt.gensalt(rounds=10)
         hashed = bcrypt.hashpw(password_hash.encode('utf-8'), salt)
         return hashed.decode('utf-8')
     return await asyncio.to_thread(_hash)

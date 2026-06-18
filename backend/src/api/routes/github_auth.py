@@ -8,7 +8,7 @@ Flow:
 import urllib.parse
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from src.core.http import get_http_client
 from jose import jwt, JWTError
 
@@ -33,7 +33,7 @@ def _users():
 
 
 @router.get("/login")
-async def github_login():
+async def github_login(request: Request):
     """
     Returns the GitHub OAuth2 authorization URL.
     The frontend should redirect the user to this URL.
@@ -44,11 +44,23 @@ async def github_login():
             detail="GitHub OAuth is not configured (GITHUB_CLIENT_ID missing)",
         )
 
+    # Determine dynamic redirect URI based on referer/origin
+    redirect_uri = settings.REDIRECT_URI
+    referer = request.headers.get("referer")
+    if referer:
+        try:
+            parsed = urllib.parse.urlparse(referer)
+            if parsed.netloc:
+                redirect_uri = f"{parsed.scheme}://{parsed.netloc}/login"
+        except Exception:
+            pass
+
     # Generate a cryptographically signed state parameter to prevent CSRF
     from datetime import timedelta
     import os
     state_payload = {
         "provider": "github",
+        "redirect_uri": redirect_uri,
         "exp": datetime.utcnow() + timedelta(minutes=15),
         "nonce": os.urandom(16).hex(),
     }
@@ -56,7 +68,7 @@ async def github_login():
 
     params = {
         "client_id": settings.GITHUB_CLIENT_ID,
-        "redirect_uri": settings.REDIRECT_URI,
+        "redirect_uri": redirect_uri,
         "scope": "read:user user:email",
         "state": signed_state,  # Signed state token used by callback and frontend
     }
@@ -91,6 +103,7 @@ async def github_callback(payload: dict):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid state provider",
             )
+        redirect_uri = decoded_state.get("redirect_uri", settings.REDIRECT_URI)
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -102,7 +115,7 @@ async def github_callback(payload: dict):
         "client_id": settings.GITHUB_CLIENT_ID,
         "client_secret": settings.GITHUB_CLIENT_SECRET,
         "code": code,
-        "redirect_uri": settings.REDIRECT_URI,
+        "redirect_uri": redirect_uri,
     }
 
     client = get_http_client()

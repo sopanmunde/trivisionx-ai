@@ -253,7 +253,7 @@ function AuthPageContent() {
       else setIsGoogleLoading(true)
       setError("")
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api"
         const res = await fetch(`${apiUrl}/auth/${provider}/callback`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -304,7 +304,7 @@ function AuthPageContent() {
       if (typeof window !== "undefined") {
         localStorage.setItem("oauth_provider", "google")
       }
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api"
       const res = await fetch(`${apiUrl}/auth/google/login`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || "Failed to get Google login URL")
@@ -323,7 +323,7 @@ function AuthPageContent() {
       if (typeof window !== "undefined") {
         localStorage.setItem("oauth_provider", "github")
       }
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api"
       const res = await fetch(`${apiUrl}/auth/github/login`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || "Failed to get GitHub login URL")
@@ -345,7 +345,7 @@ function AuthPageContent() {
     setIsLoading(true)
     try {
       if (isSignUp) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api"
         const res = await fetch(`${apiUrl}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -367,7 +367,7 @@ function AuthPageContent() {
           setForm((p) => ({ ...p, password: "", confirmPassword: "" }))
         }, 1600)
       } else {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai-v3ot.onrender.com/api"
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api"
         const res = await fetch(`${apiUrl}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

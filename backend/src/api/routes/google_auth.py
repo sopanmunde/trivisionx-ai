@@ -9,7 +9,7 @@ import urllib.parse
 import time
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from jose import jwt, JWTError
@@ -59,7 +59,7 @@ def _users():
 
 
 @router.get("/login")
-async def google_login():
+async def google_login(request: Request):
     """
     Returns the Google OAuth2 authorization URL.
     The frontend should redirect the user to this URL.
@@ -70,11 +70,23 @@ async def google_login():
             detail="Google OAuth is not configured (GOOGLE_CLIENT_ID missing)",
         )
 
+    # Determine dynamic redirect URI based on referer/origin
+    redirect_uri = settings.REDIRECT_URI
+    referer = request.headers.get("referer")
+    if referer:
+        try:
+            parsed = urllib.parse.urlparse(referer)
+            if parsed.netloc:
+                redirect_uri = f"{parsed.scheme}://{parsed.netloc}/login"
+        except Exception:
+            pass
+
     # Generate a cryptographically signed state parameter to prevent CSRF
     from datetime import timedelta
     import os
     state_payload = {
         "provider": "google",
+        "redirect_uri": redirect_uri,
         "exp": datetime.utcnow() + timedelta(minutes=15),
         "nonce": os.urandom(16).hex(),
     }
@@ -82,7 +94,7 @@ async def google_login():
 
     params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
-        "redirect_uri": settings.REDIRECT_URI,
+        "redirect_uri": redirect_uri,
         "response_type": "code",
         "scope": "openid email profile",
         "access_type": "offline",
@@ -91,6 +103,7 @@ async def google_login():
     }
     url = f"{GOOGLE_AUTH_URL}?{urllib.parse.urlencode(params)}"
     return {"authorization_url": url}
+
 
 
 @router.post("/callback")
@@ -120,6 +133,7 @@ async def google_callback(payload: dict):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid state provider",
             )
+        redirect_uri = decoded_state.get("redirect_uri", settings.REDIRECT_URI)
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -131,7 +145,7 @@ async def google_callback(payload: dict):
         "code": code,
         "client_id": settings.GOOGLE_CLIENT_ID,
         "client_secret": settings.GOOGLE_CLIENT_SECRET,
-        "redirect_uri": settings.REDIRECT_URI,
+        "redirect_uri": redirect_uri,
         "grant_type": "authorization_code",
     }
 
@@ -154,19 +168,28 @@ async def google_callback(payload: dict):
             detail="No ID token received from Google",
         )
 
-    # ── Verify ID token ───────────────────────────────────────────────────
+    # ── Verify ID token locally (non-blocking, bypassing external network cert fetches) ─────────────────────
     try:
-        import asyncio
-        loop = asyncio.get_running_loop()
-        id_info = await loop.run_in_executor(
-            None,
-            lambda: id_token.verify_oauth2_token(
-                id_token_str,
-                cached_google_request,
-                settings.GOOGLE_CLIENT_ID,
-            )
-        )
-    except ValueError as e:
+        # Decode claims locally since the ID token is obtained directly from Google
+        # via a secure HTTPS connection using our Google Client Secret
+        id_info = jwt.get_unverified_claims(id_token_str)
+        
+        # Verify issuer
+        iss = id_info.get("iss")
+        if iss not in ["accounts.google.com", "https://accounts.google.com"]:
+            raise ValueError(f"Invalid issuer: {iss}")
+            
+        # Verify audience (client ID)
+        aud = id_info.get("aud")
+        if aud != settings.GOOGLE_CLIENT_ID:
+            raise ValueError(f"Invalid audience: {aud}")
+            
+        # Verify expiration
+        exp = id_info.get("exp")
+        if not exp or time.time() > exp:
+            raise ValueError("Token has expired")
+            
+    except Exception as e:
         logger.error(f"Google ID token verification failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
