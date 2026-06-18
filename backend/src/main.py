@@ -14,12 +14,92 @@ Architecture (matches image workflow):
     /api/health   — Health check
 """
 print("Importing main.py... Fastapi")
+import time
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.responses import Response
 
 from src.middleware.fastapi_compression import CompressionMiddleware
+
+in_flight_requests = 0
+shutdown_started = False
+
+class GracefulShutdownMiddleware:
+    """
+    Middleware that tracks the number of in-flight requests and rejects new requests
+    with a 503 Service Unavailable error once a graceful shutdown begins.
+    """
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        global in_flight_requests, shutdown_started
+        
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        if shutdown_started:
+            response = Response("Service Unavailable", status_code=503)
+            await response(scope, receive, send)
+            return
+
+        in_flight_requests += 1
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            in_flight_requests -= 1
+
+
+async def drain_inflight_requests(timeout: float):
+    """
+    Waits for all active in-flight requests to finish, up to the timeout.
+    """
+    global shutdown_started, in_flight_requests
+    shutdown_started = True
+    
+    logger = get_logger("src.main.shutdown")
+    logger.info(f"Draining in-flight requests. Currently active: {in_flight_requests}")
+    start_time = time.time()
+    
+    while in_flight_requests > 0:
+        elapsed = time.time() - start_time
+        if elapsed >= timeout:
+            logger.warning(f"Timeout reached. Force-closing remaining {in_flight_requests} requests.")
+            break
+        await asyncio.sleep(0.1)
+        
+    logger.info("In-flight requests successfully drained.")
+
+
+def register_signal_handlers():
+    """
+    Cooperatively registers SIGINT and SIGTERM handlers to intercept shutdown
+    signals without breaking Uvicorn's termination loop.
+    """
+    import signal
+    logger = get_logger("src.main.signals")
+    original_handlers = {}
+
+    def handle_signal(sig, frame):
+        logger.info(f"Received shutdown signal {sig}. Initiating graceful cleanup...")
+        # Delegate to the original uvicorn/standard signal handler so it exits properly
+        orig_handler = original_handlers.get(sig)
+        if orig_handler and callable(orig_handler):
+            orig_handler(sig, frame)
+
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        try:
+            original_handlers[sig] = signal.getsignal(sig)
+            signal.signal(sig, handle_signal)
+            logger.info(f"Cooperative signal handler registered for signal {sig}")
+        except ValueError:
+            # signal.signal only works in the main thread
+            pass
 
 print("Importing config...")
 from src.core.config import settings
@@ -51,6 +131,7 @@ async def lifespan(app: FastAPI):
     All failures are non-fatal (warnings) so the app can start degraded.
     """
     logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
+    register_signal_handlers()
 
     # MongoDB indexes
     try:
@@ -88,13 +169,56 @@ async def lifespan(app: FastAPI):
 
     logger.info("Application ready [OK]")
     yield
+    # Shutdown steps
+    logger.info("Graceful shutdown started...")
+    shutdown_start = time.time()
+    
+    # 1. Signal active SSE streams
     try:
+        from src.services.chat_service import signal_sse_shutdown
+        await signal_sse_shutdown()
+        logger.info(f"[OK] SSE streams notified in {time.time() - shutdown_start:.4f}s")
+    except Exception as e:
+        logger.warning(f"Failed to signal SSE shutdown: {e}")
+
+    # 2. Wait for in-flight requests to complete (timeout=8s, leaving 2s buffer for DB/client closes)
+    try:
+        t_start = time.time()
+        await drain_inflight_requests(timeout=8.0)
+        logger.info(f"[OK] In-flight requests drained in {time.time() - t_start:.4f}s")
+    except Exception as e:
+        logger.warning(f"Failed to drain in-flight requests: {e}")
+
+    # 3. Close MongoDB connection
+    try:
+        t_start = time.time()
+        from src.database.mongodb.connection import get_mongo_client
+        get_mongo_client().close()
+        logger.info(f"[OK] MongoDB client connection closed in {time.time() - t_start:.4f}s")
+    except Exception as e:
+        logger.warning(f"Failed to close MongoDB client: {e}")
+
+    # 4. Close Redis client connection
+    try:
+        t_start = time.time()
+        from src.core.cache import _get_client
+        client = await _get_client()
+        if client is not None:
+            await client.close()
+            logger.info(f"[OK] Redis client connection closed in {time.time() - t_start:.4f}s")
+    except Exception as e:
+        logger.warning(f"Failed to close Redis client: {e}")
+
+    # 5. Close HTTP client
+    try:
+        t_start = time.time()
         from src.core.http import close_http_client
         await close_http_client()
-        logger.info("[OK] Shared HTTP client closed")
+        logger.info(f"[OK] Shared HTTP client closed in {time.time() - t_start:.4f}s")
     except Exception as e:
         logger.warning(f"Failed to close shared HTTP client: {e}")
-    logger.info("Application shutdown complete")
+
+    logger.info(f"Shutdown complete in {time.time() - shutdown_start:.2f}s")
 
 
 def create_app() -> FastAPI:
@@ -135,6 +259,7 @@ def create_app() -> FastAPI:
         minimum_size=1000,
         exclude_paths=["/api/chat/"],
     )
+    app.add_middleware(GracefulShutdownMiddleware)
 
     # ── Routers ───────────────────────────────────────────────────────────────
     app.include_router(auth_router,          prefix="/api/auth",                tags=["auth"])

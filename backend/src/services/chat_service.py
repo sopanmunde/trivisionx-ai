@@ -29,8 +29,22 @@ from src.core.logger import get_logger
 
 logger = get_logger(__name__)
 
+# ── Active SSE Streams Registry and Shutdown Tracking ─────────────────────────
+import asyncio
+from typing import Set
 
-async def stream_chat_response(
+active_queues: Set[asyncio.Queue] = set()
+shutdown_event = asyncio.Event()
+
+async def signal_sse_shutdown():
+    shutdown_event.set()
+    logger.info(f"Signaling {len(active_queues)} active SSE streams of shutdown...")
+    # Queue sentinel for all active SSE streams to exit gracefully
+    for q in list(active_queues):
+        await q.put("server_shutdown")
+
+
+async def _stream_chat_response_impl(
     query: str,
     user_id: str,
     conversation_id: Optional[str],
@@ -278,3 +292,62 @@ async def stream_chat_response(
     except Exception as e:
         logger.error(f"Agent mode error: {e}", exc_info=True)
         yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+
+async def stream_chat_response(
+    query: str,
+    user_id: str,
+    conversation_id: Optional[str],
+    messages_collection,
+    conversations_collection,
+    mode: str = "agent",
+    workflow_type: str = "research",
+    model_provider: Optional[str] = None,
+    model_name: Optional[str] = None,
+) -> AsyncGenerator[str, None]:
+    """
+    Orchestrates Quick Mode or Agent Mode and yields SSE events.
+    Gracefully handles shutdown signaling via active queue event delivery.
+    """
+    queue = asyncio.Queue()
+    active_queues.add(queue)
+
+    async def producer():
+        try:
+            async for chunk in _stream_chat_response_impl(
+                query=query,
+                user_id=user_id,
+                conversation_id=conversation_id,
+                messages_collection=messages_collection,
+                conversations_collection=conversations_collection,
+                mode=mode,
+                workflow_type=workflow_type,
+                model_provider=model_provider,
+                model_name=model_name,
+            ):
+                await queue.put(chunk)
+            await queue.put(None)  # Sentinel for success
+        except Exception as e:
+            await queue.put(e)  # Sentinel for exception
+
+    producer_task = asyncio.create_task(producer())
+
+    try:
+        while True:
+            item = await queue.get()
+            if item is None:
+                break
+            if isinstance(item, Exception):
+                raise item
+            if item == "server_shutdown":
+                yield f"data: {json.dumps({'type': 'server_shutdown', 'message': 'Server shutting down. Please try again later.'})}\n\n"
+                break
+            yield item
+    finally:
+        active_queues.discard(queue)
+        if not producer_task.done():
+            producer_task.cancel()
+            try:
+                await producer_task
+            except asyncio.CancelledError:
+                pass
