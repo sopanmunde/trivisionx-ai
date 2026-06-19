@@ -168,27 +168,18 @@ async def google_callback(payload: dict):
             detail="No ID token received from Google",
         )
 
-    # ── Verify ID token locally (non-blocking, bypassing external network cert fetches) ─────────────────────
+    # ── Verify ID token cryptographically using Google public certificates ─────────────────────────
     try:
-        # Decode claims locally since the ID token is obtained directly from Google
-        # via a secure HTTPS connection using our Google Client Secret
-        id_info = jwt.get_unverified_claims(id_token_str)
-        
-        # Verify issuer
-        iss = id_info.get("iss")
-        if iss not in ["accounts.google.com", "https://accounts.google.com"]:
-            raise ValueError(f"Invalid issuer: {iss}")
-            
-        # Verify audience (client ID)
-        aud = id_info.get("aud")
-        if aud != settings.GOOGLE_CLIENT_ID:
-            raise ValueError(f"Invalid audience: {aud}")
-            
-        # Verify expiration
-        exp = id_info.get("exp")
-        if not exp or time.time() > exp:
-            raise ValueError("Token has expired")
-            
+        import asyncio
+        loop = asyncio.get_running_loop()
+        id_info = await loop.run_in_executor(
+            None,
+            lambda: id_token.verify_oauth2_token(
+                id_token_str,
+                cached_google_request,
+                settings.GOOGLE_CLIENT_ID,
+            )
+        )
     except Exception as e:
         logger.error(f"Google ID token verification failed: {e}")
         raise HTTPException(
