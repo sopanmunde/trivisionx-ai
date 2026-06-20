@@ -51,7 +51,7 @@ async def github_login(request: Request):
         try:
             parsed = urllib.parse.urlparse(referer)
             if parsed.netloc:
-                redirect_uri = f"{parsed.scheme}://{parsed.netloc}/dashboard"
+                redirect_uri = f"{parsed.scheme}://{parsed.netloc}/login"
         except Exception:
             pass
 

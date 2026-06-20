@@ -206,6 +206,21 @@ function getFriendlyErrorMessage(err: Error, defaultMsg: string): string {
   return msg || defaultMsg;
 }
 
+function getProviderFromParams(searchParams: any): string {
+  const state = searchParams.get("state")
+  if (!state) return "google"
+  try {
+    const parts = state.split(".")
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")))
+      return payload.provider || "google"
+    }
+  } catch (e) {
+    // Fail-safe
+  }
+  return state === "github" ? "github" : "google"
+}
+
 function AuthPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -218,34 +233,29 @@ function AuthPageContent() {
   const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  // Track SSO callback mode in state — independent of URL so replaceState() doesn't reset it
+  const [ssoCallbackState, setSsoCallbackState] = useState<{ active: boolean; provider: string }>({
+    active: false,
+    provider: "google",
+  })
 
   // ── Handle OAuth callback (Google or GitHub) ──────────────────────────
   useEffect(() => {
     const code = searchParams.get("code")
     if (!code) return
 
-    // Determine provider from state param (set during login redirect)
+    // Determine provider from signed state JWT param
     const state = searchParams.get("state")
-    let provider = typeof window !== "undefined" ? localStorage.getItem("oauth_provider") : null
+    let provider = getProviderFromParams(searchParams)
 
-    if (!provider && state) {
-      try {
-        const parts = state.split(".")
-        if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")))
-          provider = payload.provider
-        }
-      } catch (e) {
-        console.error("Failed to parse state payload", e)
-      }
-    }
+    // Mark SSO callback mode BEFORE cleaning the URL.
+    // This keeps the loader visible after replaceState() clears the URL params
+    // (which would otherwise reset isCallback to false and flash the login form).
+    setSsoCallbackState({ active: true, provider })
 
-    if (!provider) {
-      provider = state === "github" ? "github" : "google"
-    }
-
-    // Clean the URL immediately
+    // Now safe to clean the URL — the loader state is in React state, not the URL
     window.history.replaceState({}, "", "/login")
+    if (typeof window !== "undefined") localStorage.removeItem("oauth_provider")
 
     const exchangeCode = async () => {
       setIsSsoLoading(true)
@@ -268,6 +278,7 @@ function AuthPageContent() {
       } catch (err) {
         const e = err as Error
         setError(getFriendlyErrorMessage(e, `${provider} sign-in failed. Please try again.`))
+        setSsoCallbackState({ active: false, provider })
       } finally {
         setIsSsoLoading(false)
         setIsGoogleLoading(false)
@@ -385,6 +396,60 @@ function AuthPageContent() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (ssoCallbackState.active) {
+    const provider = ssoCallbackState.provider === "github" ? "GitHub" : "Google"
+
+    return (
+      <div className="relative min-h-screen bg-zinc-950 flex items-center justify-center p-4 overflow-hidden">
+        {/* Background radial glow */}
+        <div
+          className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[700px] h-[500px] rounded-full blur-3xl opacity-25"
+          style={{ background: "radial-gradient(ellipse, rgba(113,113,122,0.4) 0%, rgba(82,82,91,0.15) 50%, transparent 70%)" }}
+        />
+        {/* Dot grid */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+
+        <BackgroundFlows />
+
+        <div className="relative z-10 w-full max-w-sm flex flex-col items-center justify-center text-center space-y-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <TriVisionXLogo size="lg" animate={true} />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.05 }}
+            className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 shadow-2xl shadow-black/60 w-full flex flex-col items-center space-y-5"
+          >
+            <div className="relative flex items-center justify-center w-12 h-12 rounded-full border border-zinc-800 bg-zinc-950">
+              <Loader2 className="h-5 w-5 animate-spin text-zinc-300" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h2 className="text-base font-semibold text-zinc-200">
+                Verifying Credentials
+              </h2>
+              <p className="text-xs text-zinc-400 max-w-[240px]">
+                Securely authenticating with {provider}...
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    )
   }
 
   return (
