@@ -354,9 +354,9 @@ export default function AIAssistantUI() {
     );
   }
 
-  async function sendMessage(convId, content, mode = "research") {
+  async function sendMessage(convId, content, mode = "research", fileRef = null) {
     const token = localStorage.getItem("token");
-    if (!content.trim() || !token) return;
+    if (!content.trim() && !fileRef || !token) return;
 
     let targetConvId = convId;
     const now = new Date().toISOString();
@@ -365,6 +365,7 @@ export default function AIAssistantUI() {
       role: "user",
       content,
       createdAt: now,
+      ...(fileRef ? { attachedFile: fileRef } : {}),
     };
 
     // 1. Handle New Chat creation
@@ -698,7 +699,7 @@ export default function AIAssistantUI() {
           <ChatPane
             ref={composerRef}
             conversation={selected}
-            onSend={(content, mode) => selected && sendMessage(selected.id, content, mode)}
+            onSend={(content, mode, fileRef) => selected && sendMessage(selected.id, content, mode, fileRef)}
             onEditMessage={(messageId, newContent) =>
               selected && editMessage(selected.id, messageId, newContent)
             }

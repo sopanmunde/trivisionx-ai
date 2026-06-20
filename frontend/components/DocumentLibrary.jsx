@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -11,6 +11,14 @@ import {
   Loader2,
   UploadCloud,
   File as FileIcon,
+  Image as ImageIcon,
+  FileCode,
+  FileSpreadsheet,
+  Presentation,
+  FileJson,
+  FileType,
+  Archive,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -19,18 +27,66 @@ import { createPortal } from "react-dom";
 import RagPipelineVisualizer from "./RagPipelineVisualizer";
 import ModernConfirmDialog from "./ModernConfirmDialog";
 
+// ── Accepted file types (mirrors backend ALLOWED_EXTENSIONS) ─────────────────
+const ACCEPTED_TYPES = [
+  // Documents
+  ".pdf", ".docx", ".doc", ".txt", ".rtf", ".odt",
+  // Spreadsheets
+  ".xlsx", ".xls", ".csv",
+  // Presentations
+  ".pptx", ".ppt",
+  // Web / markup
+  ".html", ".htm", ".md", ".mdx", ".rst",
+  // Data
+  ".json", ".jsonl", ".xml", ".yaml", ".yml",
+  // Code
+  ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".cpp", ".c", ".cs",
+  ".go", ".rs", ".rb", ".php", ".sh", ".sql",
+  // Images
+  ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff", ".svg",
+  // Archives
+  ".zip",
+];
+
+const MAX_FILE_SIZE_MB = 100;
+
+function getFileIcon(filename) {
+  const ext = filename?.split(".").pop()?.toLowerCase() || "";
+  if (["pdf"].includes(ext))
+    return { icon: FileType, color: "text-red-400", bg: "bg-red-950/40 border-red-900/50" };
+  if (["docx", "doc", "rtf", "odt"].includes(ext))
+    return { icon: FileText, color: "text-blue-400", bg: "bg-blue-950/40 border-blue-900/50" };
+  if (["xlsx", "xls", "csv"].includes(ext))
+    return { icon: FileSpreadsheet, color: "text-green-400", bg: "bg-green-950/40 border-green-900/50" };
+  if (["pptx", "ppt"].includes(ext))
+    return { icon: Presentation, color: "text-orange-400", bg: "bg-orange-950/40 border-orange-900/50" };
+  if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff", "svg"].includes(ext))
+    return { icon: ImageIcon, color: "text-purple-400", bg: "bg-purple-950/40 border-purple-900/50" };
+  if (["json", "jsonl", "xml", "yaml", "yml"].includes(ext))
+    return { icon: FileJson, color: "text-yellow-400", bg: "bg-yellow-950/40 border-yellow-900/50" };
+  if (["html", "htm", "md", "mdx", "rst"].includes(ext))
+    return { icon: FileCode, color: "text-cyan-400", bg: "bg-cyan-950/40 border-cyan-900/50" };
+  if (["py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "cs", "go", "rs", "rb", "php", "sh", "sql"].includes(ext))
+    return { icon: FileCode, color: "text-indigo-400", bg: "bg-indigo-950/40 border-indigo-900/50" };
+  if (["zip"].includes(ext))
+    return { icon: Archive, color: "text-zinc-400", bg: "bg-zinc-900/40 border-zinc-800/50" };
+  return { icon: FileIcon, color: "text-zinc-400", bg: "bg-zinc-900/40 border-zinc-800/50" };
+}
+
 export default function DocumentLibrary({ open, onClose }) {
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [uploadingStage, setUploadingStage] = useState(null); // 'parsing', 'chunking', etc.
+  const [uploadingStage, setUploadingStage] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadChunks, setUploadChunks] = useState(0);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = React.useRef(null);
 
   const [mounted, setMounted] = useState(false);
   const [deleteDocConfirmOpen, setDeleteDocConfirmOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState(null);
+  const [uploadFileName, setUploadFileName] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -91,16 +147,20 @@ export default function DocumentLibrary({ open, onClose }) {
     }
   };
 
-  const handleUpload = async (event) => {
-    const file = event.target.files?.[0];
+  const handleUpload = useCallback(async (file) => {
     if (!file) return;
 
-    const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!["pdf", "docx", "txt"].includes(ext)) {
-      toast.error("Unsupported file type. Please upload PDF, DOCX, or TXT.");
+    const ext = "." + (file.name.split(".").pop()?.toLowerCase() || "");
+    if (!ACCEPTED_TYPES.includes(ext)) {
+      toast.error(`Unsupported file type "${ext}". Please check the allowed formats.`);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast.error(`File too large. Maximum size is ${MAX_FILE_SIZE_MB} MB.`);
       return;
     }
 
+    setUploadFileName(file.name);
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("file", file);
@@ -162,7 +222,22 @@ export default function DocumentLibrary({ open, onClose }) {
 
     // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
+
+  const handleInputChange = (event) => {
+    handleUpload(event.target.files?.[0]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleUpload(file);
+  }, [handleUpload]);
+
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragOver(true); };
+  const handleDragLeave = () => setIsDragOver(false);
 
   const filteredDocs = documents.filter((d) =>
     d.filename.toLowerCase().includes(query.toLowerCase())
@@ -200,13 +275,13 @@ export default function DocumentLibrary({ open, onClose }) {
             </button>
 
             {/* Header */}
-            <div className="flex flex-col space-y-2 text-left">
+            <div className="flex flex-col space-y-1 text-left">
               <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Database className="h-5 w-5" />
                 Document Library
               </h2>
-              <p className="text-sm text-muted-foreground">
-                Manage indexed files for Deep Research mode.
+              <p className="text-xs text-muted-foreground">
+                Upload any file — PDFs, images, spreadsheets, code, and more.
               </p>
             </div>
 
@@ -223,12 +298,12 @@ export default function DocumentLibrary({ open, onClose }) {
               )}
 
               {/* Actions */}
-              <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center gap-2 mb-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <input
                     type="text"
-                    placeholder="Search documents..."
+                    placeholder="Search files..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     className="flex h-9 w-full rounded-xl border border-input dark:border-zinc-800 bg-transparent px-3 py-1 pl-8 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:bg-zinc-900/20 dark:hover:border-zinc-700/80 disabled:cursor-not-allowed disabled:opacity-50"
@@ -244,12 +319,33 @@ export default function DocumentLibrary({ open, onClose }) {
                 </button>
                 <input
                   type="file"
-                  accept=".pdf,.docx,.txt"
+                  accept={ACCEPTED_TYPES.join(",")}
                   className="hidden"
                   ref={fileInputRef}
-                  onChange={handleUpload}
+                  onChange={handleInputChange}
                 />
               </div>
+
+              {/* Drag & Drop Zone */}
+              <motion.div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={() => !uploadingStage && fileInputRef.current?.click()}
+                animate={{ borderColor: isDragOver ? "rgba(139,92,246,0.6)" : "rgba(63,63,70,0.5)", backgroundColor: isDragOver ? "rgba(139,92,246,0.06)" : "transparent" }}
+                className={cn(
+                  "mb-5 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-5 text-center transition-colors cursor-pointer select-none",
+                  uploadingStage && "pointer-events-none opacity-50"
+                )}
+              >
+                <div className={cn("flex h-9 w-9 items-center justify-center rounded-full border transition-colors", isDragOver ? "border-violet-500/50 bg-violet-500/10" : "border-zinc-800 bg-zinc-900")}>
+                  <UploadCloud className={cn("h-4 w-4 transition-colors", isDragOver ? "text-violet-400" : "text-zinc-400")} />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-zinc-300">{isDragOver ? "Drop to upload" : "Drag & drop or click to browse"}</p>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">PDF, DOCX, XLSX, PPTX, Images, Code files, JSON, CSV and more · up to {MAX_FILE_SIZE_MB} MB</p>
+                </div>
+              </motion.div>
 
               {/* Document List */}
               {isLoading ? (
@@ -259,31 +355,33 @@ export default function DocumentLibrary({ open, onClose }) {
               ) : documents.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800/80 p-8 text-center animate-in fade-in-50">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted dark:bg-zinc-900">
-                    <FileIcon className="h-5 w-5 text-muted-foreground dark:text-zinc-400" />
+                    <UploadCloud className="h-5 w-5 text-muted-foreground dark:text-zinc-400" />
                   </div>
-                  <h3 className="mt-4 text-sm font-semibold">No documents uploaded</h3>
-                  <p className="mt-2 text-sm text-muted-foreground max-w-[250px]">
-                    Upload PDFs or Word docs to use them in Deep Research mode.
+                  <h3 className="mt-4 text-sm font-semibold">No files uploaded yet</h3>
+                  <p className="mt-2 text-xs text-muted-foreground max-w-[240px]">
+                    Upload any file type — documents, images, spreadsheets, code — to use them in Deep Research mode.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {filteredDocs.map((doc) => (
+                <div className="space-y-2">
+                  {filteredDocs.map((doc) => {
+                    const { icon: DocIcon, color, bg } = getFileIcon(doc.filename);
+                    return (
                     <motion.div
                       key={doc.id}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="group flex items-center justify-between rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-card dark:bg-zinc-900/40 text-card-foreground shadow-sm p-4 transition-colors hover:bg-accent dark:hover:bg-zinc-900/80 hover:text-accent-foreground"
+                      className="group flex items-center justify-between rounded-xl border border-zinc-200 dark:border-zinc-800/60 bg-card dark:bg-zinc-900/30 text-card-foreground p-3 transition-all hover:bg-accent dark:hover:bg-zinc-900/70 hover:text-accent-foreground hover:border-zinc-700/80"
                     >
-                      <div className="flex items-center gap-4 overflow-hidden">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border dark:border-zinc-800 bg-background dark:bg-zinc-950">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border", bg)}>
+                          <DocIcon className={cn("h-4 w-4", color)} />
                         </div>
                         <div className="overflow-hidden">
                           <h4 className="truncate text-sm font-medium leading-none" title={doc.filename}>
                             {doc.filename}
                           </h4>
-                          <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Database className="h-3 w-3" />
                               {doc.chunk_count} chunks
@@ -301,7 +399,7 @@ export default function DocumentLibrary({ open, onClose }) {
                         <span className="sr-only">Delete</span>
                       </button>
                     </motion.div>
-                  ))}
+                  )})}
                   {filteredDocs.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-8">
                       No documents match your search.
