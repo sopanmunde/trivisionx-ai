@@ -9,8 +9,10 @@ import { Eye, EyeOff, Loader2, Check, AlertCircle, ArrowLeft, Brain, Database, G
 import { TriVisionXLogo } from "@/components/TriVisionXLogo"
 
 function PasswordStrength({ password }: { password: string }) {
+  const MIN = 8
+  const MAX = 12
   const checks = [
-    password.length >= 8,
+    password.length >= MIN && password.length <= MAX,
     /[A-Z]/.test(password),
     /[0-9]/.test(password),
     /[^A-Za-z0-9]/.test(password),
@@ -20,20 +22,27 @@ function PasswordStrength({ password }: { password: string }) {
   const labels = ["", "Weak", "Fair", "Good", "Strong"]
   const labelCls = ["", "text-red-400", "text-amber-400", "text-yellow-400", "text-emerald-400"]
   if (!password) return null
+
+  const tooLong = password.length > MAX
+
   return (
     <div className="mt-2 space-y-1">
       <div className="flex gap-1">
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`h-0.5 flex-1 rounded-full transition-all duration-300 ${i < score ? colors[score] : "bg-zinc-700"
-              }`}
+            className={`h-0.5 flex-1 rounded-full transition-all duration-300 ${
+              tooLong ? "bg-red-500" : i < score ? colors[score] : "bg-zinc-700"
+            }`}
           />
         ))}
       </div>
-      {score > 0 && (
+      {tooLong ? (
+        <p className="text-[11px] font-medium text-red-400">Too long — max {MAX} characters</p>
+      ) : score > 0 && (
         <p className={`text-[11px] font-medium ${labelCls[score]}`}>{labels[score]}</p>
       )}
+      <p className="text-[10px] text-zinc-600">{password.length}/{MAX} characters</p>
     </div>
   )
 }
@@ -487,6 +496,7 @@ function SignUpPageContent() {
                   <input
                     id="password" name="password" type={showPassword ? "text" : "password"}
                     value={form.password} onChange={handleChange} required
+                    minLength={8} maxLength={12}
                     className={inputCls + " pr-9"}
                   />
                   <button
@@ -505,6 +515,7 @@ function SignUpPageContent() {
                   <input
                     id="confirmPassword" name="confirmPassword" type={showConfirm ? "text" : "password"}
                     value={form.confirmPassword} onChange={handleChange} required
+                    minLength={8} maxLength={12}
                     className={inputCls + " pr-9"}
                   />
                   <button
