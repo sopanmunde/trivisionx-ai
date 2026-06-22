@@ -224,7 +224,6 @@ function getProviderFromParams(searchParams: any): string {
 function AuthPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [isSignUp, setIsSignUp] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isGitHubLoading, setIsGitHubLoading] = useState(false)
@@ -232,19 +231,16 @@ function AuthPageContent() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
   // Track SSO callback mode in state — independent of URL so replaceState() doesn't reset it
   const [ssoCallbackState, setSsoCallbackState] = useState<{ active: boolean; provider: string }>({
     active: false,
     provider: "google",
   })
 
-  // ── Handle OAuth callback (Google or GitHub) ──────────────────────────
   useEffect(() => {
     const code = searchParams.get("code")
     if (!code) return
 
-    // Determine provider from signed state JWT param
     const state = searchParams.get("state")
     let provider = getProviderFromParams(searchParams)
 
@@ -292,21 +288,10 @@ function AuthPageContent() {
   const [form, setForm] = useState({
     email: "",
     password: "",
-    confirmPassword: "",
-    first_name: "",
-    last_name: "",
-    username: "",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }))
-
-  const toggle = () => {
-    setIsSignUp((s) => !s)
-    setError("")
-    setSuccess(false)
-    setForm((p) => ({ ...p, password: "", confirmPassword: "" }))
-  }
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true)
@@ -349,47 +334,19 @@ function AuthPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    if (isSignUp && form.password !== form.confirmPassword) {
-      setError("Passwords do not match.")
-      return
-    }
     setIsLoading(true)
     try {
-      if (isSignUp) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api"
-        const res = await fetch(`${apiUrl}/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: form.email,
-            username: form.username,
-            first_name: form.first_name,
-            last_name: form.last_name,
-            password: form.password,
-            confirm_password: form.confirmPassword,
-          }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.detail || "Signup failed")
-        setSuccess(true)
-        setTimeout(() => {
-          setIsSignUp(false)
-          setSuccess(false)
-          setForm((p) => ({ ...p, password: "", confirmPassword: "" }))
-        }, 1600)
-      } else {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api"
-        const res = await fetch(`${apiUrl}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: form.email, password: form.password }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.detail || "Login failed")
-        localStorage.setItem("token", data.access_token)
-        document.cookie = `auth_token=${data.access_token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
-        router.push("/dashboard")
-      }
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api"
+      const res = await fetch(`${apiUrl}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, password: form.password }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || "Login failed")
+      localStorage.setItem("token", data.access_token)
+      document.cookie = `auth_token=${data.access_token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
+      router.push("/dashboard")
     } catch (err) {
       const error = err as Error
       setError(getFriendlyErrorMessage(error, "Something went wrong. Please try again."))
@@ -501,24 +458,12 @@ function AuthPageContent() {
         >
           {/* CardHeader */}
           <div className="flex flex-col space-y-1 p-6 pb-4">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={isSignUp ? "su-h" : "si-h"}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.18 }}
-              >
-                <h1 className="text-xl font-semibold leading-none tracking-tight text-zinc-100">
-                  {isSignUp ? "Create an account" : "Welcome back"}
-                </h1>
-                <p className="text-sm text-zinc-400 mt-1.5">
-                  {isSignUp
-                    ? "Enter your details below to get started."
-                    : "Enter your credentials to sign in."}
-                </p>
-              </motion.div>
-            </AnimatePresence>
+            <h1 className="text-xl font-semibold leading-none tracking-tight text-zinc-100">
+              Welcome back
+            </h1>
+            <p className="text-sm text-zinc-400 mt-1.5">
+              Enter your credentials to sign in.
+            </p>
           </div>
 
           {/* CardContent */}
@@ -557,37 +502,6 @@ function AuthPageContent() {
             </AnimatePresence>
 
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-              {/* Sign-up-only fields */}
-              <AnimatePresence initial={false}>
-                {isSignUp && (
-                  <motion.div
-                    key="su-fields"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22, ease: "easeInOut" }}
-                    className="overflow-hidden space-y-4"
-                  >
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormItem>
-                        <Label htmlFor="first_name">First name</Label>
-                        <input id="first_name" name="first_name" value={form.first_name}
-                          onChange={handleChange} required={isSignUp} className={inputCls} />
-                      </FormItem>
-                      <FormItem>
-                        <Label htmlFor="last_name">Last name</Label>
-                        <input id="last_name" name="last_name" value={form.last_name}
-                          onChange={handleChange} className={inputCls} />
-                      </FormItem>
-                    </div>
-                    <FormItem>
-                      <Label htmlFor="username">Username</Label>
-                      <input id="username" name="username" value={form.username}
-                        onChange={handleChange} placeholder="johndoe" required={isSignUp} className={inputCls} />
-                    </FormItem>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {/* Email */}
               <FormItem>
@@ -602,11 +516,9 @@ function AuthPageContent() {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  {!isSignUp && (
-                    <Link href="#" className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-4">
-                      Forgot password?
-                    </Link>
-                  )}
+                  <Link href="#" className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-4">
+                    Forgot password?
+                  </Link>
                 </div>
                 <div className="relative">
                   <input
@@ -624,42 +536,7 @@ function AuthPageContent() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {isSignUp && <PasswordStrength password={form.password} />}
               </FormItem>
-
-              {/* Confirm password */}
-              <AnimatePresence initial={false}>
-                {isSignUp && (
-                  <motion.div
-                    key="confirm-pw"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <FormItem>
-                      <Label htmlFor="confirmPassword">Confirm password</Label>
-                      <div className="relative">
-                        <input
-                          id="confirmPassword" name="confirmPassword"
-                          type={showConfirm ? "text" : "password"}
-                          value={form.confirmPassword} onChange={handleChange} required={isSignUp}
-                          className={inputCls + " pr-9"}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirm((s) => !s)}
-                          tabIndex={-1}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-                        >
-                          {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </FormItem>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {/* Submit — Shadcn primary button */}
               <button
@@ -668,7 +545,7 @@ function AuthPageContent() {
                 className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-900 shadow hover:bg-zinc-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-300 disabled:pointer-events-none disabled:opacity-50 transition-colors"
               >
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isSignUp ? "Create account" : "Sign in"}
+                Sign in
               </button>
             </form>
           </div>
@@ -727,13 +604,13 @@ function AuthPageContent() {
 
         {/* Toggle sign-in / sign-up */}
         <p className="mt-4 text-center text-sm text-zinc-500">
-          {isSignUp ? "Already have an account? " : "Don't have an account? "}
-          <button
-            onClick={toggle}
+          Don't have an account?{" "}
+          <Link
+            href="/signup"
             className="font-medium text-zinc-300 hover:text-zinc-100 underline underline-offset-4 transition-colors"
           >
-            {isSignUp ? "Sign in" : "Sign up"}
-          </button>
+            Sign up
+          </Link>
         </p>
       </div>
     </div>

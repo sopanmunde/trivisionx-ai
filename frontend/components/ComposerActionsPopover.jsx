@@ -65,99 +65,37 @@ function Divider() {
   return <div className="mx-2.5 my-1.5 h-px bg-gradient-to-r from-transparent via-zinc-200 dark:via-zinc-700 to-transparent opacity-50" />;
 }
 
-export default function ComposerActionsPopover({ children }) {
+export default function ComposerActionsPopover({ children, onFileSelect }) {
   const [open, setOpen] = useState(false);
   const [showMore, setShowMore] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  const [uploadingStage, setUploadingStage] = useState(null); // 'parsing', 'chunking', etc.
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadChunks, setUploadChunks] = useState(0);
-
-  const handleUpload = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!["pdf", "docx", "txt"].includes(ext)) {
-      toast.error("Unsupported file type. Please upload PDF, DOCX, or TXT.");
-      return;
-    }
-
-    setOpen(false); // Close popover
-    setIsUploading(true);
-    setUploadingStage("parsing");
-    setUploadProgress(10);
-    setUploadChunks(0);
-
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
-      const res = await fetch(`${apiUrl}/documents/upload/stream`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let done = false;
-
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        done = readerDone;
-        if (value) {
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n\n");
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.stage) {
-                  setUploadingStage(data.stage);
-                  setUploadProgress(data.progress || 0);
-                  if (data.chunks) setUploadChunks(data.chunks);
-                }
-                if (data.error) throw new Error(data.error);
-
-                if (data.stage === "done") {
-                  setTimeout(() => {
-                    setUploadingStage(null);
-                    setIsUploading(false);
-                    toast.success(`Indexed ${data.chunks} chunks successfully.`);
-                  }, 2000);
-                }
-              } catch (e) {
-                // Ignore incomplete JSON
-              }
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to upload document");
-      setUploadingStage(null);
-      setIsUploading(false);
-    }
-
-    // Reset file input
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file && onFileSelect) onFileSelect(file);
+    setOpen(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  const ACCEPTED_TYPES = [
+    ".pdf", ".docx", ".doc", ".txt", ".rtf", ".odt",
+    ".xlsx", ".xls", ".csv",
+    ".pptx", ".ppt",
+    ".html", ".htm", ".md", ".mdx", ".rst",
+    ".json", ".jsonl", ".xml", ".yaml", ".yml",
+    ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".cpp", ".c", ".cs",
+    ".go", ".rs", ".rb", ".php", ".sh", ".sql",
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff", ".svg",
+    ".zip",
+  ];
 
   const mainActions = [
     {
       icon: Paperclip,
-      label: isUploading ? "Uploading…" : "Add files",
+      label: "Add files",
       color: "text-blue-500 dark:text-blue-400",
       bg: "bg-blue-50 dark:bg-blue-500/10",
-      action: () => fileInputRef.current?.click(),
+      action: () => { setOpen(false); fileInputRef.current?.click(); },
     },
     {
       icon: Bot,
@@ -327,31 +265,13 @@ export default function ComposerActionsPopover({ children }) {
 
       <input
         type="file"
-        accept=".pdf,.docx,.txt"
+        accept={ACCEPTED_TYPES.join(",")}
         className="hidden"
         ref={fileInputRef}
-        onChange={handleUpload}
+        onChange={handleFileChange}
       />
 
-      {/* Upload Progress Modal */}
-      <AnimatePresence>
-        {isUploading && uploadingStage && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="w-full max-w-lg shadow-2xl rounded-2xl"
-            >
-              <RagPipelineVisualizer
-                currentStage={uploadingStage}
-                progress={uploadProgress}
-                chunks={uploadChunks}
-              />
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* No upload progress modal here — handled in Composer */}
     </Popover>
   );
 }

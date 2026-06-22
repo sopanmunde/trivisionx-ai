@@ -61,8 +61,26 @@ MAX_TOP_K = 20
 MMR_LAMBDA = 0.6
 
 # ─── File upload ────────────────────────────────────────────────────────────────
-ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
-MAX_FILE_SIZE_MB = 50
+ALLOWED_EXTENSIONS = {
+    # Documents
+    ".pdf", ".docx", ".doc", ".txt", ".rtf", ".odt",
+    # Spreadsheets
+    ".xlsx", ".xls", ".csv",
+    # Presentations
+    ".pptx", ".ppt",
+    # Web / markup
+    ".html", ".htm", ".md", ".mdx", ".rst",
+    # Data
+    ".json", ".jsonl", ".xml", ".yaml", ".yml",
+    # Code
+    ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".cpp", ".c", ".cs",
+    ".go", ".rs", ".rb", ".php", ".sh", ".sql",
+    # Images (OCR-capable or passthrough)
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff", ".svg",
+    # Archives (metadata stored but not deep-parsed)
+    ".zip",
+}
+MAX_FILE_SIZE_MB = 5
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 # ─── Streaming ──────────────────────────────────────────────────────────────────

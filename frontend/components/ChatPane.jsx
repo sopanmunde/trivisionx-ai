@@ -20,6 +20,13 @@ import {
   Pill,
   BookOpen,
   FileText,
+  FileType,
+  FileSpreadsheet,
+  FileCode,
+  FileJson,
+  File as FileIcon,
+  Archive,
+  Presentation,
 } from "lucide-react";
 import { TriVisionXLogo } from "./TriVisionXLogo";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +35,40 @@ import Composer from "./Composer";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+
+// ─── File icon helper (mirrors Composer.jsx) ────────────────────────────────
+function getFileInfo(filename) {
+  const ext = filename?.split(".").pop()?.toLowerCase() || "";
+  if (ext === "pdf") return { icon: FileType, bg: "bg-red-500", label: "PDF" };
+  if (["docx", "doc", "rtf", "odt"].includes(ext)) return { icon: FileText, bg: "bg-blue-500", label: ext.toUpperCase() };
+  if (["xlsx", "xls", "csv"].includes(ext)) return { icon: FileSpreadsheet, bg: "bg-green-500", label: ext.toUpperCase() };
+  if (["pptx", "ppt"].includes(ext)) return { icon: Presentation, bg: "bg-orange-500", label: ext.toUpperCase() };
+  if (["json", "jsonl", "xml", "yaml", "yml"].includes(ext)) return { icon: FileJson, bg: "bg-yellow-500", label: ext.toUpperCase() };
+  if (["html", "htm", "md", "mdx", "rst"].includes(ext)) return { icon: FileCode, bg: "bg-cyan-500", label: ext.toUpperCase() };
+  if (["py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "cs", "go", "rs", "rb", "php", "sh", "sql"].includes(ext)) return { icon: FileCode, bg: "bg-indigo-500", label: ext.toUpperCase() };
+  if (ext === "zip") return { icon: Archive, bg: "bg-zinc-600", label: "ZIP" };
+  return { icon: FileIcon, bg: "bg-zinc-600", label: ext.toUpperCase() || "File" };
+}
+
+// ─── File card shown on sent user messages ───────────────────────────────────
+function MessageFileCard({ attachedFile }) {
+  const info = getFileInfo(attachedFile.name);
+  const Icon = info.icon;
+  const shortName = attachedFile.name.length > 32 ? attachedFile.name.slice(0, 30) + "…" : attachedFile.name;
+  return (
+    <div className="flex justify-end mb-1.5">
+      <div className="flex items-center gap-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/80 px-3 py-2 shadow-sm max-w-[260px]">
+        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", info.bg)}>
+          <Icon className="h-4 w-4 text-white" />
+        </div>
+        <div className="overflow-hidden">
+          <p className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100 truncate leading-snug">{shortName}</p>
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">{info.label}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Typing Indicator ───────────────────────────────────────────────────────
 function ThinkingMessage({ onPause, agentState }) {
@@ -243,10 +284,10 @@ const ChatPane = forwardRef(function ChatPane(
               <div className="w-full">
                 <Composer
                   ref={composerRef}
-                  onSend={async (text, mode) => {
-                    if (!text.trim()) return;
+                  onSend={async (text, mode, fileRef) => {
+                    if (!text.trim() && !fileRef) return;
                     setBusy(true);
-                    await onSend?.(text, mode);
+                    await onSend?.(text, mode, fileRef);
                     setBusy(false);
                   }}
                   busy={busy}
@@ -370,6 +411,10 @@ const ChatPane = forwardRef(function ChatPane(
                       ) : (
                         /* ── Normal Message ── */
                         <div className="relative">
+                          {/* File card above user message */}
+                          {m.role === "user" && m.attachedFile && (
+                            <MessageFileCard attachedFile={m.attachedFile} />
+                          )}
                           <Message
                             role={m.role}
                             content={m.content}
@@ -484,10 +529,10 @@ const ChatPane = forwardRef(function ChatPane(
           {/* Composer at the bottom */}
           <Composer
             ref={composerRef}
-            onSend={async (text, mode) => {
-              if (!text.trim()) return;
+            onSend={async (text, mode, fileRef) => {
+              if (!text.trim() && !fileRef) return;
               setBusy(true);
-              await onSend?.(text, mode);
+              await onSend?.(text, mode, fileRef);
               setBusy(false);
             }}
             busy={busy}
