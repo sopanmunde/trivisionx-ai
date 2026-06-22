@@ -81,7 +81,7 @@ export function Navbar() {
             size="sm"
             className="relative overflow-hidden shimmer-btn bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 rounded-full px-4 h-9 font-semibold transition-all"
           >
-            <Link href="/login">
+            <Link href="/signup">
               <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-zinc-200/40 to-transparent" />
               <span className="relative">Sign Up</span>
             </Link>
@@ -130,7 +130,7 @@ export function Navbar() {
               asChild
               className="shimmer-btn bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-full"
             >
-              <Link href="/login">Get Started</Link>
+              <Link href="/signup">Get Started</Link>
             </Button>
           </div>
         </motion.div>
