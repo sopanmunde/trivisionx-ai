@@ -11,8 +11,10 @@ import Sidebar from "./Sidebar";
 import ChatPane from "./ChatPane";
 import Header from "./Header";
 import { INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData";
+import { useRouter } from "next/navigation";
 
 export default function AIAssistantUI() {
+  const router = useRouter();
   const [theme, setTheme] = useState(() => {
     const saved =
       typeof window !== "undefined" && localStorage.getItem("theme");
@@ -55,7 +57,7 @@ export default function AIAssistantUI() {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        window.location.href = "/login";
+        router.push("/login");
       }
     } catch { }
   }, []);
