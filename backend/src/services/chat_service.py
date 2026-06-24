@@ -77,9 +77,13 @@ async def _stream_chat_response_impl(
     history = []
     if conversation_id:
         try:
+            # Load up to 11 messages to ensure we get a full history window excluding the current message
             history = await get_conversation_history(
-                messages_collection, conversation_id, limit=10,
+                messages_collection, conversation_id, limit=11,
             )
+            # Exclude the current user query if it has already been saved to MongoDB
+            if history and history[-1].get("role") == "user" and history[-1].get("content") == query:
+                history.pop()
         except Exception as e:
             logger.warning(f"Could not load history for {conversation_id}: {e}")
 

@@ -148,7 +148,7 @@ async def planner_node(state: AgentState) -> dict:
 
     # Build messages once (reused across provider fallback attempts)
     messages = [SystemMessage(content=PLANNER_SYSTEM_V2)]
-    for turn in history[-2:]:
+    for turn in history[-6:]:
         role = turn.get("role", "")
         content = turn.get("content", "")
         if role == "user":
