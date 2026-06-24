@@ -12,7 +12,6 @@ SSE event protocol:
   {"done": true, "sources": [...]}               — stream complete
   {"error": "<message>"}                         — error
 """
-import json
 from typing import AsyncGenerator, Optional
 from datetime import datetime, timezone
 from bson import ObjectId
@@ -26,6 +25,15 @@ from src.database.mongodb.repositories.chat_repository import (
     touch_conversation,
 )
 from src.core.logger import get_logger
+from src.streaming import (
+    sse_node_event,
+    sse_token_event,
+    sse_citations_event,
+    sse_done_event,
+    sse_error_event,
+    sse_quality_score_event,
+    sse_provider_switch_event,
+)
 
 logger = get_logger(__name__)
 
@@ -88,7 +96,6 @@ async def _stream_chat_response_impl(
         try:
             from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
             from src.core.llm_factory import get_fallback_providers, is_quota_error
-            from src.streaming import sse_provider_switch_event
             from src.core.logger import get_logger as _get_logger
 
             qlog = _get_logger("chat_service.quick")
@@ -111,7 +118,7 @@ async def _stream_chat_response_impl(
                     langchain_messages.append(AIMessage(content=msg.get("content", "")))
             langchain_messages.append(HumanMessage(content=query))
 
-            yield f"data: {json.dumps({'node': 'direct_llm', 'status': 'running'})}\n\n"
+            yield sse_node_event("direct_llm", "running")
 
             # ── Auto-failover loop ──────────────────────────────────────────
             fallback_providers = get_fallback_providers(provider)
@@ -136,7 +143,7 @@ async def _stream_chat_response_impl(
                             if not token:
                                 continue
                             streamed_text += token
-                            yield f"data: {json.dumps({'type': 'token', 'data': token, 'text': token})}\n\n"
+                            yield sse_token_event(token)
 
                     succeeded = True
                     break
@@ -157,12 +164,12 @@ async def _stream_chat_response_impl(
                     else:
                         err_msg = f"AI provider error: {str(e)[:100]}"
                     streamed_text = err_msg
-                    yield f"data: {json.dumps({'type': 'token', 'data': err_msg, 'text': err_msg})}\n\n"
+                    yield sse_token_event(err_msg)
                     succeeded = True
                     break
 
-            yield f"data: {json.dumps({'node': 'direct_llm', 'status': 'completed'})}\n\n"
-            yield f"data: {json.dumps({'done': True, 'sources': []})}\n\n"
+            yield sse_node_event("direct_llm", "completed")
+            yield sse_done_event([])
 
             if conversation_id and streamed_text:
                 try:
@@ -180,7 +187,7 @@ async def _stream_chat_response_impl(
 
         except Exception as e:
             logger.error(f"Quick mode fatal error: {e}", exc_info=True)
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield sse_error_event(str(e))
             return
 
     # ═════════════════════════════════════════════════════════════════════
@@ -226,20 +233,20 @@ async def _stream_chat_response_impl(
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 active_node = name
-                yield f"data: {json.dumps({'node': name, 'status': 'running'})}\n\n"
+                yield sse_node_event(name, "running")
 
             elif kind == "on_chain_end" and name in (
                 "planner", "retriever", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
-                yield f"data: {json.dumps({'node': name, 'status': 'completed'})}\n\n"
+                yield sse_node_event(name, "completed")
 
                 if name == "retriever":
                     output = data.get("output", {})
                     cits = output.get("citations", [])
                     if cits:
                         final_citations = cits
-                        yield f"data: {json.dumps({'type': 'citations', 'data': cits})}\n\n"
+                        yield sse_citations_event(cits)
 
                 elif name == "reporter":
                     output = data.get("output", {})
@@ -247,11 +254,11 @@ async def _stream_chat_response_impl(
                     final_citations = output.get("citations", final_citations)
 
                     if not streamed_text and final_text:
-                        yield f"data: {json.dumps({'type': 'token', 'data': final_text, 'text': final_text})}\n\n"
+                        yield sse_token_event(final_text)
 
                     quality_score = output.get("quality_score")
                     if quality_score:
-                        yield f"data: {json.dumps({'type': 'quality_score', 'data': quality_score})}\n\n"
+                        yield sse_quality_score_event(quality_score)
 
             # Token-level streaming from the LLM
             elif kind == "on_chat_model_stream":
@@ -266,14 +273,16 @@ async def _stream_chat_response_impl(
                     if not token:
                         continue
                     streamed_text += token
-                    yield f"data: {json.dumps({'type': 'token', 'data': token, 'text': token})}\n\n"
+                    yield sse_token_event(token)
 
             # Custom events (e.g. provider failover)
             elif kind == "on_custom_event":
                 if name == "provider_switch":
-                    yield f"data: {json.dumps({'type': 'provider_switch', **data})}\n\n"
+                    yield sse_provider_switch_event(
+                        data.get("from", ""), data.get("to", ""), data.get("reason", "")
+                    )
 
-        yield f"data: {json.dumps({'done': True, 'sources': final_citations})}\n\n"
+        yield sse_done_event(final_citations)
 
         persist_text = final_text or streamed_text
         if conversation_id and persist_text:
@@ -291,7 +300,7 @@ async def _stream_chat_response_impl(
 
     except Exception as e:
         logger.error(f"Agent mode error: {e}", exc_info=True)
-        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        yield sse_error_event(str(e))
 
 
 async def stream_chat_response(
