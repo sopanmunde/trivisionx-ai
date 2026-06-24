@@ -2,13 +2,31 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import Link from "next/link";
 import { TriVisionXLogo } from "./TriVisionXLogo";
 
 const footerLinks = {
-  Product: ["Features", "Pricing", "Changelog", "Roadmap", "API"],
-  Resources: ["Documentation", "Guides", "Blog", "Community", "Templates"],
-  Company: ["About", "Careers", "Press", "Partners", "Contact"],
-  Legal: ["Privacy", "Terms", "Security", "Cookies", "Licenses"],
+  Product: [
+    { label: "Features", href: "/features" },
+    { label: "Pricing", href: "/pricing" },
+  ],
+  Resources: [
+    { label: "Documentation", href: "/docs" },
+    { label: "Guides", href: "/guides" },
+    { label: "Blog", href: "/blog" },
+  ],
+  Company: [
+    { label: "About", href: "/about" },
+    { label: "Careers", href: "/careers" },
+    { label: "Contact", href: "/contact" },
+  ],
+  Legal: [
+    { label: "Privacy", href: "/privacy" },
+    { label: "Terms", href: "/terms" },
+    { label: "Security", href: "/security" },
+    { label: "Cookies", href: "/cookies" },
+    { label: "Licenses", href: "/licenses" },
+  ],
 };
 
 export function Footer() {
@@ -34,9 +52,9 @@ export function Footer() {
         >
           {/* Brand */}
           <div className="col-span-2 md:col-span-1 space-y-4">
-            <a href="#" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
               <TriVisionXLogo size="sm" shimmer={true} glow={true} showWordmark={true} animate={false} />
-            </a>
+            </Link>
             <p className="text-xs text-zinc-500 leading-relaxed">
               Enterprise-grade multi-agent orchestration and context retrieval engines.
             </p>
@@ -56,13 +74,13 @@ export function Footer() {
               <h4 className="text-xs font-mono font-bold tracking-wider text-zinc-300 uppercase">{title}</h4>
               <ul className="space-y-2.5">
                 {links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
                       className="text-xs text-zinc-500 hover:text-purple-400 dark:text-zinc-400 dark:hover:text-purple-400 transition-colors"
                     >
-                      {link}
-                    </a>
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>

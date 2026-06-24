@@ -32,7 +32,7 @@ export function ContactSection() {
         } else if (lower.includes("bug") || lower.includes("error") || lower.includes("fail") || lower.includes("broken")) {
           setIntent("Technical Support");
         } else if (lower.includes("partner") || lower.includes("collab") || lower.includes("integrate")) {
-          setIntent("Partnership / API");
+          setIntent("Other Inquiry");
         } else {
           setIntent("General Inquiry");
         }

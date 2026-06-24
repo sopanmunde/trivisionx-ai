@@ -39,7 +39,7 @@ function PasswordStrength({ password }: { password: string }) {
 }
 
 const inputCls =
-  "flex h-9 w-full rounded-md border border-zinc-800 bg-transparent px-3 py-1 text-sm text-zinc-100 shadow-sm placeholder:text-zinc-500 outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+  "flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm text-foreground shadow-sm placeholder:text-muted-foreground outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -68,14 +68,14 @@ function FlowNode({ label, icon: Icon, className, activeColor }: FlowNodeProps) 
       animate={{ opacity: 0.65, scale: 1 }}
       whileHover={{ opacity: 1, scale: 1.03, borderColor: "rgba(168,85,247,0.35)", boxShadow: "0 0 15px rgba(168,85,247,0.15)" }}
       transition={{ duration: 0.5 }}
-      className={`absolute hidden lg:flex items-center gap-2 px-3 py-2.5 rounded-xl border border-zinc-850 bg-zinc-900/40 backdrop-blur-md shadow-lg font-mono text-[10px] text-zinc-300 pointer-events-auto transition-all ${className}`}
+      className={`absolute hidden lg:flex items-center gap-2 px-3 py-2.5 rounded-xl border border-zinc-850 bg-card/40 backdrop-blur-md shadow-lg font-mono text-[10px] text-muted-foreground pointer-events-auto transition-all ${className}`}
     >
-      <div className="p-1.5 rounded-lg bg-zinc-950/80 border border-zinc-800 text-zinc-400">
+      <div className="p-1.5 rounded-lg bg-background/80 border border-border text-muted-foreground">
         <Icon className="w-3.5 h-3.5" />
       </div>
       <div className="flex flex-col">
         <span className="font-bold text-zinc-200">{label}</span>
-        <span className="text-[8px] text-zinc-500 flex items-center gap-1">
+        <span className="text-[8px] text-muted-foreground flex items-center gap-1">
           <span className={`w-1.5 h-1.5 rounded-full ${activeColor} animate-pulse`} />
           FLOW ACTIVE
         </span>
@@ -359,7 +359,7 @@ function AuthPageContent() {
     const provider = ssoCallbackState.provider === "github" ? "GitHub" : "Google"
 
     return (
-      <div className="relative min-h-screen bg-zinc-950 flex items-center justify-center p-4 overflow-hidden">
+      <div className="relative min-h-screen bg-background flex items-center justify-center p-4 overflow-hidden">
         {/* Background radial glow */}
         <div
           className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[700px] h-[500px] rounded-full blur-3xl opacity-25"
@@ -389,17 +389,17 @@ function AuthPageContent() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.05 }}
-            className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 shadow-2xl shadow-black/60 w-full flex flex-col items-center space-y-5"
+            className="rounded-xl border border-border bg-card p-8 shadow-2xl shadow-black/60 w-full flex flex-col items-center space-y-5"
           >
-            <div className="relative flex items-center justify-center w-12 h-12 rounded-full border border-zinc-800 bg-zinc-950">
-              <Loader2 className="h-5 w-5 animate-spin text-zinc-300" />
+            <div className="relative flex items-center justify-center w-12 h-12 rounded-full border border-border bg-background">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
 
             <div className="space-y-1.5">
               <h2 className="text-base font-semibold text-zinc-200">
                 Verifying Credentials
               </h2>
-              <p className="text-xs text-zinc-400 max-w-[240px]">
+              <p className="text-xs text-muted-foreground max-w-[240px]">
                 Securely authenticating with {provider}...
               </p>
             </div>
@@ -410,7 +410,7 @@ function AuthPageContent() {
   }
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 flex items-center justify-center p-4 overflow-hidden">
+    <div className="relative min-h-screen bg-background flex items-center justify-center p-4 overflow-hidden">
       {/* Background radial glow */}
       <div
         className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[700px] h-[500px] rounded-full blur-3xl opacity-25"
@@ -430,7 +430,7 @@ function AuthPageContent() {
       {/* Home button — top left */}
       <Link
         href="/"
-        className="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-900/80 px-3 py-1.5 text-sm font-medium text-zinc-400 shadow-sm backdrop-blur-sm hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-700 transition-colors"
+        className="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 rounded-md border border-border bg-card/80 px-3 py-1.5 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Home
@@ -454,14 +454,14 @@ function AuthPageContent() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.05 }}
-          className="rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-100 shadow-2xl shadow-black/60"
+          className="rounded-xl border border-border bg-card text-foreground shadow-2xl shadow-black/60"
         >
           {/* CardHeader */}
           <div className="flex flex-col space-y-1 p-6 pb-4">
-            <h1 className="text-xl font-semibold leading-none tracking-tight text-zinc-100">
+            <h1 className="text-xl font-semibold leading-none tracking-tight text-foreground">
               Welcome back
             </h1>
-            <p className="text-sm text-zinc-400 mt-1.5">
+            <p className="text-sm text-muted-foreground mt-1.5">
               Enter your credentials to sign in.
             </p>
           </div>
@@ -494,7 +494,7 @@ function AuthPageContent() {
                   className="flex items-center gap-2.5 rounded-md border border-emerald-800/60 bg-emerald-950/50 px-3 py-2.5 text-sm text-emerald-400"
                 >
                   <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500">
-                    <Check className="h-2.5 w-2.5 text-white" />
+                    <Check className="h-2.5 w-2.5 text-foreground" />
                   </div>
                   Account created! Redirecting to sign in…
                 </motion.div>
@@ -516,7 +516,7 @@ function AuthPageContent() {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Link href="#" className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-4">
+                  <Link href="#" className="text-xs text-muted-foreground hover:text-zinc-200 transition-colors underline underline-offset-4">
                     Forgot password?
                   </Link>
                 </div>
@@ -531,7 +531,7 @@ function AuthPageContent() {
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
                     tabIndex={-1}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -542,7 +542,7 @@ function AuthPageContent() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-900 shadow hover:bg-zinc-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-300 disabled:pointer-events-none disabled:opacity-50 transition-colors"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground shadow hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-300 disabled:pointer-events-none disabled:opacity-50 transition-colors"
               >
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 Sign in
@@ -554,10 +554,10 @@ function AuthPageContent() {
           <div className="px-6 pb-6 space-y-4">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-zinc-800" />
+                <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-zinc-900 px-2 text-zinc-500 tracking-widest">Or continue with</span>
+                <span className="bg-card px-2 text-muted-foreground tracking-widest">Or continue with</span>
               </div>
             </div>
 
@@ -567,7 +567,7 @@ function AuthPageContent() {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={isGoogleLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-zinc-800 bg-transparent px-4 py-2 text-sm font-medium text-zinc-300 shadow-sm hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-700 transition-colors disabled:pointer-events-none disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors disabled:pointer-events-none disabled:opacity-50"
               >
                 {isGoogleLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -587,7 +587,7 @@ function AuthPageContent() {
                 type="button"
                 onClick={handleGitHubLogin}
                 disabled={isGitHubLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-zinc-800 bg-transparent px-4 py-2 text-sm font-medium text-zinc-300 shadow-sm hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-700 transition-colors disabled:pointer-events-none disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors disabled:pointer-events-none disabled:opacity-50"
               >
                 {isGitHubLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -603,11 +603,11 @@ function AuthPageContent() {
         </motion.div>
 
         {/* Toggle sign-in / sign-up */}
-        <p className="mt-4 text-center text-sm text-zinc-500">
+        <p className="mt-4 text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
           <Link
             href="/signup"
-            className="font-medium text-zinc-300 hover:text-zinc-100 underline underline-offset-4 transition-colors"
+            className="font-medium text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
           >
             Sign up
           </Link>
@@ -620,7 +620,7 @@ function AuthPageContent() {
 export default function AuthPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="h-6 w-6 border-2 border-zinc-600 border-t-zinc-200 rounded-full animate-spin" />
       </div>
     }>
