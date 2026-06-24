@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/api";
 
 // ─── Accepted file types ───────────────────────────────────────────────────────
 const ACCEPTED_TYPES = [
@@ -276,7 +277,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     formData.append("file", file);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+      const apiUrl = API_BASE_URL;
       const res = await fetch(`${apiUrl}/documents/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },

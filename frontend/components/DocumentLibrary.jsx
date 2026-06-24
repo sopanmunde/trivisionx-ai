@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/api";
 import { createPortal } from "react-dom";
 import RagPipelineVisualizer from "./RagPipelineVisualizer";
 import ModernConfirmDialog from "./ModernConfirmDialog";
@@ -101,7 +102,7 @@ export default function DocumentLibrary({ open, onClose }) {
     if (!token) return;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+      const apiUrl = API_BASE_URL;
       const res = await fetch(`${apiUrl}/documents`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -129,7 +130,7 @@ export default function DocumentLibrary({ open, onClose }) {
 
     const token = localStorage.getItem("token");
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+      const apiUrl = API_BASE_URL;
       const res = await fetch(`${apiUrl}/documents/${doc.id}?filename=${encodeURIComponent(doc.filename)}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -170,7 +171,7 @@ export default function DocumentLibrary({ open, onClose }) {
     setUploadChunks(0);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+      const apiUrl = API_BASE_URL;
       const res = await fetch(`${apiUrl}/documents/upload/stream`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },

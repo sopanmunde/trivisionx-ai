@@ -17,6 +17,7 @@ import { UserProfileModal } from "./UserProfileModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
+import { API_BASE_URL } from "@/lib/api";
 
 /* ── tiny shimmer border helper ─────────────────────────────────────────── */
 function ShimmerBorder({ className = "" }) {
@@ -99,7 +100,7 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (!token) return;
     fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api"}/me`,
+      `${API_BASE_URL}/me`,
       {
         headers: { Authorization: `Bearer ${token}` },
       },

@@ -27,7 +27,7 @@ services:
     networks:
       - copilot-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://trivisionx-ai.onrender.com/api/health/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -51,7 +51,7 @@ services:
       - ./frontend/.env
     environment:
       - PORT=3000
-      - NEXT_PUBLIC_API_BASE_URL=https://trivisionx-ai.onrender.com
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
     depends_on:
       backend:
         condition: service_healthy
