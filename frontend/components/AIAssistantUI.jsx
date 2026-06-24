@@ -12,6 +12,7 @@ import ChatPane from "./ChatPane";
 import Header from "./Header";
 import { INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function AIAssistantUI() {
   const router = useRouter();
@@ -122,8 +123,7 @@ export default function AIAssistantUI() {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+      const apiUrl = API_BASE_URL;
       const res = await fetch(`${apiUrl}/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -164,8 +164,7 @@ export default function AIAssistantUI() {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const apiUrl =
-          process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+        const apiUrl = API_BASE_URL;
         const res = await fetch(`${apiUrl}/conversations`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -208,8 +207,7 @@ export default function AIAssistantUI() {
         const token = localStorage.getItem("token");
         if (!token) return;
         try {
-          const apiUrl =
-            process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+          const apiUrl = API_BASE_URL;
           const res = await fetch(
             `${apiUrl}/conversations/${selectedId}/messages`,
             {
@@ -283,8 +281,7 @@ export default function AIAssistantUI() {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+      const apiUrl = API_BASE_URL;
       const res = await fetch(`${apiUrl}/conversations/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -302,8 +299,7 @@ export default function AIAssistantUI() {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+      const apiUrl = API_BASE_URL;
       const res = await fetch(`${apiUrl}/conversations/${id}`, {
         method: "PUT",
         headers: {
@@ -373,8 +369,7 @@ export default function AIAssistantUI() {
     // 1. Handle New Chat creation
     if (convId === "new") {
       try {
-        const apiUrl =
-          process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+        const apiUrl = API_BASE_URL;
         const res = await fetch(`${apiUrl}/conversations`, {
           method: "POST",
           headers: {
@@ -440,8 +435,7 @@ export default function AIAssistantUI() {
     setProviderSwitchEvent(null);
 
     try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "https://trivisionx-ai.onrender.com/api";
+      const apiUrl = API_BASE_URL;
       const response = await fetch(`${apiUrl}/chat`, {
         method: "POST",
         headers: {

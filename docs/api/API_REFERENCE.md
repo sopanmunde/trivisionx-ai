@@ -1,9 +1,9 @@
 # API Reference — TriVisionX Platform
 
-> **Base URL (local):** `https://trivisionx-ai.onrender.com`  
+> **Base URL (local):** `http://localhost:8000`  
 > **Authentication:** Bearer JWT token in `Authorization` header  
-> **OpenAPI UI:** `https://trivisionx-ai.onrender.com/docs`  
-> **ReDoc:** `https://trivisionx-ai.onrender.com/redoc`
+> **OpenAPI UI:** `http://localhost:8000/docs`  
+> **ReDoc:** `http://localhost:8000/redoc`
 
 ---
 
