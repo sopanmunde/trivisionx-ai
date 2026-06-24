@@ -35,7 +35,7 @@ function AgentWorkflowVisual() {
   ];
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 bg-zinc-950/90 rounded-2xl border border-zinc-800/80 w-full max-w-lg mx-auto shadow-2xl">
+    <div className="flex flex-col items-center gap-4 p-4 bg-background/90 rounded-2xl border border-border/80 w-full max-w-lg mx-auto shadow-2xl">
       <div className="relative w-full aspect-[320/120]">
         <svg viewBox="0 0 320 120" className="w-full h-full">
           {/* Base Connection Lines */}
@@ -170,7 +170,7 @@ function AgentWorkflowVisual() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
             transition={{ duration: 0.2 }}
-            className="text-[10px] font-mono text-zinc-400 bg-zinc-900/60 px-3 py-1 rounded-full border border-zinc-800/80"
+            className="text-[10px] font-mono text-muted-foreground bg-card/60 px-3 py-1 rounded-full border border-border/80"
           >
             {step === 0 && "System Idle — Awaiting research prompt..."}
             {step === 1 && "Smart Router: Analyzing query & selecting optimal workflow..."}
@@ -220,9 +220,9 @@ function RetrievalVisual() {
   return (
     <div className="space-y-3 font-mono text-xs w-full">
       {/* Mock Search Bar */}
-      <div className="flex items-center gap-2 p-2 bg-zinc-950 rounded-lg border border-zinc-800/80 text-[10px] text-zinc-400">
+      <div className="flex items-center gap-2 p-2 bg-background rounded-lg border border-border/80 text-[10px] text-muted-foreground">
         <Search className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
-        <span className="text-zinc-300 font-bold whitespace-nowrap">{queryText}</span>
+        <span className="text-muted-foreground font-bold whitespace-nowrap">{queryText}</span>
         <span className="w-1 h-3.5 bg-purple-400 animate-pulse-glow" />
       </div>
 
@@ -234,7 +234,7 @@ function RetrievalVisual() {
             animate={active === i ? { opacity: 1, x: 4 } : { opacity: 0.4, x: 0 }}
             className={`p-2 rounded border transition-all ${active === i
                 ? "border-purple-500/30 bg-purple-500/5 text-purple-400"
-                : "border-zinc-800 bg-transparent text-zinc-500"
+                : "border-border bg-transparent text-muted-foreground"
               }`}
           >
             <div className="flex justify-between items-center text-[10px]">
@@ -273,8 +273,8 @@ function MultiLlmVisual() {
   const activeQuery = queries[queryIndex];
 
   return (
-    <div className="bg-zinc-950/80 p-3 rounded-xl border border-zinc-900/60 space-y-2.5 font-mono text-[9px] w-full shadow-lg">
-      <div className="flex justify-between items-center text-zinc-500 text-[8px] pb-1.5 border-b border-zinc-900">
+    <div className="bg-background/80 p-3 rounded-xl border border-zinc-900/60 space-y-2.5 font-mono text-[9px] w-full shadow-lg">
+      <div className="flex justify-between items-center text-muted-foreground text-[8px] pb-1.5 border-b border-zinc-900">
         <span>ACTIVE LLM GATEWAY ROUTER</span>
         <span className="flex items-center gap-1">
           <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
@@ -283,10 +283,10 @@ function MultiLlmVisual() {
       </div>
 
       <div className="flex items-center justify-between gap-2 py-1.5">
-        <div className="flex-1 bg-zinc-900/40 border border-zinc-900 p-2.5 rounded truncate text-zinc-300 font-bold">
+        <div className="flex-1 bg-card/40 border border-zinc-900 p-2.5 rounded truncate text-muted-foreground font-bold">
           "{activeQuery.text}"
         </div>
-        <div className="text-zinc-600 font-bold animate-pulse text-[11px]">➜</div>
+        <div className="text-muted-foreground font-bold animate-pulse text-[11px]">➜</div>
         <div className={`px-3 py-2 rounded-xl border font-bold text-center w-20 transition-all duration-300 text-[10px] ${activeQuery.color} shadow-sm`}>
           {activeQuery.model}
         </div>
@@ -298,9 +298,9 @@ function MultiLlmVisual() {
 // ── 4. Structured Report Compiler Layout ───────────────────────────────
 function ReportVisual() {
   return (
-    <div className="p-3 bg-zinc-950/80 rounded-xl border border-zinc-800/80 space-y-2.5 font-mono text-[10px] text-zinc-400 shadow-lg">
-      <div className="flex justify-between items-center border-b border-zinc-800 pb-1.5">
-        <span className="flex items-center gap-1.5 text-zinc-300">
+    <div className="p-3 bg-background/80 rounded-xl border border-border/80 space-y-2.5 font-mono text-[10px] text-muted-foreground shadow-lg">
+      <div className="flex justify-between items-center border-b border-border pb-1.5">
+        <span className="flex items-center gap-1.5 text-muted-foreground">
           <FileText className="w-3.5 h-3.5 text-purple-400" />
           report_generator.md
         </span>
@@ -310,11 +310,11 @@ function ReportVisual() {
         </span>
       </div>
       <div className="space-y-1.5 text-[9px]">
-        <div className="flex items-center justify-between text-zinc-500">
+        <div className="flex items-center justify-between text-muted-foreground">
           <span>Sections compiled</span>
           <span>100% (4/4)</span>
         </div>
-        <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
+        <div className="h-1 bg-card rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: "100%" }}
@@ -323,13 +323,13 @@ function ReportVisual() {
           />
         </div>
         <div className="flex flex-wrap gap-1 mt-2 pt-1 border-t border-zinc-900">
-          <span className="px-1.5 py-0.5 bg-zinc-800/60 rounded border border-zinc-700/50 text-zinc-400 flex items-center gap-1">
+          <span className="px-1.5 py-0.5 bg-accent/60 rounded border border-border/50 text-muted-foreground flex items-center gap-1">
             <FileCheck className="w-2.5 h-2.5 text-purple-400" /> Citations
           </span>
-          <span className="px-1.5 py-0.5 bg-zinc-800/60 rounded border border-zinc-700/50 text-zinc-400 flex items-center gap-1">
+          <span className="px-1.5 py-0.5 bg-accent/60 rounded border border-border/50 text-muted-foreground flex items-center gap-1">
             <GitMerge className="w-2.5 h-2.5 text-purple-400" /> Markdown
           </span>
-          <span className="px-1.5 py-0.5 bg-zinc-800/60 rounded border border-zinc-700/50 text-zinc-400 flex items-center gap-1">
+          <span className="px-1.5 py-0.5 bg-accent/60 rounded border border-border/50 text-muted-foreground flex items-center gap-1">
             <Activity className="w-2.5 h-2.5 text-purple-400" /> Metrics
           </span>
         </div>
@@ -364,10 +364,10 @@ function CodingLoopVisual() {
   }, []);
 
   return (
-    <div className="space-y-2.5 font-mono text-[9px] w-full bg-zinc-950/90 p-3 rounded-xl border border-zinc-800/80 shadow-lg">
+    <div className="space-y-2.5 font-mono text-[9px] w-full bg-background/90 p-3 rounded-xl border border-border/80 shadow-lg">
       {/* Code Editor Mockup */}
-      <div className="border border-zinc-900 bg-zinc-950 p-2 rounded text-zinc-300 select-none">
-        <div className="flex gap-1 mb-1.5 border-b border-zinc-900 pb-1 text-[8px] text-zinc-500">
+      <div className="border border-zinc-900 bg-background p-2 rounded text-muted-foreground select-none">
+        <div className="flex gap-1 mb-1.5 border-b border-zinc-900 pb-1 text-[8px] text-muted-foreground">
           <Terminal className="w-2.5 h-2.5 text-purple-400" />
           agent_test.py
         </div>
@@ -378,7 +378,7 @@ function CodingLoopVisual() {
       {/* Compiler Terminal logs */}
       <div className="space-y-1.5 border-t border-zinc-900 pt-2 text-[8px]">
         <div className="flex justify-between items-center">
-          <span className="text-zinc-500 flex items-center gap-1">
+          <span className="text-muted-foreground flex items-center gap-1">
             <Play className="w-2.5 h-2.5 text-purple-500" />
             pytest test_agents.py
           </span>
@@ -421,7 +421,7 @@ export function BentoGrid() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="features" className="py-24 px-4 bg-zinc-950 text-zinc-100 transition-colors">
+    <section id="features" className="py-24 px-4 bg-background text-foreground transition-colors">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -429,10 +429,10 @@ export function BentoGrid() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
             Enterprise-Grade Agentic Automation
           </h2>
-          <p className="text-zinc-400 max-w-2xl mx-auto text-sm sm:text-base">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
             Streamline complex workflows with self-correcting agent systems, semantic memory retrieval, and autonomous code execution loops.
           </p>
         </motion.div>
@@ -447,7 +447,7 @@ export function BentoGrid() {
           {/* 1. Large Card: Multi-Agent Orchestration */}
           <motion.div
             variants={itemVariants}
-            className="md:col-span-2 group relative p-5 md:p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700 backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden"
+            className="md:col-span-2 group relative p-5 md:p-6 rounded-2xl bg-card/40 border border-border/80 hover:border-border backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden"
           >
             <div
               className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
@@ -458,25 +458,25 @@ export function BentoGrid() {
             />
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
               <div className="flex-1">
-                <div className="p-2 rounded-lg bg-zinc-800/50 w-fit mb-4">
+                <div className="p-2 rounded-lg bg-accent/50 w-fit mb-4">
                   <Bot className="w-5 h-5 text-purple-400" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">
+                <h3 className="text-lg font-bold text-foreground mb-2">
                   Agentic Workflow Orchestration
                 </h3>
-                <p className="text-zinc-400 text-xs max-w-md mb-4 leading-relaxed">
+                <p className="text-muted-foreground text-xs max-w-md mb-4 leading-relaxed">
                   Autonomous orchestration of specialized AI agents built with LangGraph. Intelligently routes and schedules tasks across planning, semantic querying, logic synthesis, and reporter agents.
                 </p>
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2.5 text-[11px] text-zinc-300">
+                  <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
                     <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                     <span>State-Machine loops (LangGraph backend)</span>
                   </div>
-                  <div className="flex items-center gap-2.5 text-[11px] text-zinc-300">
+                  <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
                     <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                     <span>Dynamic task routing with parallel execution</span>
                   </div>
-                  <div className="flex items-center gap-2.5 text-[11px] text-zinc-300">
+                  <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
                     <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                     <span>Self-healing cyclic planning loops</span>
                   </div>
@@ -491,7 +491,7 @@ export function BentoGrid() {
           {/* 2. Semantic MMR Retrieval */}
           <motion.div
             variants={itemVariants}
-            className="group relative p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700 backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
+            className="group relative p-5 rounded-2xl bg-card/40 border border-border/80 hover:border-border backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
           >
             <div
               className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
@@ -501,11 +501,11 @@ export function BentoGrid() {
               }}
             />
             <div>
-              <div className="p-2 rounded-lg bg-zinc-800/50 w-fit mb-3">
+              <div className="p-2 rounded-lg bg-accent/50 w-fit mb-3">
                 <Search className="w-4 h-4 text-purple-400" strokeWidth={1.5} />
               </div>
-              <h3 className="text-base font-bold text-white mb-1.5">Autonomous Context Retrieval</h3>
-              <p className="text-zinc-400 text-xs mb-4 leading-relaxed">
+              <h3 className="text-base font-bold text-foreground mb-1.5">Autonomous Context Retrieval</h3>
+              <p className="text-muted-foreground text-xs mb-4 leading-relaxed">
                 Automated semantic memory extraction using MMR over Pinecone vector stores, providing agents with contextually dense and noise-filtered local knowledge.
               </p>
             </div>
@@ -515,7 +515,7 @@ export function BentoGrid() {
           {/* 3. Multi-LLM Gateway */}
           <motion.div
             variants={itemVariants}
-            className="group relative p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700 backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
+            className="group relative p-5 rounded-2xl bg-card/40 border border-border/80 hover:border-border backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
           >
             <div
               className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
@@ -525,11 +525,11 @@ export function BentoGrid() {
               }}
             />
             <div>
-              <div className="p-2 rounded-lg bg-zinc-800/50 w-fit mb-3">
+              <div className="p-2 rounded-lg bg-accent/50 w-fit mb-3">
                 <Cpu className="w-4 h-4 text-purple-400" strokeWidth={1.5} />
               </div>
-              <h3 className="text-base font-bold text-white mb-1.5">Dynamic Model Routing</h3>
-              <p className="text-zinc-400 text-xs mb-4 leading-relaxed">
+              <h3 className="text-base font-bold text-foreground mb-1.5">Dynamic Model Routing</h3>
+              <p className="text-muted-foreground text-xs mb-4 leading-relaxed">
                 Automated routing of model calls across Gemini, Claude, OpenAI, and DeepSeek, dynamically matching individual agent tasks to the most efficient LLM runtime.
               </p>
             </div>
@@ -539,7 +539,7 @@ export function BentoGrid() {
           {/* 4. Structured Reports */}
           <motion.div
             variants={itemVariants}
-            className="group relative p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700 backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
+            className="group relative p-5 rounded-2xl bg-card/40 border border-border/80 hover:border-border backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
           >
             <div
               className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
@@ -549,11 +549,11 @@ export function BentoGrid() {
               }}
             />
             <div>
-              <div className="p-2 rounded-lg bg-zinc-800/50 w-fit mb-3">
+              <div className="p-2 rounded-lg bg-accent/50 w-fit mb-3">
                 <FileText className="w-4 h-4 text-purple-400" strokeWidth={1.5} />
               </div>
-              <h3 className="text-base font-bold text-white mb-1.5">Automated Report Synthesis</h3>
-              <p className="text-zinc-400 text-xs mb-4 leading-relaxed">
+              <h3 className="text-base font-bold text-foreground mb-1.5">Automated Report Synthesis</h3>
+              <p className="text-muted-foreground text-xs mb-4 leading-relaxed">
                 Hands-free compilation of verified research reports, complete with auto-generated tables, references, and inline citation mapping.
               </p>
             </div>
@@ -563,7 +563,7 @@ export function BentoGrid() {
           {/* 5. Autonomous Coding Loop */}
           <motion.div
             variants={itemVariants}
-            className="group relative p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700 backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
+            className="group relative p-5 rounded-2xl bg-card/40 border border-border/80 hover:border-border backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
           >
             <div
               className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
@@ -573,11 +573,11 @@ export function BentoGrid() {
               }}
             />
             <div>
-              <div className="p-2 rounded-lg bg-zinc-800/50 w-fit mb-3">
+              <div className="p-2 rounded-lg bg-accent/50 w-fit mb-3">
                 <Code className="w-4 h-4 text-purple-400" strokeWidth={1.5} />
               </div>
-              <h3 className="text-base font-bold text-white mb-1.5">Self-Correcting Coding Loop</h3>
-              <p className="text-zinc-400 text-xs mb-4 leading-relaxed">
+              <h3 className="text-base font-bold text-foreground mb-1.5">Self-Correcting Coding Loop</h3>
+              <p className="text-muted-foreground text-xs mb-4 leading-relaxed">
                 An autonomous loop that generates, executes, audits, and debugs code scripts until all unit tests pass successfully without human intervention.
               </p>
             </div>

@@ -15,7 +15,7 @@ const plans = [
       "Single active agent pipeline",
       "Shared Pinecone retriever",
       "Standard OpenAI & Anthropic routing",
-      "Community forum support",
+      "Discord & email support",
     ],
     cta: "Start Building Free",
     highlighted: false,

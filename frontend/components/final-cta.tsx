@@ -4,6 +4,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { ArrowRight, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export function FinalCTA() {
   const ref = useRef(null);
@@ -41,18 +42,22 @@ export function FinalCTA() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button
+            asChild
             size="lg"
             className="w-full sm:w-auto bg-zinc-100 hover:bg-zinc-200 text-zinc-950 rounded-xl px-8 h-12 text-sm font-semibold flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
           >
-            Deploy First Pipeline
-            <ArrowRight className="w-4 h-4" />
+            <Link href="/pricing">
+              View Pricing
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </Button>
           <Button
+            asChild
             variant="outline"
             size="lg"
             className="w-full sm:w-auto rounded-xl px-8 h-12 text-sm font-semibold border-zinc-800 text-zinc-300 hover:bg-zinc-900 hover:text-white hover:border-zinc-700 bg-transparent flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
           >
-            Consult Agent Architect
+            <Link href="/contact">Contact Us</Link>
           </Button>
         </div>
 
