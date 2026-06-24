@@ -32,9 +32,8 @@ function PasswordStrength({ password }: { password: string }) {
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`h-0.5 flex-1 rounded-full transition-all duration-300 ${
-              tooLong ? "bg-red-500" : i < score ? colors[score] : "bg-zinc-700"
-            }`}
+            className={`h-0.5 flex-1 rounded-full transition-all duration-300 ${tooLong ? "bg-red-500" : i < score ? colors[score] : "bg-zinc-700"
+              }`}
           />
         ))}
       </div>
@@ -220,7 +219,7 @@ function getProviderFromParams(searchParams: any): string {
       const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")))
       return payload.provider || "google"
     }
-  } catch (e) {}
+  } catch (e) { }
   return state === "github" ? "github" : "google"
 }
 
@@ -485,7 +484,7 @@ function SignUpPageContent() {
                 <Label htmlFor="username">Username</Label>
                 <input id="username" name="username" value={form.username} onChange={handleChange} placeholder="johndoe" required className={inputCls} />
               </FormItem>
-              
+
               <FormItem>
                 <Label htmlFor="email">Email</Label>
                 <input id="email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="m@example.com" required className={inputCls} />

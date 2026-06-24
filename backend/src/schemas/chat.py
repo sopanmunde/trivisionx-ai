@@ -13,6 +13,7 @@ class QueryRequest(BaseModel):
     model_provider: Optional[str] = None
 
     model_name: Optional[str] = None
+    filename: Optional[str] = None
 
     @field_validator("mode")
     @classmethod

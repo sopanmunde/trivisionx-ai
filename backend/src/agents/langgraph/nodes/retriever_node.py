@@ -35,12 +35,17 @@ async def retriever_node(state: AgentState) -> dict:
             "current_node": "retriever",
         }
 
+    filename = state.get("filename")
     search_queries = plan if plan else [query]
-    user_filter = {"user_id": user_id} if user_id else None
+    user_filter = {"user_id": user_id} if user_id else {}
+    if filename:
+        user_filter["filename"] = filename
+    if not user_filter:
+        user_filter = None
 
     logger.info(
         f"[Retrieval] workflow={workflow_type}, {len(search_queries)} queries, "
-        f"provider={provider}, model={model_name or 'default'}"
+        f"provider={provider}, model={model_name or 'default'}, filename={filename or 'None'}"
     )
 
     retriever = get_mmr_retriever(top_k=DEFAULT_TOP_K, filter=user_filter)

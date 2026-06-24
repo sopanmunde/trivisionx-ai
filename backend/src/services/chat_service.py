@@ -64,6 +64,7 @@ async def _stream_chat_response_impl(
     workflow_type: str = "research",
     model_provider: Optional[str] = None,
     model_name: Optional[str] = None,
+    filename: Optional[str] = None,
 ) -> AsyncGenerator[str, None]:
     """
     Orchestrates either Quick Mode or Agent Mode and yields SSE events.
@@ -205,6 +206,7 @@ async def _stream_chat_response_impl(
         "query": query,
         "conversation_id": conversation_id,
         "user_id": user_id,
+        "filename": filename,
         "report_mode": False,
         "mode": mode,
         "workflow_type": workflow_type,
@@ -326,6 +328,7 @@ async def stream_chat_response(
     model_provider: Optional[str] = None,
     model_name: Optional[str] = None,
     http_request: Optional[Request] = None,
+    filename: Optional[str] = None,
 ) -> AsyncGenerator[str, None]:
     """
     Orchestrates Quick Mode or Agent Mode and yields SSE events.
@@ -346,6 +349,7 @@ async def stream_chat_response(
                 workflow_type=workflow_type,
                 model_provider=model_provider,
                 model_name=model_name,
+                filename=filename,
             ):
                 await queue.put(chunk)
             await queue.put(None)  # Sentinel for success
