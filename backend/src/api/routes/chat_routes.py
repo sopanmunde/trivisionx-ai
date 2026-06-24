@@ -11,7 +11,7 @@ Supports two modes:
 Supports multiple model providers (anthropic, google, groq, mistral, etc.)
 and multiple workflow types (research, coding, data_analysis, etc.)
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import StreamingResponse
 from src.core.security import get_current_user
 from src.schemas.chat import QueryRequest
@@ -29,6 +29,7 @@ logger = get_logger(__name__)
 @router.post("", summary="Send a chat message (SSE stream)")
 async def chat(
     request: QueryRequest,
+    http_request: Request,
     current_user=Depends(get_current_user),
 ):
     """
@@ -97,6 +98,7 @@ async def chat(
             workflow_type=request.workflow_type,
             model_provider=request.model_provider,
             model_name=request.model_name,
+            http_request=http_request,
         ),
         media_type="text/event-stream",
         headers={

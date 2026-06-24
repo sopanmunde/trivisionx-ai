@@ -12,6 +12,8 @@ SSE event protocol:
   {"done": true, "sources": [...]}               — stream complete
   {"error": "<message>"}                         — error
 """
+import json
+from fastapi import Request
 from typing import AsyncGenerator, Optional
 from datetime import datetime, timezone
 from bson import ObjectId
@@ -313,6 +315,7 @@ async def stream_chat_response(
     workflow_type: str = "research",
     model_provider: Optional[str] = None,
     model_name: Optional[str] = None,
+    http_request: Optional[Request] = None,
 ) -> AsyncGenerator[str, None]:
     """
     Orchestrates Quick Mode or Agent Mode and yields SSE events.
@@ -343,7 +346,15 @@ async def stream_chat_response(
 
     try:
         while True:
-            item = await queue.get()
+            if http_request and await http_request.is_disconnected():
+                logger.info("[Chat] Client disconnected. Cleaning up SSE stream.")
+                break
+
+            try:
+                item = await asyncio.wait_for(queue.get(), timeout=1.0)
+            except asyncio.TimeoutError:
+                continue
+
             if item is None:
                 break
             if isinstance(item, Exception):
