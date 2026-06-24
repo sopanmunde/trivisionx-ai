@@ -20,15 +20,19 @@ async def insert_message(
     role: str,
     content: str,
     sources: List[Dict] = None,
+    attached_file: Optional[Dict] = None,
 ) -> str:
-    result = await _db()[COLLECTION_MESSAGES].insert_one({
+    doc = {
         "conversation_id": conversation_id,
         "user_id": user_id,
         "role": role,
         "content": content,
         "sources": sources or [],
         "created_at": datetime.utcnow(),
-    })
+    }
+    if attached_file:
+        doc["attachedFile"] = attached_file
+    result = await _db()[COLLECTION_MESSAGES].insert_one(doc)
     return str(result.inserted_id)
 
 

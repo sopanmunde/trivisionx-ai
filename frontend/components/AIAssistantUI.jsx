@@ -442,7 +442,12 @@ export default function AIAssistantUI() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ msg: content, conversation_id: targetConvId, mode }),
+        body: JSON.stringify({
+          msg: content,
+          conversation_id: targetConvId,
+          mode,
+          filename: fileRef ? fileRef.name : null,
+        }),
       });
 
       if (!response.ok) {

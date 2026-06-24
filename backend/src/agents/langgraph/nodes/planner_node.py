@@ -147,6 +147,7 @@ async def planner_node(state: AgentState) -> dict:
         }
 
     # Build messages once (reused across provider fallback attempts)
+    filename = state.get("filename")
     messages = [SystemMessage(content=PLANNER_SYSTEM_V2)]
     for turn in history[-6:]:
         role = turn.get("role", "")
@@ -155,7 +156,11 @@ async def planner_node(state: AgentState) -> dict:
             messages.append(HumanMessage(content=content))
         elif role == "assistant":
             messages.append(AIMessage(content=content))
-    messages.append(HumanMessage(content=query))
+    
+    user_content = query
+    if filename:
+        user_content = f"{query}\n\n[Note: User has attached document '{filename}' to this query. It should be used to retrieve context.]"
+    messages.append(HumanMessage(content=user_content))
 
     # ── Provider failover loop ──────────────────────────────────────────────
     from src.core.llm_factory import get_fallback_providers

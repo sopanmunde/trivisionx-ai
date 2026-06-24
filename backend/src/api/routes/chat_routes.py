@@ -76,6 +76,7 @@ async def chat(
                 user_id=user_id,
                 role="user",
                 content=query,
+                attached_file={"name": request.filename} if request.filename else None,
             )
         except Exception as e:
             logger.warning(f"Failed to save user message: {e}")
@@ -99,6 +100,7 @@ async def chat(
             model_provider=request.model_provider,
             model_name=request.model_name,
             http_request=http_request,
+            filename=request.filename,
         ),
         media_type="text/event-stream",
         headers={

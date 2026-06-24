@@ -22,6 +22,7 @@ class AgentState(TypedDict):
     query: str
     conversation_id: Optional[str]
     user_id: Optional[str]
+    filename: Optional[str]
     report_mode: bool
     mode: str
     workflow_type: str

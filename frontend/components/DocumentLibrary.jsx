@@ -368,39 +368,40 @@ export default function DocumentLibrary({ open, onClose }) {
                   {filteredDocs.map((doc) => {
                     const { icon: DocIcon, color, bg } = getFileIcon(doc.filename);
                     return (
-                    <motion.div
-                      key={doc.id}
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="group flex items-center justify-between rounded-xl border border-zinc-200 dark:border-zinc-800/60 bg-card dark:bg-zinc-900/30 text-card-foreground p-3 transition-all hover:bg-accent dark:hover:bg-zinc-900/70 hover:text-accent-foreground hover:border-zinc-700/80"
-                    >
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border", bg)}>
-                          <DocIcon className={cn("h-4 w-4", color)} />
-                        </div>
-                        <div className="overflow-hidden">
-                          <h4 className="truncate text-sm font-medium leading-none" title={doc.filename}>
-                            {doc.filename}
-                          </h4>
-                          <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Database className="h-3 w-3" />
-                              {doc.chunk_count} chunks
-                            </span>
-                            <span>•</span>
-                            <span>{new Date(doc.uploaded_at).toLocaleDateString()}</span>
+                      <motion.div
+                        key={doc.id}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="group flex items-center justify-between rounded-xl border border-zinc-200 dark:border-zinc-800/60 bg-card dark:bg-zinc-900/30 text-card-foreground p-3 transition-all hover:bg-accent dark:hover:bg-zinc-900/70 hover:text-accent-foreground hover:border-zinc-700/80"
+                      >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border", bg)}>
+                            <DocIcon className={cn("h-4 w-4", color)} />
+                          </div>
+                          <div className="overflow-hidden">
+                            <h4 className="truncate text-sm font-medium leading-none" title={doc.filename}>
+                              {doc.filename}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Database className="h-3 w-3" />
+                                {doc.chunk_count} chunks
+                              </span>
+                              <span>•</span>
+                              <span>{new Date(doc.uploaded_at).toLocaleDateString()}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <button
-                        onClick={() => triggerDeleteConfirm(doc)}
-                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-destructive hover:text-destructive-foreground h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 cursor-pointer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </button>
-                    </motion.div>
-                  )})}
+                        <button
+                          onClick={() => triggerDeleteConfirm(doc)}
+                          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-destructive hover:text-destructive-foreground h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 cursor-pointer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </button>
+                      </motion.div>
+                    )
+                  })}
                   {filteredDocs.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-8">
                       No documents match your search.
@@ -410,7 +411,7 @@ export default function DocumentLibrary({ open, onClose }) {
               )}
             </div>
           </motion.div>
-          
+
           <ModernConfirmDialog
             isOpen={deleteDocConfirmOpen}
             onClose={() => { setDeleteDocConfirmOpen(false); setDocToDelete(null); }}
