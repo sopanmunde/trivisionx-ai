@@ -243,7 +243,13 @@ async def _stream_chat_response_impl(
             ):
                 yield sse_node_event(name, "completed")
 
-                if name == "retriever":
+                if name == "planner":
+                    output = data.get("output", {})
+                    if output.get("terminate") and output.get("final_output"):
+                        final_text = output.get("final_output")
+                        yield sse_token_event(final_text)
+
+                elif name == "retriever":
                     output = data.get("output", {})
                     cits = output.get("citations", [])
                     if cits:
