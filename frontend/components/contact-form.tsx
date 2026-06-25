@@ -8,6 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useState } from "react";
+import { API_BASE_URL } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type ContactFormData = {
   firstName: string;
@@ -31,13 +39,28 @@ export function ContactForm() {
 
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
-    // Mock API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
-    toast.success("Message sent successfully!", {
-      description: "We'll get back to you within 24 hours.",
-    });
-    form.reset();
+    try {
+      const res = await fetch(`${API_BASE_URL}/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.detail || "Failed to send message");
+      }
+      toast.success("Message sent successfully!", {
+        description: "We'll get back to you within 24 hours.",
+      });
+      form.reset();
+    } catch (err) {
+      const error = err as Error;
+      toast.error(error.message || "An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -91,18 +114,19 @@ export function ContactForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs font-semibold text-muted-foreground font-mono uppercase tracking-wider mb-2 block">Subject</FormLabel>
-              <FormControl>
-                <select 
-                  {...field}
-                  className="w-full h-9 rounded-md border border-input bg-transparent bg-card px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                >
-                  <option value="" disabled>Select a topic</option>
-                  <option value="General Inquiry">General Inquiry</option>
-                  <option value="Enterprise Sales">Enterprise Sales</option>
-                  <option value="Technical Support">Technical Support</option>
-                  <option value="Other">Other</option>
-                </select>
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a topic" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="dark bg-popover border-zinc-800">
+                  <SelectItem value="General Inquiry">General Inquiry</SelectItem>
+                  <SelectItem value="Enterprise Sales">Enterprise Sales</SelectItem>
+                  <SelectItem value="Technical Support">Technical Support</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -119,9 +143,23 @@ export function ContactForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isSubmitting} className="w-full rounded-md font-semibold py-6 shadow-sm">
-          <Send className="w-4 h-4 mr-2" />
-          {isSubmitting ? "Sending..." : "Send Message"}
+        <Button 
+          type="submit" 
+          disabled={isSubmitting} 
+          className="w-full font-medium shadow-sm transition-all"
+          size="lg"
+        >
+          {isSubmitting ? (
+            <span className="flex items-center gap-2">
+              <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Sending...
+            </span>
+          ) : (
+            <>
+              <Send className="w-4 h-4 mr-2" />
+              Send Message
+            </>
+          )}
         </Button>
       </form>
     </Form>

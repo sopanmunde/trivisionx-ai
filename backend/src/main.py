@@ -119,6 +119,7 @@ from src.api.routes.github_auth import router as github_auth_router
 from src.api.routes.chat_routes import router as chat_router
 from src.api.routes.upload_routes import router as upload_router
 from src.api.routes.report_routes import router as report_router
+from src.api.routes.contact_routes import router as contact_router
 from src.api.routes.health_routes import router as health_router
 from src.api.routes.models_routes import router as models_router
 from src.api.conversations import router as conversations_router
@@ -277,6 +278,7 @@ def create_app() -> FastAPI:
     app.include_router(chat_router,          prefix="/api/chat",                tags=["chat"])
     app.include_router(upload_router,        prefix="/api/documents",           tags=["documents"])
     app.include_router(report_router,        prefix="/api/reports",             tags=["reports"])
+    app.include_router(contact_router,       prefix="/api/contact",             tags=["contact"])
     # Alias: /api/research-sessions → same data as /api/reports/history
     app.include_router(report_router,        prefix="/api/research-sessions",   tags=["research-sessions"])
     app.include_router(models_router,        prefix="/api/models",              tags=["models"])

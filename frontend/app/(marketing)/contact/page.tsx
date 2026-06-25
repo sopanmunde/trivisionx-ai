@@ -26,11 +26,11 @@ export default function ContactPage() {
       title="Get in Touch"
       subtitle="Have a question, partnership inquiry, or need enterprise support? We'd love to hear from you."
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 relative z-10">
+      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 relative z-10">
         {/* Contact Form */}
-        <Card className="p-8">
-          <CardHeader className="p-0 mb-6">
-            <CardTitle className="text-xl font-bold text-foreground">Send a Message</CardTitle>
+        <Card className="p-6 md:p-8 bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 shadow-2xl rounded-2xl">
+          <CardHeader className="p-0 mb-5">
+            <CardTitle className="text-lg font-bold text-foreground">Send a Message</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <ContactForm />
@@ -38,19 +38,19 @@ export default function ContactPage() {
         </Card>
 
         {/* Contact Info */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {contactInfo.map((item) => {
             const Icon = item.icon;
             return (
               <Card
                 key={item.title}
-                className="p-5 flex gap-4 hover:border-muted-foreground/30 transition-all duration-200 group cursor-pointer"
+                className="p-4 flex gap-4 bg-zinc-900/30 backdrop-blur-md border border-zinc-800/50 hover:border-zinc-700/80 hover:bg-zinc-800/20 transition-all duration-200 group cursor-pointer rounded-xl"
               >
-                <div className="inline-flex p-3 rounded-lg bg-secondary border border-border text-primary group-hover:bg-muted transition-colors self-start shrink-0">
-                  <Icon className="w-5 h-5" />
+                <div className="inline-flex p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700 text-zinc-300 group-hover:bg-zinc-700 group-hover:text-white transition-colors self-start shrink-0">
+                  <Icon className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground mb-1.5 text-sm tracking-tight">{item.title}</h3>
+                  <h3 className="font-bold text-foreground mb-1 text-sm tracking-tight">{item.title}</h3>
                   {item.lines.map((l) => (
                     <p key={l} className="text-xs text-muted-foreground font-mono leading-relaxed">
                       {l}
