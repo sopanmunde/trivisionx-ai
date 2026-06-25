@@ -358,7 +358,7 @@ const ChatPane = forwardRef(function ChatPane(
           </AnimatePresence>
 
           {/* Messages scroll area */}
-          <div className="flex-1 overflow-y-auto scroll-smooth">
+          <div className="flex-1 overflow-y-auto scroll-smooth scrollbar-thin">
             <div className="mx-auto max-w-3xl px-4 py-8">
               <div className="space-y-6">
                 <AnimatePresence initial={false}>
