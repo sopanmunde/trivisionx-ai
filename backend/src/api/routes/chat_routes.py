@@ -18,8 +18,9 @@ from src.schemas.chat import QueryRequest
 from src.database.mongodb.connection import get_database
 from src.database.mongodb.repositories.chat_repository import insert_message
 from src.services.chat_service import stream_chat_response
-from src.core.constants import COLLECTION_MESSAGES, COLLECTION_CONVERSATIONS
+from src.core.constants import COLLECTION_MESSAGES, COLLECTION_CONVERSATIONS, RATE_LIMIT_CHAT
 from src.middleware.prompt_injection_guard import scan_text, sanitize
+from src.core.limiter import limiter
 from src.core.logger import get_logger
 
 router = APIRouter()
@@ -27,9 +28,10 @@ logger = get_logger(__name__)
 
 
 @router.post("", summary="Send a chat message (SSE stream)")
+@limiter.limit(RATE_LIMIT_CHAT)
 async def chat(
-    request: QueryRequest,
-    http_request: Request,
+    request: Request,
+    query_req: QueryRequest,
     current_user=Depends(get_current_user),
 ):
     """
@@ -56,7 +58,7 @@ async def chat(
     user_id = str(current_user["_id"])
     db = get_database()
 
-    query = sanitize(request.msg)
+    query = sanitize(query_req.msg)
     if scan_text(query):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -69,22 +71,22 @@ async def chat(
             detail="Query cannot be empty.",
         )
 
-    if request.conversation_id:
+    if query_req.conversation_id:
         try:
             await insert_message(
-                conversation_id=request.conversation_id,
+                conversation_id=query_req.conversation_id,
                 user_id=user_id,
                 role="user",
                 content=query,
-                attached_file={"name": request.filename} if request.filename else None,
+                attached_file={"name": query_req.filename} if query_req.filename else None,
             )
         except Exception as e:
             logger.warning(f"Failed to save user message: {e}")
 
     logger.info(
-        f"[Chat] mode={request.mode}, workflow={request.workflow_type}, "
-        f"provider={request.model_provider or 'default'}, "
-        f"model={request.model_name or 'default'}, "
+        f"[Chat] mode={query_req.mode}, workflow={query_req.workflow_type}, "
+        f"provider={query_req.model_provider or 'default'}, "
+        f"model={query_req.model_name or 'default'}, "
         f"query='{query[:60]}'"
     )
 
@@ -92,15 +94,15 @@ async def chat(
         stream_chat_response(
             query=query,
             user_id=user_id,
-            conversation_id=request.conversation_id,
+            conversation_id=query_req.conversation_id,
             messages_collection=db[COLLECTION_MESSAGES],
             conversations_collection=db[COLLECTION_CONVERSATIONS],
-            mode=request.mode,
-            workflow_type=request.workflow_type,
-            model_provider=request.model_provider,
-            model_name=request.model_name,
-            http_request=http_request,
-            filename=request.filename,
+            mode=query_req.mode,
+            workflow_type=query_req.workflow_type,
+            model_provider=query_req.model_provider,
+            model_name=query_req.model_name,
+            http_request=request,
+            filename=query_req.filename,
         ),
         media_type="text/event-stream",
         headers={

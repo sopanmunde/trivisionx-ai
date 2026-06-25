@@ -1,6 +1,8 @@
 """Upload routes — PDF/DOCX/TXT ingestion with full pipeline."""
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File, Request
 from src.core.security import get_current_user
+from src.core.limiter import limiter
+from src.core.constants import RATE_LIMIT_UPLOAD
 from src.utils.validators import validate_file
 from src.rag.ingestion.pdf_loader import load_pdf
 from src.rag.ingestion.docx_loader import load_docx
@@ -15,7 +17,9 @@ logger = get_logger(__name__)
 
 
 @router.post("/upload")
+@limiter.limit(RATE_LIMIT_UPLOAD)
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...),
     current_user=Depends(get_current_user),
 ):
@@ -117,7 +121,9 @@ import json
 import asyncio
 
 @router.post("/upload/stream")
+@limiter.limit(RATE_LIMIT_UPLOAD)
 async def upload_document_stream(
+    request: Request,
     file: UploadFile = File(...),
     current_user=Depends(get_current_user),
 ):
