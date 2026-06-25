@@ -25,10 +25,11 @@ async def upload_document(
 ):
     user_id = str(current_user["_id"])
     filename = file.filename
-    content = await file.read()
 
-    # Validate
-    validate_file(filename, len(content))
+    # Validate before reading to prevent OOM
+    validate_file(filename, file.size or 0)
+
+    content = await file.read()
 
     # Load based on extension
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
