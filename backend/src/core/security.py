@@ -58,9 +58,8 @@ def _users():
 async def get_password_hash(password: str) -> str:
     import asyncio
     def _hash():
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
         salt = bcrypt.gensalt(rounds=10)
-        hashed = bcrypt.hashpw(password_hash.encode('utf-8'), salt)
+        hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
         return hashed.decode('utf-8')
     return await asyncio.to_thread(_hash)
 
@@ -68,8 +67,12 @@ async def get_password_hash(password: str) -> str:
 async def verify_password(plain_password: str, hashed_password: str) -> bool:
     import asyncio
     def _verify():
-        plain_password_hash = hashlib.sha256(plain_password.encode()).hexdigest()
         try:
+            # Try direct verification first
+            if bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8')):
+                return True
+            # Fallback for legacy hashes (SHA-256 -> bcrypt)
+            plain_password_hash = hashlib.sha256(plain_password.encode()).hexdigest()
             return bcrypt.checkpw(plain_password_hash.encode('utf-8'), hashed_password.encode('utf-8'))
         except ValueError:
             return False
