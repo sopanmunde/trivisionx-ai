@@ -93,17 +93,25 @@ async def run_ingestion_pipeline(
     # ── Duplicate guard ──────────────────────────────────────────────────────
     if not allow_reindex:
         try:
-            existing = vector_store.similarity_search(
-                query=filename,
-                k=1,
+            index = vector_store.index
+            stats = index.describe_index_stats()
+            dimension = stats.dimension
+            dummy_vector = [0.0] * dimension
+            existing = index.query(
+                vector=dummy_vector,
                 filter={"user_id": user_id, "filename": filename},
+                top_k=1,
             )
             if existing:
-                logger.warning(
-                    f"'{filename}' already indexed for user={user_id}. "
-                    "Skipping re-index. Pass allow_reindex=True to override."
-                )
-                return 0
+                matches = getattr(existing, "matches", None)
+                if matches is None and isinstance(existing, dict):
+                    matches = existing.get("matches")
+                if matches:
+                    logger.warning(
+                        f"'{filename}' already indexed for user={user_id}. "
+                        "Skipping re-index. Pass allow_reindex=True to override."
+                    )
+                    return 0
         except Exception as e:
             # Non-fatal: if check fails, proceed with indexing
             logger.debug(f"Duplicate check failed (non-fatal): {e}")
