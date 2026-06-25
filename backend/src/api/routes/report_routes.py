@@ -1,6 +1,8 @@
 """Report routes — generate and retrieve research reports."""
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
+from src.core.limiter import limiter
+from src.core.constants import RATE_LIMIT_REPORT
 from typing import Optional
 from src.core.security import get_current_user
 from src.services.report_service import create_report
@@ -20,19 +22,21 @@ class ReportRequest(BaseModel):
 
 
 @router.post("/generate")
+@limiter.limit(RATE_LIMIT_REPORT)
 async def generate_report_endpoint(
-    request: ReportRequest,
+    request: Request,
+    report_req: ReportRequest,
     current_user=Depends(get_current_user),
 ):
     user_id = str(current_user["_id"])
     db = get_database()
 
     result = await create_report(
-        query=request.query,
+        query=report_req.query,
         user_id=user_id,
-        conversation_id=request.conversation_id,
+        conversation_id=report_req.conversation_id,
         reports_collection=db[COLLECTION_REPORTS],
-        top_k=request.top_k,
+        top_k=report_req.top_k,
     )
     return result
 
