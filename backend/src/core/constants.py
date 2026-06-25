@@ -90,6 +90,7 @@ SSE_RETRY_MS = 3000
 RATE_LIMIT_CHAT = "30/minute"
 RATE_LIMIT_UPLOAD = "10/minute"
 RATE_LIMIT_REPORT = "5/minute"
+RATE_LIMIT_CONTACT = "5/minute"
 RATE_LIMIT_DEFAULT = "60/minute"
 
 # ─── Collections ────────────────────────────────────────────────────────────────
@@ -98,6 +99,7 @@ COLLECTION_CONVERSATIONS = "conversations"
 COLLECTION_MESSAGES = "messages"
 COLLECTION_DOCUMENTS = "documents"
 COLLECTION_REPORTS = "reports"
+COLLECTION_CONTACTS = "contacts"
 
 # ─── Cache ──────────────────────────────────────────────────────────────────────
 REDIS_TTL_SECONDS = 3600          # 1 hour default TTL for RAG query cache
