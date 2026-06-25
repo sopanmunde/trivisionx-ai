@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from '@vercel/analytics/next';
+import { headers } from "next/headers";
 import "./globals.css";
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -57,11 +58,14 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers()
+  const nonce = headersList.get("x-nonce") || undefined
+
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className="font-sans antialiased">
@@ -70,12 +74,14 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          nonce={nonce}
         >
           <TooltipProvider>
             {children}
           </TooltipProvider>
           <Toaster position="bottom-right" />
-          <Analytics />
+          {/* @ts-expect-error - Analytics component supports nonce at runtime but lacks it in some type definitions */}
+          <Analytics nonce={nonce} />
         </ThemeProvider>
       </body>
     </html>
