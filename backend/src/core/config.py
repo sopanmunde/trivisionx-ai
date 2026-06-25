@@ -48,7 +48,6 @@ class Settings(BaseSettings):
     # ── Google OAuth2 SSO ───────────────────────────────────────────────────
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
-    REDIRECT_URI: str = "http://localhost:3000/login"
 
     # ── GitHub OAuth2 SSO ─────────────────────────────────────────────────
     GITHUB_CLIENT_ID: str = ""
