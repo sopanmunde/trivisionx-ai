@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom'
 import React from 'react'
+import { vi } from 'vitest'
 
 // Mock localStorage globally to avoid issues with Node's native experimental localStorage
 const localStorageMock = (() => {
