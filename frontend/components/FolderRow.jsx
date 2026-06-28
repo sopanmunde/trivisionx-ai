@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
@@ -25,7 +25,7 @@ export default function FolderRow({
   onRenameFolder,
   onDeleteConversation,
   onRenameConversation,
-  // Controlled accordion — parent controls open state
+  // Controlled accordion â€” parent controls open state
   isExpanded,
   onToggle,
 }) {
@@ -69,13 +69,13 @@ export default function FolderRow({
         >
           <div className="flex h-4 w-4 shrink-0 items-center justify-center transition-colors">
             {expanded ? (
-              <ChevronDown className="h-3 w-3 text-zinc-500 group-hover/btn:text-violet-500 dark:text-zinc-500 dark:group-hover/btn:text-violet-400" />
+              <ChevronDown className="h-3 w-3 text-zinc-500 group-hover/btn:text-fuchsia-500 dark:text-zinc-500 dark:group-hover/btn:text-fuchsia-400" />
             ) : (
-              <ChevronRight className="h-3 w-3 text-zinc-500 group-hover/btn:text-violet-500 dark:text-zinc-500 dark:group-hover/btn:text-violet-400" />
+              <ChevronRight className="h-3 w-3 text-zinc-500 group-hover/btn:text-fuchsia-500 dark:text-zinc-500 dark:group-hover/btn:text-fuchsia-400" />
             )}
           </div>
-          <FolderIcon className="h-3.5 w-3.5 shrink-0 text-zinc-500 group-hover/btn:text-violet-500 dark:text-zinc-500 dark:group-hover/btn:text-violet-400 transition-colors" />
-          <span className="truncate text-[12px] font-medium text-zinc-700 group-hover/btn:text-zinc-900 dark:text-zinc-300 dark:group-hover/btn:text-zinc-100 transition-colors">
+          <FolderIcon className="h-3.5 w-3.5 shrink-0 text-zinc-500 group-hover/btn:text-fuchsia-500 dark:text-zinc-500 dark:group-hover/btn:text-fuchsia-400 transition-colors" />
+          <span className="truncate text-[11px] font-medium text-zinc-700 group-hover/btn:text-zinc-900 dark:text-zinc-300 dark:group-hover/btn:text-zinc-100 transition-colors">
             {name}
           </span>
         </button>
@@ -104,7 +104,7 @@ export default function FolderRow({
               <div className="space-y-0.5">
                 <button
                   onClick={handleRename}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
                   Rename
@@ -112,7 +112,7 @@ export default function FolderRow({
                 <div className="my-1 h-px bg-zinc-100 dark:bg-zinc-800/50" />
                 <button
                   onClick={handleDeleteTrigger}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 cursor-pointer"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 cursor-pointer"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete

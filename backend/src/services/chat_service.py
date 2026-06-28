@@ -80,7 +80,7 @@ async def _stream_chat_response_impl(
         try:
             # Load up to 11 messages to ensure we get a full history window excluding the current message
             history = await get_conversation_history(
-                messages_collection, conversation_id, limit=11,
+                messages_collection, conversation_id, limit=6,
             )
             # Exclude the current user query if it has already been saved to MongoDB
             if history and history[-1].get("role") == "user" and history[-1].get("content") == query:
@@ -365,7 +365,7 @@ async def stream_chat_response(
                 break
 
             try:
-                item = await asyncio.wait_for(queue.get(), timeout=1.0)
+                item = await asyncio.wait_for(queue.get(), timeout=0.05)
             except asyncio.TimeoutError:
                 continue
 

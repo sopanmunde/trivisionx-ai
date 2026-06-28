@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useMemo } from "react";
 import { X, SearchIcon, Plus, Clock, ChevronRight } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -82,13 +82,13 @@ export default function SearchPopover({
             >
               <div className="p-3 border-b border-zinc-200/50 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/20">
                 <div className="relative group">
-                  <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 transition-colors group-focus-within:text-violet-500 dark:group-focus-within:text-violet-400" />
+                  <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 transition-colors group-focus-within:text-fuchsia-500 dark:group-focus-within:text-fuchsia-400" />
                   <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search conversations..."
-                    className="w-full rounded-xl border border-zinc-200/80 bg-white py-2.5 pl-10 pr-3 text-[13px] font-medium text-zinc-800 placeholder:text-zinc-400 outline-none transition-all focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:focus:border-violet-500 dark:focus:ring-violet-500/20"
+                    className="w-full rounded-xl border border-zinc-200/80 bg-white py-2.5 pl-10 pr-3 text-[13px] font-medium text-zinc-800 placeholder:text-zinc-400 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:focus:border-fuchsia-500 dark:focus:ring-fuchsia-500/20"
                     autoFocus
                   />
                 </div>
@@ -100,7 +100,7 @@ export default function SearchPopover({
                   onClick={handleNewChat}
                   className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900/60 active:scale-[0.98]"
                 >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white border border-zinc-200/80 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 group-hover:text-violet-500 dark:group-hover:text-violet-400 transition-colors">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white border border-zinc-200/80 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 group-hover:text-fuchsia-500 dark:group-hover:text-fuchsia-400 transition-colors">
                     <Plus className="h-3.5 w-3.5" />
                   </div>
                   <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">

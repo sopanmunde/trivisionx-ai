@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { MoreHorizontal, Pin, Edit3, Trash2 } from "lucide-react";
@@ -58,16 +58,16 @@ export default function ConversationRow({
         className={cls(
           "relative flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left transition-all duration-200 border border-transparent",
           active
-            ? "bg-white/60 border-white/80 shadow-[0_1px_4px_rgba(0,0,0,0.06)] text-violet-700 dark:bg-violet-500/10 dark:border-violet-500/30 dark:text-violet-400"
+            ? "bg-white/60 border-white/80 shadow-[0_1px_4px_rgba(0,0,0,0.06)] text-fuchsia-700 dark:bg-fuchsia-500/10 dark:border-fuchsia-500/30 dark:text-fuchsia-400"
             : "text-zinc-600 hover:bg-white/40 hover:border-white/50 hover:shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:border-zinc-800/80",
         )}
       >
         {active && (
-          <div className="absolute left-0 top-1/2 h-3 w-0.5 -translate-y-1/2 rounded-full bg-violet-500 shadow-[0_0_4px_rgba(139,92,246,0.5)] dark:bg-violet-400" />
+          <div className="absolute left-0 top-1/2 h-3 w-0.5 -translate-y-1/2 rounded-full bg-fuchsia-500 shadow-[0_0_4px_rgba(139,92,246,0.5)] dark:bg-fuchsia-400" />
         )}
 
         <div className="min-w-0 flex-1 pl-1">
-          <span className="block truncate text-[12px] font-medium leading-snug">
+          <span className="block truncate text-[11px] font-medium leading-snug">
             {data.title}
           </span>
         </div>
@@ -97,14 +97,14 @@ export default function ConversationRow({
             <div className="space-y-0.5">
               <button
                 onClick={handlePin}
-                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
+                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
               >
                 <Pin className="h-3.5 w-3.5" />
                 {data.pinned ? "Unpin" : "Pin"}
               </button>
               <button
                 onClick={handleRename}
-                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
+                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
               >
                 <Edit3 className="h-3.5 w-3.5" />
                 Rename
@@ -112,7 +112,7 @@ export default function ConversationRow({
               <div className="my-1 h-px bg-zinc-100 dark:bg-zinc-800/50" />
               <button
                 onClick={handleDeleteTrigger}
-                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 cursor-pointer"
+                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 cursor-pointer"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Delete

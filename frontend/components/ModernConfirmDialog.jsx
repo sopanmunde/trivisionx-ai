@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import {
@@ -25,8 +25,8 @@ export default function ModernConfirmDialog({
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent className="max-w-[380px] rounded-[24px] border border-zinc-200/80 bg-white/95 backdrop-blur-xl p-6 shadow-2xl dark:border-zinc-800/80 dark:bg-zinc-950/95 gap-5 flex flex-col items-center overflow-hidden">
-        {/* Top glowing fuchsia-violet-blue gradient strip */}
-        <div className="absolute top-0 inset-x-0 h-[4px] bg-gradient-to-r from-violet-500 via-fuchsia-500 to-blue-500 rounded-t-[24px] pointer-events-none" />
+        {/* Top glowing fuchsia-fuchsia-blue gradient strip */}
+        <div className="absolute top-0 inset-x-0 h-[4px] bg-gradient-to-r from-fuchsia-500 via-fuchsia-500 to-blue-500 rounded-t-[24px] pointer-events-none" />
 
         <AlertDialogHeader className="flex flex-col items-center gap-3.5 text-center sm:text-center">
           {/* Circular Glowing Icon Shell */}

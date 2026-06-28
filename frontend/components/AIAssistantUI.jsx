@@ -115,9 +115,11 @@ export default function AIAssistantUI() {
 
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingConvId, setThinkingConvId] = useState(null);
+  const [isResponding, setIsResponding] = useState(false);
   const [agentState, setAgentState] = useState(null);
   const [providerSwitchEvent, setProviderSwitchEvent] = useState(null);
   const [user, setUser] = useState(null);
+  const [selectedBot, setSelectedBot] = useState("Fast");
 
   const fetchUser = async () => {
     try {
@@ -352,7 +354,7 @@ export default function AIAssistantUI() {
     );
   }
 
-  async function sendMessage(convId, content, mode = "research", fileRef = null) {
+  async function sendMessage(convId, content, mode = "research", fileRef = null, selectedBot = "Fast") {
     const token = localStorage.getItem("token");
     if (!content.trim() && !fileRef || !token) return;
 
@@ -429,8 +431,11 @@ export default function AIAssistantUI() {
 
     // 3. Start Streaming
     const asstMsgId = Math.random().toString(36).slice(2);
-    setIsThinking(true);
-    setThinkingConvId(targetConvId);
+    if (selectedBot !== "Fast") {
+      setIsThinking(true);
+      setThinkingConvId(targetConvId);
+    }
+    setIsResponding(true);
     setAgentState(null);
     setProviderSwitchEvent(null);
 
@@ -557,6 +562,7 @@ export default function AIAssistantUI() {
                   // Also clear thinking in case no tokens arrived (edge case)
                   setIsThinking(false);
                   setThinkingConvId(null);
+                  setIsResponding(false);
                   setProviderSwitchEvent(null);
                 }
               } catch (e) {
@@ -566,8 +572,10 @@ export default function AIAssistantUI() {
           }
         }
       }
+      setIsResponding(false);
     } catch (error) {
       console.error("Error fetching response:", error);
+      setIsResponding(false);
       setIsThinking(false);
       setThinkingConvId(null);
       setConversations((prev) =>
@@ -576,10 +584,10 @@ export default function AIAssistantUI() {
           const msgs = c.messages.map((m) =>
             m.id === asstMsgId
               ? {
-                ...m,
-                content:
-                  "Sorry, I couldn't process your request. Please try again.",
-              }
+                  ...m,
+                  content:
+                    "Sorry, I couldn't process your request. Please try again.",
+                }
               : m,
           );
           return { ...c, messages: msgs };
@@ -604,16 +612,17 @@ export default function AIAssistantUI() {
     );
   }
 
-  function resendMessage(convId, messageId) {
+  function resendMessage(convId, messageId, selectedBot = "Fast") {
     const conv = conversations.find((c) => c.id === convId);
     const msg = conv?.messages?.find((m) => m.id === messageId);
     if (!msg) return;
-    sendMessage(convId, msg.content);
+    sendMessage(convId, msg.content, undefined, undefined, selectedBot);
   }
 
   function pauseThinking() {
     setIsThinking(false);
     setThinkingConvId(null);
+    setIsResponding(false);
     setAgentState(null);
   }
 
@@ -696,22 +705,28 @@ export default function AIAssistantUI() {
             setSidebarOpen={setSidebarOpen}
             user={user}
             onUserUpdate={fetchUser}
+            selectedBot={selectedBot}
+            setSelectedBot={setSelectedBot}
           />
           <ChatPane
             ref={composerRef}
             conversation={selected}
-            onSend={(content, mode, fileRef) => selected && sendMessage(selected.id, content, mode, fileRef)}
+            onSend={(content, mode, fileRef) => {
+              if (selected) sendMessage(selected.id, content, mode, fileRef, selectedBot);
+            }}
             onEditMessage={(messageId, newContent) =>
               selected && editMessage(selected.id, messageId, newContent)
             }
-            onResendMessage={(messageId) =>
-              selected && resendMessage(selected.id, messageId)
-            }
+            onResendMessage={(messageId) => {
+              if (selected) resendMessage(selected.id, messageId, selectedBot);
+            }}
             isThinking={isThinking && thinkingConvId === selected?.id}
+            isResponding={isResponding}
             onPauseThinking={pauseThinking}
             agentState={agentState}
             providerSwitchEvent={providerSwitchEvent}
             onDismissProviderSwitch={() => setProviderSwitchEvent(null)}
+            selectedBot={selectedBot}
           />
         </main>
       </div>

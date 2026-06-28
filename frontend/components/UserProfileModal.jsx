@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -134,7 +134,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
   const inputClass = (field) =>
     `w-full rounded-xl border bg-zinc-50/50 px-4 py-2.5 text-[14px] text-zinc-900 outline-none transition-all duration-200 placeholder:text-zinc-400 dark:bg-zinc-900/20 dark:text-white ${
       focusedField === field
-        ? "border-zinc-900 ring-1 ring-zinc-900 dark:border-violet-500 dark:ring-violet-500/50"
+        ? "border-zinc-900 ring-1 ring-zinc-900 dark:border-fuchsia-500 dark:ring-fuchsia-500/50"
         : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700"
     }`;
 
@@ -193,7 +193,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-4">
                     <Loader2 className="h-6 w-6 animate-spin text-zinc-900 dark:text-white" />
-                    <p className="text-[13px] text-zinc-500">Syncing data…</p>
+                    <p className="text-[13px] text-zinc-500">Syncing dataâ€¦</p>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-8">

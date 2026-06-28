@@ -9,6 +9,17 @@ logger = get_logger(__name__)
 
 import certifi
 
+try:
+    import dns.resolver
+    # Override/fallback broken local nameservers with public DNS resolvers for mongodb+srv resolution
+    custom_resolver = dns.resolver.Resolver()
+    custom_resolver.nameservers = ["8.8.8.8", "1.1.1.1"]
+    dns.resolver.default_resolver = custom_resolver
+    logger.info("Custom DNS resolver configured for MongoDB (Google/Cloudflare DNS)")
+except Exception as e:
+    logger.warning(f"Could not configure custom DNS resolver: {e}")
+
+
 @lru_cache(maxsize=1)
 def get_mongo_client() -> AsyncIOMotorClient:
     """

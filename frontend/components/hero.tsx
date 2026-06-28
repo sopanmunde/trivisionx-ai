@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion, cubicBezier } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -31,7 +31,7 @@ export function Hero() {
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-zinc-100 dark:to-zinc-900 pointer-events-none transition-colors duration-300" />
 
-      {/* Violet radial spotlight glow */}
+      {/* fuchsia radial spotlight glow */}
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/4 w-[900px] h-[700px] rounded-full blur-3xl pointer-events-none"
         style={{
@@ -48,7 +48,7 @@ export function Hero() {
       />
 
       <div className="relative z-10 max-w-5xl mx-auto text-center">
-        {/* Logo mark — centered with glow */}
+        {/* Logo mark â€” centered with glow */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: -10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
