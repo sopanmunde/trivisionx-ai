@@ -112,8 +112,8 @@ def _build_google(model: str, temperature: float, streaming: bool) -> BaseChatMo
         temperature=temperature,
         streaming=streaming,
         google_api_key=api_key,
-        max_output_tokens=8192,
-        max_retries=3,
+        max_output_tokens=4096,
+        max_retries=0,
     )
 
 

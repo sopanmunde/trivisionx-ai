@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { FileText, MoreHorizontal, Copy, Edit3, Trash2 } from "lucide-react";
@@ -72,7 +72,7 @@ export default function TemplateRow({
           className="group/btn flex items-center gap-2 flex-1 text-left min-w-0"
           title={`Use template: ${template.snippet}`}
         >
-          <FileText className="h-4 w-4 text-zinc-500 shrink-0 group-hover/btn:text-violet-500 dark:text-zinc-500 dark:group-hover/btn:text-violet-400 transition-colors" />
+          <FileText className="h-4 w-4 text-zinc-500 shrink-0 group-hover/btn:text-fuchsia-500 dark:text-zinc-500 dark:group-hover/btn:text-fuchsia-400 transition-colors" />
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium text-zinc-700 group-hover/btn:text-zinc-900 dark:text-zinc-300 dark:group-hover/btn:text-zinc-100 transition-colors">{template.name}</div>
             <div className="truncate text-xs text-zinc-500 dark:text-zinc-400 group-hover/btn:text-zinc-600 dark:group-hover/btn:text-zinc-300 transition-colors">
@@ -107,21 +107,21 @@ export default function TemplateRow({
               <div className="space-y-0.5">
                 <button
                   onClick={handleUse}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
                 >
                   <Copy className="h-3.5 w-3.5" />
                   Use Template
                 </button>
                 <button
                   onClick={handleEdit}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
                   Edit
                 </button>
                 <button
                   onClick={handleRename}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900/60"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
                   Rename
@@ -129,7 +129,7 @@ export default function TemplateRow({
                 <div className="my-1 h-px bg-zinc-100 dark:bg-zinc-800/50" />
                 <button
                   onClick={handleDeleteTrigger}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 cursor-pointer"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 cursor-pointer"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete

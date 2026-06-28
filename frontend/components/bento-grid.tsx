@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
@@ -7,7 +7,7 @@ import {
   GitMerge, Terminal, FileCheck, Activity, Play, CheckCircle2
 } from "lucide-react";
 
-// ── 1. Advanced Agent Graph Orchestration (SVG Animated) ─────────────────
+// â”€â”€ 1. Advanced Agent Graph Orchestration (SVG Animated) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AgentWorkflowVisual() {
   const [step, setStep] = useState(0);
 
@@ -172,7 +172,7 @@ function AgentWorkflowVisual() {
             transition={{ duration: 0.2 }}
             className="text-[10px] font-mono text-muted-foreground bg-card/60 px-3 py-1 rounded-full border border-border/80"
           >
-            {step === 0 && "System Idle — Awaiting research prompt..."}
+            {step === 0 && "System Idle â€” Awaiting research prompt..."}
             {step === 1 && "Smart Router: Analyzing query & selecting optimal workflow..."}
             {step === 2 && "Retrieval Agent: Querying vector chunks via Pinecone MMR..."}
             {step === 3 && "Code Dev Agent: Generating clean technical algorithms..."}
@@ -185,7 +185,7 @@ function AgentWorkflowVisual() {
   );
 }
 
-// ── 2. Advanced MMR Search Visualizer (Simulated Search Box) ─────────────
+// â”€â”€ 2. Advanced MMR Search Visualizer (Simulated Search Box) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function RetrievalVisual() {
   const [queryText, setQueryText] = useState("");
   const fullQueryText = "Query: 'DeepSeek R1 vs Claude 3.7'";
@@ -252,7 +252,7 @@ function RetrievalVisual() {
   );
 }
 
-// ── 3. Multi-LLM Throughput Chart (Bar Graph) ───────────────────────────
+// â”€â”€ 3. Multi-LLM Throughput Chart (Bar Graph) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MultiLlmVisual() {
   const [queryIndex, setQueryIndex] = useState(0);
 
@@ -260,7 +260,7 @@ function MultiLlmVisual() {
     { text: "Synthesize 100k docs", model: "Gemini", color: "text-purple-400 border-purple-500/20 bg-purple-500/5" },
     { text: "Optimize AST parser", model: "DeepSeek", color: "text-pink-400 border-pink-500/20 bg-pink-500/5" },
     { text: "Entity extraction", model: "GPT-4o", color: "text-indigo-400 border-indigo-500/20 bg-indigo-500/5" },
-    { text: "Complex reasoning step", model: "Claude", color: "text-violet-400 border-violet-500/20 bg-violet-500/5" },
+    { text: "Complex reasoning step", model: "Claude", color: "text-fuchsia-400 border-fuchsia-500/20 bg-fuchsia-500/5" },
   ];
 
   useEffect(() => {
@@ -286,7 +286,7 @@ function MultiLlmVisual() {
         <div className="flex-1 bg-card/40 border border-zinc-900 p-2.5 rounded truncate text-muted-foreground font-bold">
           "{activeQuery.text}"
         </div>
-        <div className="text-muted-foreground font-bold animate-pulse text-[11px]">➜</div>
+        <div className="text-muted-foreground font-bold animate-pulse text-[11px]">âžœ</div>
         <div className={`px-3 py-2 rounded-xl border font-bold text-center w-20 transition-all duration-300 text-[10px] ${activeQuery.color} shadow-sm`}>
           {activeQuery.model}
         </div>
@@ -295,7 +295,7 @@ function MultiLlmVisual() {
   );
 }
 
-// ── 4. Structured Report Compiler Layout ───────────────────────────────
+// â”€â”€ 4. Structured Report Compiler Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ReportVisual() {
   return (
     <div className="p-3 bg-background/80 rounded-xl border border-border/80 space-y-2.5 font-mono text-[10px] text-muted-foreground shadow-lg">
@@ -338,7 +338,7 @@ function ReportVisual() {
   );
 }
 
-// ── 5. Advanced Autonomous Coding compiler loop ──────────────────────────
+// â”€â”€ 5. Advanced Autonomous Coding compiler loop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CodingLoopVisual() {
   const [step, setStep] = useState(0);
   const [codeSnippet, setCodeSnippet] = useState("");
@@ -394,7 +394,7 @@ function CodingLoopVisual() {
   );
 }
 
-// ── Grid Container Motion Animation Settings ───────────────────────────
+// â”€â”€ Grid Container Motion Animation Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const containerVariants = {
   hidden: {},
   visible: {

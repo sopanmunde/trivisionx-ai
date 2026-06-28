@@ -16,19 +16,19 @@ function CodeBlock({ children, className, ...props }) {
       await navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    } catch { }
   };
 
   return (
-    <div className="group/code relative my-3 overflow-hidden rounded-xl border border-zinc-200/80 bg-zinc-950 shadow-sm dark:border-zinc-800/80">
+    <div className="group/code relative my-4 overflow-hidden rounded-lg border border-zinc-200/50 bg-zinc-950 shadow-sm dark:border-zinc-800/50">
       {/* Language tag + Copy button */}
-      <div className="flex items-center justify-between border-b border-zinc-800/60 bg-zinc-900 px-4 py-2">
-        <span className="text-[11px] font-medium text-zinc-500">
+      <div className="flex items-center justify-between border-b border-zinc-800/40 bg-zinc-900 px-4 py-1.5">
+        <span className="text-[11px] font-mono font-medium text-zinc-400">
           {className?.replace("language-", "") || "code"}
         </span>
         <button
           onClick={handleCopy}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-medium text-zinc-500 transition-all hover:bg-zinc-800 hover:text-zinc-300 active:scale-95"
+          className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
         >
           {copied ? (
             <>
@@ -36,12 +36,12 @@ function CodeBlock({ children, className, ...props }) {
             </>
           ) : (
             <>
-              <Copy className="h-3 w-3" /> Copy
+              <Copy className="h-3 w-3" /> Copy code
             </>
           )}
         </button>
       </div>
-      <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed">
+      <pre className="overflow-x-auto p-4 text-[13.5px] leading-relaxed">
         <code className={className} {...props}>
           {children}
         </code>
@@ -56,19 +56,19 @@ export default function Message({ role, content, sources, quality_score, childre
   return (
     <div
       className={cls(
-        "flex gap-3 px-1",
+        "flex gap-4 px-2 w-full",
         isUser ? "justify-end" : "justify-start",
       )}
     >
       {/* AI avatar */}
       {!isUser && (
-        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-sm">
+        <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shadow-sm">
           <svg
-            className="w-[55%] h-[55%] text-zinc-900 dark:text-zinc-100"
+            className="w-[50%] h-[50%] text-zinc-700 dark:text-zinc-300"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
@@ -83,28 +83,27 @@ export default function Message({ role, content, sources, quality_score, childre
 
       <div
         className={cls(
-          "max-w-[95%] sm:max-w-[85%] text-[14.5px] leading-relaxed relative group/msg transition-all duration-300",
+          "text-[15px] leading-relaxed max-w-[85%] sm:max-w-[75%] transition-all duration-200",
           isUser
-            ? "rounded-2xl rounded-tr-sm bg-zinc-100/80 px-4 py-3 text-zinc-900 shadow-sm border border-zinc-200/60 dark:bg-zinc-900/20 dark:text-zinc-100 dark:border-zinc-800/60 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all duration-300"
-            : "rounded-2xl rounded-tl-sm bg-white px-4 py-3 text-zinc-900 shadow-sm border border-zinc-200/80 dark:bg-zinc-900/40 dark:text-zinc-100 dark:border-zinc-800/80 backdrop-blur-sm hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all duration-300",
+            ? "rounded-2xl bg-zinc-100 dark:bg-zinc-800 px-4 py-2.5 text-zinc-800 dark:text-zinc-100 select-text"
+            : "text-zinc-800 dark:text-zinc-100 bg-transparent shadow-none border-none px-0 py-1 w-full"
         )}
       >
         {content !== undefined ? (
           isUser ? (
             <span className="whitespace-pre-wrap break-words">{typeof content === 'string' ? content : JSON.stringify(content)}</span>
           ) : (
-            <div className="prose prose-sm dark:prose-invert max-w-none break-words prose-p:my-2 prose-p:leading-relaxed prose-headings:font-semibold prose-headings:tracking-tight prose-li:my-0.5 prose-code:rounded-md prose-code:bg-zinc-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-zinc-800 prose-code:font-mono prose-code:text-[12px] dark:prose-code:bg-zinc-800 dark:prose-code:text-zinc-200 prose-pre:my-0 prose-pre:p-0 prose-pre:bg-transparent prose-pre:shadow-none prose-blockquote:border-l-zinc-300 dark:prose-blockquote:border-l-zinc-600 prose-blockquote:text-zinc-500 dark:prose-blockquote:text-zinc-400 prose-table:text-[13px]">
+            <div className="prose prose-sm dark:prose-invert max-w-none break-words prose-p:my-2.5 prose-p:leading-relaxed prose-headings:font-semibold prose-headings:tracking-tight prose-li:my-1 prose-code:rounded-md prose-code:bg-zinc-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-zinc-800 prose-code:font-mono prose-code:text-[12px] dark:prose-code:bg-zinc-800 dark:prose-code:text-zinc-200 prose-pre:my-0 prose-pre:p-0 prose-pre:bg-transparent prose-pre:shadow-none prose-blockquote:border-l-zinc-300 dark:prose-blockquote:border-l-zinc-600 prose-blockquote:text-zinc-500 dark:prose-blockquote:text-zinc-400 prose-table:text-[13px]">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}
                 components={{
                   pre: ({ children }) => <>{children}</>,
                   code: ({ node, className, children, ...props }) => {
-                    // Block code: parent is <pre>, use CodeBlock with div/pre wrapper
                     const isBlock = node?.position && className?.startsWith("language-") ||
                       (node?.parent?.tagName === "pre") ||
                       (typeof children === "string" && children.includes("\n"));
-                    
+
                     if (isBlock || className) {
                       return (
                         <CodeBlock className={className} {...props}>
@@ -113,11 +112,10 @@ export default function Message({ role, content, sources, quality_score, childre
                       );
                     }
 
-                    // Inline code: simple <code> element (safe inside <p>)
                     return (
                       <code
                         className={cls(
-                          "rounded-md bg-zinc-100 px-1.5 py-0.5 font-mono text-[12px] dark:bg-zinc-800",
+                          "rounded-md bg-zinc-100 px-1.2 py-0.4 font-mono text-[12px] dark:bg-zinc-800",
                           className,
                         )}
                         {...props}
@@ -133,8 +131,8 @@ export default function Message({ role, content, sources, quality_score, childre
 
               {/* Citations Panel */}
               {sources && sources.length > 0 && (
-                <div className="mt-4 border-t border-zinc-200/60 dark:border-zinc-700/50 pt-3">
-                  <h4 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-400 mb-2 uppercase tracking-wider">
+                <div className="mt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 pt-3">
+                  <h4 className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
                     Citations
                   </h4>
                   <ul className="space-y-1.5 list-none pl-0">
@@ -155,22 +153,24 @@ export default function Message({ role, content, sources, quality_score, childre
                   </ul>
                 </div>
               )}
-              
+
               {/* Quality Score Panel */}
               {role === "assistant" && typeof content === "string" && quality_score && (
-                <div className="mt-4 border-t border-zinc-200/60 dark:border-zinc-700/50 pt-3">
+                <div className="mt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 pt-3">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <h4 className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
                       Research Quality
                     </h4>
                     <span className={cls(
-                      "text-[10px] font-bold px-1.5 py-0.5 rounded uppercase",
-                      quality_score.overall >= 80 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                      quality_score.overall >= 60 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
-                      "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
+                      "text-[9px] font-semibold px-1.5 py-0.5 rounded border",
+                      quality_score.overall >= 80
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        : quality_score.overall >= 60
+                          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                          : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
                     )}>
                       {quality_score.overall >= 80 ? "High Reliability" :
-                       quality_score.overall >= 60 ? "Medium Reliability" : "Low Reliability"}
+                        quality_score.overall >= 60 ? "Medium Reliability" : "Low Reliability"}
                     </span>
                   </div>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
@@ -180,7 +180,7 @@ export default function Message({ role, content, sources, quality_score, childre
                         <span className="text-zinc-500 dark:text-zinc-400">Coverage</span>
                         <span className="font-semibold text-zinc-700 dark:text-zinc-300">{quality_score.coverage}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                         <div className="h-full bg-blue-500 rounded-full" style={{ width: `${quality_score.coverage}%` }} />
                       </div>
                     </div>
@@ -190,8 +190,8 @@ export default function Message({ role, content, sources, quality_score, childre
                         <span className="text-zinc-500 dark:text-zinc-400">Confidence</span>
                         <span className="font-semibold text-zinc-700 dark:text-zinc-300">{quality_score.confidence}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-violet-500 rounded-full" style={{ width: `${quality_score.confidence}%` }} />
+                      <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-fuchsia-500 rounded-full" style={{ width: `${quality_score.confidence}%` }} />
                       </div>
                     </div>
                     {/* Completeness */}
@@ -200,7 +200,7 @@ export default function Message({ role, content, sources, quality_score, childre
                         <span className="text-zinc-500 dark:text-zinc-400">Completeness</span>
                         <span className="font-semibold text-zinc-700 dark:text-zinc-300">{quality_score.completeness}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                         <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${quality_score.completeness}%` }} />
                       </div>
                     </div>

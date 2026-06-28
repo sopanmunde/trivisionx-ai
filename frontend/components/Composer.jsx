@@ -1,42 +1,36 @@
 "use client";
 
 import {
-  useRef,
-  useState,
-  forwardRef,
-  useImperativeHandle,
-  useEffect,
-  useCallback,
+  useRef, useState, forwardRef, useImperativeHandle, useEffect, useCallback,
 } from "react";
 import {
-  Send, Loader2, Plus, Mic, StopCircle, ChevronDown,
-  FlaskConical, Zap, Check, BrainCircuit, Hexagon, Asterisk,
-  FileText, FileType, FileSpreadsheet, FileCode, FileJson, ImageIcon,
+  Loader2, Plus, StopCircle, ChevronDown,
+  FlaskConical, Zap, Check, BrainCircuit,
+  FileText, FileType, FileSpreadsheet, FileCode, FileJson,
   Archive, File as FileIcon, X, Presentation,
+  Bot, Globe, BookOpen, Palette, ArrowUp, Calendar,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ComposerActionsPopover from "./ComposerActionsPopover";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Badge } from "./ui/badge";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/lib/api";
+import { Spinner } from "./ui/spinner";
 
-// ─── Accepted file types ───────────────────────────────────────────────────────
 const ACCEPTED_TYPES = [
   ".pdf", ".docx", ".doc", ".txt", ".rtf", ".odt",
-  ".xlsx", ".xls", ".csv",
-  ".pptx", ".ppt",
+  ".xlsx", ".xls", ".csv", ".pptx", ".ppt",
   ".html", ".htm", ".md", ".mdx", ".rst",
   ".json", ".jsonl", ".xml", ".yaml", ".yml",
   ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".cpp", ".c", ".cs",
   ".go", ".rs", ".rb", ".php", ".sh", ".sql",
-  ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff", ".svg",
-  ".zip",
+  ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff", ".svg", ".zip",
 ];
 const MAX_FILE_SIZE_MB = 5;
 
-// ─── File icon helper ──────────────────────────────────────────────────────────
 function getFileInfo(filename) {
   const ext = filename?.split(".").pop()?.toLowerCase() || "";
   if (ext === "pdf") return { icon: FileType, color: "text-red-400", bg: "bg-red-500", label: "PDF" };
@@ -51,43 +45,31 @@ function getFileInfo(filename) {
   return { icon: FileIcon, color: "text-zinc-400", bg: "bg-zinc-600", label: ext.toUpperCase() || "File" };
 }
 
-// ─── Attached file pill (ChatGPT-style) ───────────────────────────────────────
 function AttachedFilePill({ file, uploading, onRemove }) {
   const info = getFileInfo(file.name);
   const Icon = info.icon;
-  const shortName = file.name.length > 28 ? file.name.slice(0, 26) + "…" : file.name;
-
+  const shortName = file.name.length > 28 ? file.name.slice(0, 26) + "..." : file.name;
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.92, y: 4 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.88, y: 4 }}
-      transition={{ duration: 0.18 }}
+      initial={{ opacity: 0, scale: 0.92, y: 4 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.88, y: 4 }} transition={{ duration: 0.18 }}
       className="flex items-center gap-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 shadow-sm max-w-[280px] relative"
     >
-      {/* File icon bg */}
       <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", info.bg)}>
         <Icon className="h-4 w-4 text-white" />
       </div>
-
       <div className="overflow-hidden flex-1">
         <p className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100 truncate leading-snug">{shortName}</p>
         <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
           {uploading ? (
-            <span className="flex items-center gap-1">
-              <Loader2 className="h-2.5 w-2.5 animate-spin" /> Indexing…
-            </span>
+            <span className="flex items-center gap-1"><Loader2 className="h-2.5 w-2.5 animate-spin" /> Indexing...</span>
           ) : info.label}
         </p>
       </div>
-
-      {/* Remove button */}
       {!uploading && (
-        <button
-          onClick={onRemove}
+        <button onClick={onRemove}
           className="shrink-0 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-300/80 dark:bg-zinc-700 hover:bg-zinc-400 dark:hover:bg-zinc-600 transition-colors"
-          title="Remove attachment"
-        >
+          title="Remove attachment">
           <X className="h-2.5 w-2.5 text-zinc-700 dark:text-zinc-300" />
         </button>
       )}
@@ -95,134 +77,36 @@ function AttachedFilePill({ file, uploading, onRemove }) {
   );
 }
 
-// ─── Mode definitions ──────────────────────────────────────────────────────────
-const MODES = [
-  {
-    id: "simple",
-    label: "Quick",
-    icon: Zap,
-    description: "Direct LLM answer — fast response without document search",
-    gradient: "from-amber-400 to-orange-500",
-  },
-  {
-    id: "research",
-    label: "Deep",
-    icon: FlaskConical,
-    description: "Full RAG pipeline — searches your documents & cites sources",
-    gradient: "from-violet-500 to-blue-600",
-  },
-];
 
-function ShadcnModeToggle({ mode, onChange }) {
-  return (
-    <div className="flex items-center rounded-lg bg-zinc-100/80 p-0.5 dark:bg-zinc-950/80 border border-zinc-200/50 dark:border-zinc-800/80">
-      {MODES.map((m) => {
-        const Icon = m.icon;
-        const isActive = mode === m.id;
-        return (
-          <button
-            key={m.id}
-            type="button"
-            onClick={(e) => { e.preventDefault(); onChange(m.id); }}
-            className={cn(
-              "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-all duration-200 whitespace-nowrap",
-              isActive
-                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
-                : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-            )}
-            title={m.description}
-          >
-            <Icon className="h-3 w-3" />
-            {m.label}
-          </button>
-        );
-      })}
-    </div>
-  );
+
+function getActionLabel(action) {
+  const map = { research: "Deep search", agent: "Agent", image: "Image", study: "Study", web: "Web search", canvas: "Canvas", calendar: "Calendar" };
+  return map[action] || action;
 }
 
-// ─── Model Selector ───────────────────────────────────────────────────────────
-const CHATBOTS = [
-  { name: "Gemini", icon: <Hexagon className="h-3.5 w-3.5" />, desc: "Google DeepMind" },
-  { name: "Claude Sonnet 4", icon: <BrainCircuit className="h-3.5 w-3.5" />, desc: "Anthropic" },
-  { name: "Assistant", icon: <Asterisk className="h-3.5 w-3.5" />, desc: "TriVisionX" },
-];
-
-function ModelSelector() {
-  const [selectedBot, setSelectedBot] = useState("Gemini");
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  const current = CHATBOTS.find((b) => b.name === selectedBot);
-
-  useEffect(() => {
-    function handleOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false);
-    }
-    if (open) document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [open]);
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex h-8 w-auto sm:w-[140px] max-w-[140px] items-center justify-between whitespace-nowrap rounded-md border border-transparent bg-transparent px-2.5 py-2 text-[11.5px] font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-zinc-50"
-      >
-        <span className="flex items-center gap-2 truncate">
-          <span className="flex h-3.5 w-3.5 items-center justify-center">{current?.icon}</span>
-          <span className="truncate">{selectedBot}</span>
-        </span>
-        <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 2 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 2 }}
-            transition={{ duration: 0.15 }}
-            className="absolute bottom-[calc(100%+4px)] right-0 z-[9999] min-w-[12rem] overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md dark:border-zinc-800/80 dark:bg-zinc-950/95 dark:text-zinc-50"
-          >
-            <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">Select a model</div>
-            {CHATBOTS.map((bot) => (
-              <button
-                key={bot.name}
-                type="button"
-                onClick={() => { setSelectedBot(bot.name); setOpen(false); }}
-                className="relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 outline-none transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-900/60 dark:hover:text-zinc-50"
-              >
-                <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                  {selectedBot === bot.name && <Check className="h-4 w-4" />}
-                </span>
-                <span className="flex items-center gap-2 truncate text-xs">
-                  <span className="flex h-3.5 w-3.5 items-center justify-center">{bot.icon}</span>
-                  {bot.name}
-                </span>
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+function getActionIcon(action) {
+  if (action === "research") return <FlaskConical className="h-3.5 w-3.5" />;
+  if (action === "agent") return <Bot className="h-3.5 w-3.5" />;
+  if (action === "image") return <Palette className="h-3.5 w-3.5" />;
+  if (action === "study") return <BookOpen className="h-3.5 w-3.5" />;
+  if (action === "web") return <Globe className="h-3.5 w-3.5" />;
+  if (action === "canvas") return <Palette className="h-3.5 w-3.5" />;
+  if (action === "calendar") return <Calendar className="h-3.5 w-3.5" />;
+  return null;
 }
 
-// ─── Main Composer ────────────────────────────────────────────────────────────
-const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "research" }, ref) {
+const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "research", selectedBot = "Fast" }, ref) {
   const [value, setValue] = useState("");
   const [sending, setSending] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [mode, setMode] = useState(defaultMode);
-  // ── Attachment state ──
-  const [attachedFile, setAttachedFile] = useState(null); // { name, type, ext }
+  const [activeAction, setActiveAction] = useState(null);
+  const [attachedFile, setAttachedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Auto-grow textarea
   useEffect(() => {
     if (!inputRef.current) return;
     const ta = inputRef.current;
@@ -242,47 +126,27 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     insertTemplate: (templateContent) => {
       setValue((prev) => {
         const next = prev ? `${prev}\n\n${templateContent}` : templateContent;
-        setTimeout(() => {
-          inputRef.current?.focus();
-          inputRef.current?.setSelectionRange(next.length, next.length);
-        }, 0);
+        setTimeout(() => { inputRef.current?.focus(); inputRef.current?.setSelectionRange(next.length, next.length); }, 0);
         return next;
       });
     },
-    setValue: (text) => {
-      setValue(text);
-      setTimeout(() => inputRef.current?.focus(), 0);
-    },
+    setValue: (text) => { setValue(text); setTimeout(() => inputRef.current?.focus(), 0); },
     focus: () => inputRef.current?.focus(),
     getMode: () => mode,
   }), [mode]);
 
-  // ── Upload file to RAG backend ─────────────────────────────────────────────
   const uploadFileToRag = useCallback(async (file) => {
     const ext = "." + (file.name.split(".").pop()?.toLowerCase() || "");
-    if (!ACCEPTED_TYPES.includes(ext)) {
-      toast.error(`Unsupported file type "${ext}".`);
-      return;
-    }
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      toast.error(`File too large. Max ${MAX_FILE_SIZE_MB} MB.`);
-      return;
-    }
-
+    if (!ACCEPTED_TYPES.includes(ext)) { toast.error(`Unsupported file type "${ext}".`); return; }
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) { toast.error(`File too large. Max ${MAX_FILE_SIZE_MB} MB.`); return; }
     setAttachedFile({ name: file.name, ext: ext.slice(1) });
     setUploading(true);
-
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("file", file);
-
     try {
       const apiUrl = API_BASE_URL;
-      const res = await fetch(`${apiUrl}/documents/upload`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const res = await fetch(`${apiUrl}/documents/upload`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Upload failed");
       toast.success(`"${file.name}" indexed (${data.chunks} chunks)`);
@@ -291,174 +155,179 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
       setAttachedFile(null);
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }, []);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = useCallback((e) => {
     const file = e.target.files?.[0];
     if (file) uploadFileToRag(file);
     e.target.value = "";
-  };
+  }, [uploadFileToRag]);
 
-  async function handleSend() {
-    if ((!value.trim() && !attachedFile) || sending || busy || uploading) return;
-    const text = value;
-    const fileRef = attachedFile;
+  const hasContent = value.trim().length > 0 || !!attachedFile;
+
+  const handleSend = useCallback(async () => {
+    if (busy) {
+      // Trigger callback with empty query to let the parent handle cancel/stop action
+      await onSend?.("", mode, null);
+      return;
+    }
+    if (!hasContent || uploading) return;
+    const text = value.trim();
+    const currentMode = mode;
+    const fileRef = attachedFile ? { name: attachedFile.name } : null;
     setValue("");
     setAttachedFile(null);
     setSending(true);
-    try {
-      await onSend?.(text, mode, fileRef);
-    } finally {
-      setSending(false);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }
-
-  const hasContent = value.trim().length > 0 || !!attachedFile;
-  const currentMode = MODES.find((m_) => m_.id === mode) || MODES[0];
+    try { await onSend?.(text, currentMode, fileRef); } finally { setSending(false); }
+  }, [busy, hasContent, uploading, value, mode, attachedFile, onSend]);
 
   return (
-    <div className="px-3 pb-2 pt-2">
-      <div
-        className={cn(
-          "mx-auto max-w-3xl rounded-2xl border bg-background transition-all duration-200",
-          isFocused
-            ? "border-primary/50 shadow-[0_0_0_3px_rgba(var(--primary),0.1)] dark:border-zinc-700/80"
-            : "border-border shadow-sm dark:bg-zinc-900/40 dark:border-zinc-800/80 dark:backdrop-blur-sm",
+    <div className="px-3 pb-2 pt-1">
+      {/* Active action badge above composer */}
+      <AnimatePresence>
+        {activeAction && (
+          <div className="flex justify-center mb-1.5">
+            <motion.div
+              initial={{ opacity: 0, y: 4, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 4, scale: 0.95 }} transition={{ duration: 0.15 }}
+            >
+              <Badge variant="secondary"
+                className="flex items-center gap-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-800/80 px-2.5 py-1 text-[11px] font-medium text-zinc-900 dark:text-zinc-50 shadow-none cursor-default">
+                <span className="text-zinc-500">{getActionIcon(activeAction)}</span>
+                <span className="truncate capitalize font-semibold">{getActionLabel(activeAction)}</span>
+                <button type="button"
+                  onClick={() => { setActiveAction(null); setMode(defaultMode); }}
+                  className="ml-1 shrink-0 flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
+                  title="Clear action">
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </Badge>
+            </motion.div>
+          </div>
         )}
-      >
-        {/* Attached file pill — above the textarea */}
+      </AnimatePresence>
+
+      <div className={cn(
+        "mx-auto max-w-3xl rounded-2xl border bg-white dark:bg-[#0B0B0C] border-zinc-200 dark:border-zinc-800/80 shadow-sm transition-all duration-200",
+        isFocused && "border-zinc-300 dark:border-zinc-700"
+      )}>
+        {/* Attached file row (only visible when file attached) */}
         <AnimatePresence>
           {attachedFile && (
-            <div className="px-4 pt-3 pb-0">
-              <AttachedFilePill
-                file={attachedFile}
-                uploading={uploading}
-                onRemove={() => setAttachedFile(null)}
-              />
-            </div>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.18 }}
+              className="flex items-center px-3 pt-2.5 pb-0"
+            >
+              <AttachedFilePill file={attachedFile} uploading={uploading} onRemove={() => setAttachedFile(null)} />
+            </motion.div>
           )}
         </AnimatePresence>
 
         {/* Textarea */}
-        <div className="px-4 pt-3.5 pb-1">
+        <div className="px-4 pt-2.5 pb-1">
           <textarea
-            ref={inputRef}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            placeholder={
-              attachedFile
-                ? `Ask anything about "${attachedFile.name}"…`
-                : mode === "research"
-                  ? "Ask a research question… (searches your documents)"
-                  : "Ask anything… (quick LLM answer)"
-            }
-            rows={1}
-            className="w-full resize-none bg-transparent text-[15px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground scrollbar-thin"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
+            ref={inputRef} value={value} onChange={(e) => setValue(e.target.value)}
+            onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
+            placeholder={`Message ${selectedBot || "TriVisionX"} ...`} rows={1}
+            className="w-full resize-none bg-transparent text-[14.5px] leading-relaxed text-zinc-800 dark:text-zinc-100 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 scrollbar-thin"
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
           />
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center justify-between px-2 pb-2 pt-1 gap-2">
-          {/* Left: Attach + Mode selector */}
+        <div className="flex flex-wrap items-center justify-between px-2.5 pb-2 pt-1 gap-2">
+          {/* Left: + (actions) */}
           <div className="flex items-center gap-1.5">
             <Tooltip>
-              <ComposerActionsPopover onFileSelect={uploadFileToRag}>
+              <ComposerActionsPopover
+                onFileSelect={uploadFileToRag} mode={mode}
+                setMode={(m) => { setMode(m); setActiveAction(m); }}
+                activeAction={activeAction}
+              >
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
-                  >
-                    <Plus className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shrink-0 cursor-pointer">
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
               </ComposerActionsPopover>
-              <TooltipContent side="top">Attach file</TooltipContent>
+              <TooltipContent side="top">Actions Menu</TooltipContent>
             </Tooltip>
-
-            <ShadcnModeToggle mode={mode} onChange={setMode} />
           </div>
 
-          {/* Right: Model + Mic + Send */}
-          <div className="flex items-center gap-1.5">
-            <ModelSelector />
+          {/* Right: Agent/Chat segment + Mic + Send */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 p-0.5 bg-zinc-100 dark:bg-zinc-900 rounded-lg border border-zinc-200/50 dark:border-zinc-800/80">
+              <button type="button"
+                onClick={() => { setActiveAction("agent"); setMode("agent"); }}
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all cursor-pointer select-none leading-none",
+                  activeAction === "agent"
+                    ? "bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 shadow-sm border border-zinc-200 dark:border-zinc-800"
+                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                )}>Agent</button>
+              <button type="button"
+                onClick={() => { setActiveAction(null); setMode(defaultMode); }}
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all cursor-pointer select-none leading-none",
+                  !activeAction || activeAction !== "agent"
+                    ? "bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 shadow-sm border border-zinc-200 dark:border-zinc-800"
+                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                )}>Chat</button>
+            </div>
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="relative flex items-center justify-center">
                   {isListening && (
                     <>
-                      <span className="absolute inset-0 rounded-full animate-ping bg-red-500/40" />
-                      <span className="absolute -inset-1 rounded-full animate-pulse bg-red-500/20" />
+                      <span className="absolute inset-0 rounded-lg animate-ping bg-red-500/40" />
+                      <span className="absolute -inset-1 rounded-lg animate-pulse bg-red-500/20" />
                     </>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  <Button variant="ghost" size="icon"
                     onClick={() => setIsListening(!isListening)}
                     className={cn(
-                      "relative h-8 w-8 rounded-full transition-all duration-300",
-                      isListening
-                        ? "bg-red-500 text-white hover:bg-red-600 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <Mic className={cn("h-4 w-4", isListening && "animate-pulse")} />
+                      "relative h-7 w-7 rounded-lg transition-all duration-300",
+                      isListening ? "bg-red-500 text-white hover:bg-red-600 shadow-md" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                    )}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4", isListening && "animate-pulse")}>
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                      <line x1="12" x2="12" y1="19" y2="22" />
+                    </svg>
                   </Button>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top">
-                {isListening ? "Listening... Click to stop" : "Voice input"}
-              </TooltipContent>
+              <TooltipContent side="top">Voice input</TooltipContent>
             </Tooltip>
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  onClick={handleSend}
-                  disabled={(!hasContent && !busy) || uploading}
-                  size="icon"
+                <Button onClick={handleSend} disabled={(!hasContent && !busy) || uploading} size="icon"
                   className={cn(
-                    "h-8 w-8 rounded-full transition-all duration-200",
+                    "h-7 w-7 rounded-lg transition-all duration-200",
                     hasContent || busy
-                      ? `bg-gradient-to-br ${currentMode.gradient} text-white shadow-md hover:opacity-90 hover:scale-105`
+                      ? "bg-zinc-950 text-white hover:bg-zinc-900 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200 shadow-sm cursor-pointer"
                       : "bg-muted text-muted-foreground cursor-not-allowed opacity-50",
-                  )}
-                >
+                  )}>
                   {sending || busy ? (
-                    <StopCircle className="h-4 w-4" />
+                    <Spinner className="h-4 w-4" />
                   ) : (
-                    <Send className="h-4 w-4 ml-0.5" />
+                    <ArrowUp className="h-4 w-4" />
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">
-                {busy ? "Stop" : `Send · ${currentMode.label} mode`}
-              </TooltipContent>
+              <TooltipContent side="top">{busy ? "Stop" : "Send message"}</TooltipContent>
             </Tooltip>
           </div>
         </div>
       </div>
 
-      {/* Hidden file input */}
-      <input
-        type="file"
-        accept={ACCEPTED_TYPES.join(",")}
-        className="hidden"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-      />
+      <input type="file" accept={ACCEPTED_TYPES.join(",")} className="hidden" ref={fileInputRef} onChange={handleFileChange} />
     </div>
   );
 });

@@ -79,7 +79,7 @@ export default async function RootLayout({
           <TooltipProvider>
             {children}
           </TooltipProvider>
-          <Toaster position="bottom-right" />
+          <Toaster position="top-center" />
           {/* @ts-expect-error - Analytics component supports nonce at runtime but lacks it in some type definitions */}
           <Analytics nonce={nonce} />
         </ThemeProvider>

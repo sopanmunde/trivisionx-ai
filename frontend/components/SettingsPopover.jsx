@@ -11,6 +11,9 @@ import {
   Sparkles,
   Zap,
   Palette,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { UserProfileModal } from "./UserProfileModal";
@@ -18,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import { API_BASE_URL } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 /* ── tiny shimmer border helper ─────────────────────────────────────────── */
 function ShimmerBorder({ className = "" }) {
@@ -198,28 +202,39 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                       setIsProfileOpen(true);
                     }}
                   />
-                  <MenuItem
-                    as="div"
-                    icon={Palette}
-                    label="Appearance"
-                    className="cursor-default"
-                    suffix={
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] capitalize text-zinc-400">
-                          {mounted ? resolvedTheme : "system"}
-                        </span>
-                        {mounted && (
-                          <div className="flex items-center justify-center p-1 rounded-md bg-zinc-200/50 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer">
-                            <AnimatedThemeToggler
-                              theme={resolvedTheme}
-                              onThemeChange={(newTheme) => setTheme(newTheme)}
-                              className="w-4 h-4 text-zinc-600 dark:text-zinc-300 [&>svg]:w-3.5 [&>svg]:h-3.5"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    }
-                  />
+                  {/* Appearance Theme Selector Panel */}
+                  <div className="px-2.5 py-1.5 space-y-1.5">
+                    <div className="flex items-center gap-2 px-1 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                      <Palette className="h-3.5 w-3.5" />
+                      <span>Appearance</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 p-1 bg-zinc-100/60 dark:bg-zinc-900/60 rounded-lg border border-zinc-200/40 dark:border-zinc-800/40">
+                      {[
+                        { id: "light", label: "Light", icon: Sun },
+                        { id: "dark", label: "Dark", icon: Moon },
+                        { id: "system", label: "System", icon: Monitor },
+                      ].map((t) => {
+                        const Icon = t.icon;
+                        const active = theme === t.id;
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => setTheme(t.id)}
+                            className={cn(
+                              "flex items-center justify-center gap-1.5 rounded-md py-1.5 text-center transition-all duration-150 select-none text-[11px] font-medium leading-none cursor-pointer",
+                              active
+                                ? "bg-white text-zinc-950 shadow-sm dark:bg-zinc-950 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-800"
+                                : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50"
+                            )}
+                          >
+                            <Icon className="h-3.5 w-3.5 shrink-0" />
+                            <span>{t.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <MenuItem
                     icon={Globe}
                     label="Language"
