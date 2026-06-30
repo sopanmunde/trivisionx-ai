@@ -86,7 +86,7 @@ export default function Message({ role, content, sources, quality_score, childre
           "text-[15px] leading-relaxed max-w-[85%] sm:max-w-[75%] transition-all duration-200",
           isUser
             ? "rounded-2xl bg-zinc-100 dark:bg-zinc-800 px-4 py-2.5 text-zinc-800 dark:text-zinc-100 select-text"
-            : "text-zinc-800 dark:text-zinc-100 bg-transparent shadow-none border-none px-0 py-1 w-full"
+            : "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-sm px-4 py-3.5 text-zinc-800 dark:text-zinc-100 shadow-sm w-full"
         )}
       >
         {content !== undefined ? (

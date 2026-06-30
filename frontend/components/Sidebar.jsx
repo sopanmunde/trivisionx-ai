@@ -68,7 +68,7 @@ function groupByDate(conversations) {
   return groups;
 }
 
-function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, selectedId, onSelect, onUserUpdate }) {
+function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, selectedId, onSelect, onUserUpdate, user, userInitials }) {
   return (
     <motion.aside
       initial={{ width: 260 }}
@@ -103,8 +103,8 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
       </div>
       <div className="flex flex-col items-center gap-2 pb-3 px-1.5">
         <SettingsPopover onUserUpdate={onUserUpdate}>
-          <button title="Settings" className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-400 transition-all hover:bg-white/10 hover:text-zinc-200 active:scale-95">
-            <Settings className="h-4 w-4" />
+          <button title="Settings" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground hover:bg-primary/90 transition-all active:scale-95 cursor-pointer shadow-sm">
+            {userInitials || "U"}
           </button>
         </SettingsPopover>
       </div>
@@ -193,9 +193,42 @@ export default function Sidebar({
     return () => cancelAnimationFrame(t);
   }, []);
 
-  const toggleFolders = () => setFoldersOpen(v => { saveLS("sb_folders_open", !v); return !v; });
-  const toggleTemplates = () => setTemplatesOpen(v => { saveLS("sb_templates_open", !v); return !v; });
-  const toggleTools = () => setToolsOpen(v => { saveLS("sb_tools_open", !v); return !v; });
+  const toggleFolders = () => setFoldersOpen(v => {
+    const next = !v;
+    saveLS("sb_folders_open", next);
+    if (next) {
+      setTemplatesOpen(false);
+      setToolsOpen(false);
+      saveLS("sb_templates_open", false);
+      saveLS("sb_tools_open", false);
+    }
+    return next;
+  });
+
+  const toggleTemplates = () => setTemplatesOpen(v => {
+    const next = !v;
+    saveLS("sb_templates_open", next);
+    if (next) {
+      setFoldersOpen(false);
+      setToolsOpen(false);
+      saveLS("sb_folders_open", false);
+      saveLS("sb_tools_open", false);
+    }
+    return next;
+  });
+
+  const toggleTools = () => setToolsOpen(v => {
+    const next = !v;
+    saveLS("sb_tools_open", next);
+    if (next) {
+      setFoldersOpen(false);
+      setTemplatesOpen(false);
+      saveLS("sb_folders_open", false);
+      saveLS("sb_templates_open", false);
+    }
+    return next;
+  });
+
   const toggleGroup = lbl => setCollapsedGroups(p => ({ ...p, [lbl]: !p[lbl] }));
 
   const getConvsByFolder = name => conversations.filter(c => c.folder === name);
@@ -236,6 +269,8 @@ export default function Sidebar({
         selectedId={selectedId}
         onSelect={onSelect}
         onUserUpdate={onUserUpdate}
+        user={user}
+        userInitials={userInitials}
       />
     );
   }
@@ -463,7 +498,7 @@ export default function Sidebar({
             <div className="shrink-0 p-3 border-t border-border/50 bg-muted/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-[30px] w-[30px] items-center justify-center rounded bg-muted text-[11px] font-bold text-muted-foreground select-none shrink-0">
+                  <div className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-primary text-[11px] font-bold text-primary-foreground select-none shrink-0 shadow-sm">
                     {userInitials}
                   </div>
                   <span className="truncate text-[11.5px] font-semibold text-foreground">{userName}</span>
