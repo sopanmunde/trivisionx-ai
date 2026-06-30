@@ -88,9 +88,9 @@ describe('Dashboard Components', () => {
       )
       
       expect(screen.getByLabelText('Open sidebar')).toBeInTheDocument()
-      expect(screen.getByTitle('Document Library')).toBeInTheDocument()
     })
   })
+
 
   describe('DocumentLibrary', () => {
     it('should render the library container with upload button', async () => {

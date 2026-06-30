@@ -1,0 +1,11 @@
+{
+  "name": "trivisionx-ai-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.js"
+  },
+  "devDependencies": {
+    "shadcn": "^4.12.0"
+  }
+}

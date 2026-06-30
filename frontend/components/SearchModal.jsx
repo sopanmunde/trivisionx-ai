@@ -70,7 +70,7 @@ export default function SearchPopover({
         side="right"
         align="start"
         sideOffset={12}
-        className="p-0 w-[360px] overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/95 shadow-2xl backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/95 z-[9999]"
+        className="p-0 w-[360px] overflow-hidden rounded-2xl border-border/80 bg-popover shadow-2xl backdrop-blur-xl z-[9999]"
       >
         <AnimatePresence>
           {open && (
@@ -80,38 +80,38 @@ export default function SearchPopover({
               exit={{ opacity: 0, scale: 0.96, x: -8 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
             >
-              <div className="p-3 border-b border-zinc-200/50 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/20">
+              <div className="p-3 border-b border-border/80 bg-muted/20">
                 <div className="relative group">
-                  <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 transition-colors group-focus-within:text-fuchsia-500 dark:group-focus-within:text-fuchsia-400" />
+                  <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-foreground" />
                   <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search conversations..."
-                    className="w-full rounded-xl border border-zinc-200/80 bg-white py-2.5 pl-10 pr-3 text-[13px] font-medium text-zinc-800 placeholder:text-zinc-400 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:focus:border-fuchsia-500 dark:focus:ring-fuchsia-500/20"
+                    className="w-full rounded-xl border-border/80 bg-background py-2.5 pl-10 pr-3 text-[13px] font-medium text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-ring focus:ring-4 focus:ring-ring/10"
                     autoFocus
                   />
                 </div>
               </div>
 
-              <div className="max-h-[380px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800">
+              <div className="max-h-[380px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border">
                 {/* New Chat Quick Action */}
                 <button
                   onClick={handleNewChat}
-                  className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900/60 active:scale-[0.98]"
+                  className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-all hover:bg-accent active:scale-[0.98]"
                 >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white border border-zinc-200/80 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 group-hover:text-fuchsia-500 dark:group-hover:text-fuchsia-400 transition-colors">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-background border border-border/80 shadow-sm text-muted-foreground group-hover:text-foreground transition-colors">
                     <Plus className="h-3.5 w-3.5" />
                   </div>
-                  <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                  <span className="text-[13px] font-semibold text-foreground">
                     Start new chat
                   </span>
                 </button>
 
-                {Object.entries(groupedConversations).map(
+                  {Object.entries(groupedConversations).map(
                   ([groupName, convs]) => (
                     <div key={groupName} className="mt-3">
-                      <div className="px-3 pb-1.5 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                      <div className="px-3 pb-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         {groupName}
                       </div>
                       <div className="space-y-0.5">
@@ -119,20 +119,20 @@ export default function SearchPopover({
                           <button
                             key={conv.id}
                             onClick={() => handleSelectConversation(conv.id)}
-                            className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900/60 active:scale-[0.98]"
+                            className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-all hover:bg-accent active:scale-[0.98]"
                           >
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-50 border border-zinc-100 dark:border-zinc-800 dark:bg-zinc-800/50 text-zinc-400 transition-colors group-hover:bg-white group-hover:border-zinc-200 dark:group-hover:bg-zinc-800">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted/50 border border-border/50 text-muted-foreground transition-colors group-hover:bg-background group-hover:border-border">
                               <Clock className="h-3.5 w-3.5" />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="truncate text-[13px] font-medium text-zinc-800 dark:text-zinc-200 leading-none mb-1 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                              <div className="truncate text-[13px] font-medium text-foreground leading-none mb-1">
                                 {conv.title}
                               </div>
-                              <div className="truncate text-[11.5px] text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-500 dark:group-hover:text-zinc-400 transition-colors">
+                              <div className="truncate text-[11.5px] text-muted-foreground">
                                 {conv.preview || "No messages"}
                               </div>
                             </div>
-                            <ChevronRight className="h-3.5 w-3.5 text-zinc-300 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
                           </button>
                         ))}
                       </div>
@@ -142,8 +142,8 @@ export default function SearchPopover({
 
                 {filteredConversations.length === 0 && (
                   <div className="py-12 text-center">
-                    <SearchIcon className="mx-auto h-8 w-8 text-zinc-200 dark:text-zinc-800 mb-2" />
-                    <p className="text-[12.5px] font-medium text-zinc-400">
+                    <SearchIcon className="mx-auto h-8 w-8 text-muted-foreground/20 mb-2" />
+                    <p className="text-[12.5px] font-medium text-muted-foreground">
                       No results found
                     </p>
                   </div>

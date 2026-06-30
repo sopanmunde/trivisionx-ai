@@ -132,10 +132,10 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
     "U";
 
   const inputClass = (field) =>
-    `w-full rounded-xl border bg-zinc-50/50 px-4 py-2.5 text-[14px] text-zinc-900 outline-none transition-all duration-200 placeholder:text-zinc-400 dark:bg-zinc-900/20 dark:text-white ${
+    `w-full rounded-xl border bg-muted/30 px-4 py-2.5 text-[14px] text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground ${
       focusedField === field
-        ? "border-zinc-900 ring-1 ring-zinc-900 dark:border-fuchsia-500 dark:ring-fuchsia-500/50"
-        : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700"
+        ? "border-ring ring-1 ring-ring"
+        : "border-border hover:border-ring/50"
     }`;
 
   const tabs = [
@@ -146,35 +146,34 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden rounded-[24px] border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 sm:rounded-[24px]">
+      <DialogContent className="max-w-lg p-0 overflow-hidden rounded-[24px] border-border bg-background shadow-2xl sm:rounded-[24px]">
         <div className="relative flex max-h-[85vh] flex-col">
           <DialogHeader className="px-8 pt-8 pb-4 text-left">
-            <DialogTitle className="text-xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+            <DialogTitle className="text-xl font-bold text-foreground tracking-tight">
               Settings
             </DialogTitle>
-            <DialogDescription className="text-[13px] text-zinc-500 font-medium">
+            <DialogDescription className="text-[13px] text-muted-foreground font-medium">
               Manage your account and preferences
             </DialogDescription>
           </DialogHeader>
             <div className="relative flex h-full flex-col">
 
-
               <div className="px-8 mb-6">
-                <div className="flex p-1 gap-1 rounded-xl bg-zinc-100/50 border border-zinc-200 dark:bg-zinc-900/20 dark:border-zinc-800/80">
+                <div className="flex p-1 gap-1 rounded-xl bg-muted/50 border border-border/80">
                   {tabs.map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-[12px] font-bold transition-all ${
                         activeTab === tab.id
-                          ? "text-zinc-900 dark:text-white"
-                          : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
+                          ? "text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {activeTab === tab.id && (
                         <motion.div
                           layoutId="activeTabCompact"
-                          className="absolute inset-0 rounded-lg bg-white border border-zinc-200 shadow-sm dark:bg-zinc-800/60 dark:border-zinc-700/60"
+                          className="absolute inset-0 rounded-lg bg-card border border-border shadow-sm"
                           transition={{
                             type: "spring",
                             stiffness: 400,
@@ -192,8 +191,8 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
               <div className="flex-1 overflow-y-auto px-8 pb-10 scrollbar-none">
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-zinc-900 dark:text-white" />
-                    <p className="text-[13px] text-zinc-500">Syncing dataâ€¦</p>
+                    <Loader2 className="h-6 w-6 animate-spin text-foreground" />
+                    <p className="text-[13px] text-muted-foreground">Syncing data…</p>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-8">
@@ -205,20 +204,20 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                       >
                         <div className="flex flex-col items-center py-4">
                           <div className="relative group/avatar mb-4">
-                            <div className="flex h-24 w-24 items-center justify-center rounded-[28px] bg-zinc-900 text-3xl font-bold text-white shadow-xl dark:bg-zinc-900 dark:border-zinc-800/80 border">
+                            <div className="flex h-24 w-24 items-center justify-center rounded-[28px] bg-primary text-3xl font-bold text-primary-foreground shadow-xl border-border">
                               {initials}
                             </div>
                             <button
                               type="button"
-                              className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-zinc-200 text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 hover:text-zinc-900 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-white"
+                              className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-xl bg-background border border-border text-muted-foreground shadow-lg transition-all hover:bg-accent hover:text-foreground"
                             >
                               <Camera className="h-4.5 w-4.5" />
                             </button>
                           </div>
-                          <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
+                          <h3 className="text-lg font-bold text-foreground">
                             {formData.first_name} {formData.last_name}
                           </h3>
-                          <p className="text-[13px] text-zinc-500 font-medium">
+                          <p className="text-[13px] text-muted-foreground font-medium">
                             {formData.email}
                           </p>
                         </div>
@@ -226,7 +225,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                         <div className="space-y-5">
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-2">
-                              <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 px-1">
+                              <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-1">
                                 First Name
                               </label>
                               <input
@@ -239,7 +238,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 px-1">
+                              <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-1">
                                 Last Name
                               </label>
                               <input
@@ -254,11 +253,11 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 px-1">
+                            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-1">
                               Username
                             </label>
                             <div className="relative">
-                              <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" />
+                              <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                               <input
                                 name="username"
                                 value={formData.username}
@@ -279,7 +278,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                         animate={{ opacity: 1, x: 0 }}
                         className="space-y-4"
                       >
-                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50/50 p-2 space-y-1 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        <div className="rounded-2xl border-border bg-muted/30 p-2 space-y-1">
                           {[
                             {
                               icon: Fingerprint,
@@ -295,18 +294,18 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                             <button
                               key={idx}
                               type="button"
-                              className="flex w-full items-center justify-between rounded-xl px-4 py-3 hover:bg-white dark:hover:bg-zinc-900/60 transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800/80 shadow-sm hover:shadow-md transition-all"
+                              className="flex w-full items-center justify-between rounded-xl px-4 py-3 hover:bg-background transition-colors border border-transparent hover:border-border/80 shadow-sm hover:shadow-md"
                             >
                               <div className="flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-lg bg-white border border-zinc-200 flex items-center justify-center dark:bg-zinc-950 dark:border-zinc-850">
-                                  <item.icon className="h-4.5 w-4.5 text-zinc-500" />
+                                <div className="h-9 w-9 rounded-lg bg-background border border-border flex items-center justify-center">
+                                  <item.icon className="h-4.5 w-4.5 text-muted-foreground" />
                                 </div>
-                                <span className="text-[14px] font-bold text-zinc-800 dark:text-zinc-200">
+                                <span className="text-[14px] font-bold text-foreground">
                                   {item.label}
                                 </span>
                               </div>
                               <span
-                                className={`text-[11px] font-bold ${item.status === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400"}`}
+                                className={`text-[11px] font-bold ${item.status === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
                               >
                                 {item.status}
                               </span>
@@ -318,15 +317,15 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                           <button
                             type="button"
                             onClick={() => setDeleteAccountConfirmOpen(true)}
-                            className="group flex w-full items-center justify-between rounded-2xl border border-red-200 bg-red-50/50 px-5 py-4 hover:bg-red-100/50 transition-all dark:border-red-900/30 dark:bg-red-950/20 cursor-pointer"
+                            className="group flex w-full items-center justify-between rounded-2xl border border-destructive/30 bg-destructive/10 px-5 py-4 hover:bg-destructive/20 transition-all cursor-pointer"
                           >
                             <div className="flex items-center gap-3">
-                              <Trash2 className="h-4.5 w-4.5 text-red-500" />
-                              <span className="text-[14px] font-bold text-red-600 dark:text-red-400">
+                              <Trash2 className="h-4.5 w-4.5 text-destructive" />
+                              <span className="text-[14px] font-bold text-destructive">
                                 Delete Account
                               </span>
                             </div>
-                            <ChevronRight className="h-4 w-4 text-red-300 transition-transform group-hover:translate-x-0.5 dark:text-red-800" />
+                            <ChevronRight className="h-4 w-4 text-destructive/50 transition-transform group-hover:translate-x-0.5" />
                           </button>
                         </div>
                       </motion.div>
@@ -337,7 +336,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                         <motion.div
                           initial={{ opacity: 0, scale: 0.98 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="flex items-center gap-3 rounded-xl bg-zinc-900 p-3.5 text-[13px] font-bold text-white shadow-xl dark:bg-white dark:text-zinc-900"
+                          className="flex items-center gap-3 rounded-xl bg-foreground p-3.5 text-[13px] font-bold text-background shadow-xl"
                         >
                           <Check className="h-4 w-4" />
                           {success}
@@ -349,14 +348,14 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                       <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 rounded-xl border border-zinc-200 bg-white py-3 text-[13px] font-bold text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 transition-all dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:bg-zinc-900/80"
+                        className="flex-1 rounded-xl border border-border bg-background py-3 text-[13px] font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-all"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={isSaving}
-                        className="relative flex-[1.5] group overflow-hidden rounded-xl bg-zinc-900 py-3 text-[13px] font-bold text-white shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100"
+                        className="relative flex-[1.5] overflow-hidden rounded-xl bg-primary py-3 text-[13px] font-bold text-primary-foreground shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 hover:bg-primary/90"
                       >
                         <span className="relative flex items-center justify-center gap-2">
                           {isSaving ? (

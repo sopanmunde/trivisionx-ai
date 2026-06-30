@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   PanelLeftClose,
@@ -163,8 +164,8 @@ function DateSection({ label, isOpen, onToggle, children }) {
 }
 
 const AddBtn = forwardRef(({ title, ...props }, ref) => (
-  <button ref={ref} {...props} aria-label={title} title={title} className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-zinc-600 transition-all hover:bg-zinc-200 hover:text-zinc-800 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-300 active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-fuchsia-500/50">
-    <Plus className="h-3 w-3" />
+  <button ref={ref} {...props} aria-label={title} title={title} className="group inline-flex h-6 w-6 items-center justify-center rounded-lg text-zinc-600 transition-all hover:bg-zinc-200 hover:text-zinc-800 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-300 active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-fuchsia-500/50">
+    <Plus className="h-3 w-3 transition-transform duration-300 ease-in-out group-data-[state=open]:rotate-90" />
   </button>
 ));
 AddBtn.displayName = "AddBtn";
@@ -183,6 +184,9 @@ export default function Sidebar({
   const [toolsOpen, setToolsOpen] = useState(() => loadLS("sb_tools_open", false));
   const [expandedFolder, setExpandedFolder] = useState(null);
   const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [rotatedNewChat, setRotatedNewChat] = useState(false);
+  const [rotatedEmail, setRotatedEmail] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   useEffect(() => {
     const t = requestAnimationFrame(() => setMounted(true));
@@ -278,20 +282,31 @@ export default function Sidebar({
 
             {/* STATIC NAVIGATION RAIL */}
             <div className="px-2.5 pb-2 shrink-0 space-y-0.5 border-b border-zinc-100 dark:border-zinc-900/50 max-h-[460px] overflow-y-auto scrollbar-none">
-              <button onClick={createNewChat} className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
-                <Plus className="h-4 w-4 text-fuchsia-600 dark:text-fuchsia-400" /><span>New Chat</span>
+              <button
+                onClick={() => {
+                  setRotatedNewChat(prev => !prev);
+                  createNewChat?.();
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer"
+              >
+                <Plus className={cls("h-4 w-4 text-muted-foreground transition-transform duration-300 ease-in-out", rotatedNewChat ? "rotate-90" : "rotate-0")} /><span>New Chat</span>
               </button>
               <SearchPopover conversations={conversations} onSelect={onSelect} createNewChat={createNewChat}>
                 <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
-                  <SearchIcon className="h-4 w-4 text-fuchsia-600 dark:text-fuchsia-400" /><span>Search</span>
+                  <SearchIcon className="h-4 w-4 text-muted-foreground" /><span>Search</span>
                 </button>
               </SearchPopover>
-              <button className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
-                <span className="flex items-center gap-2.5"><Mail className="h-4 w-4 text-fuchsia-600 dark:text-fuchsia-400" /><span>Email</span></span>
-                <Plus className="h-3 w-3 opacity-60 hover:opacity-100" />
+              <button
+                onClick={() => {
+                  setRotatedEmail(prev => !prev);
+                }}
+                className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer"
+              >
+                <span className="flex items-center gap-2.5"><Mail className="h-4 w-4 text-muted-foreground" /><span>Email</span></span>
+                <Plus className={cls("h-3 w-3 opacity-60 hover:opacity-100 transition-transform duration-300 ease-in-out", rotatedEmail ? "rotate-90" : "rotate-0")} />
               </button>
               <button onClick={toggleTools} className="flex w-full justify-between items-center rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
-                <span className="flex items-center gap-2.5"><Key className="h-4 w-4 text-fuchsia-600 dark:text-fuchsia-400" /><span>Tools</span></span>
+                <span className="flex items-center gap-2.5"><Key className="h-4 w-4 text-muted-foreground" /><span>Tools</span></span>
                 <ChevronDown className={cls("h-3 w-3 opacity-60 transition-transform duration-200", toolsOpen ? "rotate-0" : "-rotate-90")} />
               </button>
 
@@ -305,7 +320,7 @@ export default function Sidebar({
                     transition={{ duration: 0.2, ease: "easeInOut" }}
                     className="flex flex-col space-y-0.5 overflow-hidden pl-2"
                   >
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
+                     <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
                       <Brain className="h-4 w-4" /><span>Brain</span>
                     </button>
                     <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
@@ -320,16 +335,51 @@ export default function Sidebar({
                     <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
                       <SearchIcon className="h-4 w-4" /><span>Deep Research</span>
                     </button>
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
-                      <ImageIcon className="h-4 w-4" /><span>Gallery</span>
-                    </button>
-                    <button className="flex w-full justify-between items-center rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
+                    
+                    <button
+                      onClick={() => {
+                        setLibraryOpen(prev => !prev);
+                      }}
+                      className="flex w-full justify-between items-center rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer"
+                    >
                       <span className="flex items-center gap-2.5"><FolderIcon className="h-4 w-4" /><span>Library</span></span>
-                      <Plus className="h-3 w-3 opacity-60 hover:opacity-100" />
+                      <ChevronDown className={cls("h-3.5 w-3.5 opacity-60 transition-transform duration-200", libraryOpen ? "rotate-0" : "-rotate-90")} />
                     </button>
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
-                      <FileText className="h-4 w-4" /><span>Notes</span>
-                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {libraryOpen && (
+                        <motion.div
+                          key="library-dropdown"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="flex flex-col space-y-0.5 overflow-hidden pl-4 border-l border-zinc-100 dark:border-zinc-900/50 ml-4.5"
+                        >
+                          <button
+                            onClick={() => {
+                              onSelect("docs");
+                              onClose();
+                            }}
+                            className={cls(
+                              "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                              selectedId === "docs"
+                                ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
+                                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                            )}
+                          >
+                            <Globe className="h-4 w-4" /><span>Documentation</span>
+                          </button>
+                          <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
+                            <ImageIcon className="h-4 w-4" /><span>Gallery</span>
+                          </button>
+                          <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
+                            <FileText className="h-4 w-4" /><span>Notes</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
                       <CheckSquare className="h-4 w-4" /><span>Tasks</span>
                     </button>
@@ -342,7 +392,7 @@ export default function Sidebar({
             {/* SCROLLABLE BODY */}
             <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-2.5 pb-2 space-y-0.5 scrollbar-thin scrollbar-thumb-white/[0.06] scrollbar-track-transparent" aria-label="Sidebar navigation">
               <AccordionSection
-                id="templates" icon={<FileText className="h-3.5 w-3.5 text-fuchsia-600 dark:text-fuchsia-400" />} title="Templates"
+                id="templates" icon={<FileText className="h-3.5 w-3.5 text-muted-foreground" />} title="Templates"
                 badge={templateCount} isOpen={templatesOpen} onToggle={toggleTemplates}
                 addAction={
                   <TemplatePopover onCreateTemplate={handleCreateTemplate} editingTemplate={editingTemplate}>
@@ -359,7 +409,7 @@ export default function Sidebar({
               </AccordionSection>
 
               <AccordionSection
-                id="folders" icon={<FolderIcon className="h-3.5 w-3.5 text-fuchsia-600 dark:text-fuchsia-400" />} title="Folders"
+                id="folders" icon={<FolderIcon className="h-3.5 w-3.5 text-muted-foreground" />} title="Folders"
                 badge={folderCount} isOpen={foldersOpen} onToggle={toggleFolders}
                 addAction={
                   <FolderPopover onCreateFolder={handleCreateFolder}>
@@ -410,16 +460,16 @@ export default function Sidebar({
             </nav>
 
             {/* PROFILE FOOTER */}
-            <div className="shrink-0 p-3 border-t border-zinc-200/50 dark:border-zinc-900/60 bg-[#fafafa]/50 dark:bg-[#09090A]/40">
+            <div className="shrink-0 p-3 border-t border-border/50 bg-muted/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-[30px] w-[30px] items-center justify-center rounded bg-zinc-200 dark:bg-zinc-800 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 select-none shrink-0">
+                  <div className="flex h-[30px] w-[30px] items-center justify-center rounded bg-muted text-[11px] font-bold text-muted-foreground select-none shrink-0">
                     {userInitials}
                   </div>
-                  <span className="truncate text-[11.5px] font-semibold text-zinc-700 dark:text-zinc-300">{userName}</span>
+                  <span className="truncate text-[11.5px] font-semibold text-foreground">{userName}</span>
                 </div>
                 <SettingsPopover onUserUpdate={onUserUpdate}>
-                  <button aria-label="Open settings" className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all cursor-pointer">
+                  <button aria-label="Open settings" className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all cursor-pointer">
                     <Settings className="h-4 w-4" />
                   </button>
                 </SettingsPopover>

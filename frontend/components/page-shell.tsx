@@ -24,10 +24,16 @@ export function PageShell({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background pt-24 pb-16">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
+    <div className="relative min-h-screen bg-background pt-24 pb-16 overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_60%)] pointer-events-none" />
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl relative">
         <div className="flex flex-col items-center text-center space-y-4 mb-12">
-          {badge && <Badge variant="secondary" className="mb-2">{badge}</Badge>}
+          {badge && (
+            <div className="relative mb-2">
+              <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl" />
+              <Badge variant="secondary" className="relative">{badge}</Badge>
+            </div>
+          )}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground">
             {title}
           </h1>
@@ -55,7 +61,8 @@ export function Section({
   delay?: number;
 }) {
   return (
-    <section className={`py-12 border-t border-border mt-12 ${className}`}>
+    <section className={`relative py-12 mt-12 ${className}`}>
+      <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       {title && <h2 className="text-2xl font-bold mb-6 text-foreground">{title}</h2>}
       {children}
     </section>
@@ -88,17 +95,18 @@ export function FeatureCard({
   const IconComponent = icon ? getIconComponent(icon) : null;
   
   return (
-    <Card className={`h-full hover:bg-accent/40 transition-colors ${className}`}>
-      <CardHeader>
+    <Card className={`group relative h-full transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 hover:-translate-y-0.5 bg-card/80 backdrop-blur-sm ${className}`}>
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-b from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <CardHeader className="relative">
         {IconComponent && (
-          <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center mb-4 border border-border">
-            <IconComponent className="w-5 h-5 text-primary" />
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center mb-4 border border-border/60 shadow-sm group-hover:border-primary/30 group-hover:shadow-primary/10 transition-all duration-300">
+            <IconComponent className="w-5 h-5 text-foreground group-hover:text-primary transition-colors" />
           </div>
         )}
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="group-hover:text-primary transition-colors">{title}</CardTitle>
         {description && <CardDescription className="leading-relaxed">{description}</CardDescription>}
       </CardHeader>
-      {children && <CardContent>{children}</CardContent>}
+      {children && <CardContent className="relative">{children}</CardContent>}
     </Card>
   );
 }

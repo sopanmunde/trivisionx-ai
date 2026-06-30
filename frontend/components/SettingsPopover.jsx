@@ -42,10 +42,10 @@ function ShimmerBorder({ className = "" }) {
 function MenuItem({
   icon: Icon,
   label,
-  iconBg = "bg-zinc-100 dark:bg-zinc-800",
-  iconColor = "text-zinc-500 dark:text-zinc-400",
+  iconBg = "bg-muted",
+  iconColor = "text-muted-foreground",
   badge,
-  badgeColor = "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+  badgeColor = "bg-muted text-muted-foreground",
   suffix,
   onClick,
   danger = false,
@@ -60,15 +60,15 @@ function MenuItem({
       {...motionProps}
       className={`group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left transition-all duration-150 ${Component === motion.button ? "active:scale-[0.98]" : ""}
         ${danger
-          ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
-          : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/80 dark:hover:bg-zinc-900/60"
+          ? "text-destructive hover:bg-destructive/10"
+          : "text-foreground hover:bg-accent"
         } ${className}`}
     >
       <div
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${danger ? "bg-red-50 dark:bg-red-500/10" : iconBg}`}
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${danger ? "bg-destructive/10" : iconBg}`}
       >
         <Icon
-          className={`h-3.5 w-3.5 ${danger ? "text-red-500" : iconColor}`}
+          className={`h-3.5 w-3.5 ${danger ? "text-destructive" : iconColor}`}
         />
       </div>
       <span className="font-medium flex-1">{label}</span>
@@ -145,7 +145,7 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
         <PopoverTrigger asChild>{children}</PopoverTrigger>
 
         <PopoverContent
-          className="w-64 p-0 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800/80 dark:bg-zinc-950"
+          className="w-64 p-0 overflow-hidden rounded-2xl border-border bg-popover shadow-xl"
           align="start"
           side="top"
           sideOffset={10}
@@ -160,33 +160,33 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                 transition={{ duration: 0.15, ease: "easeOut" }}
               >
                 {/* ── Profile header ── */}
-                <div className="px-3.5 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/20">
+                <div className="px-3.5 py-4 border-b border-border/80 bg-muted/20">
                   <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 dark:bg-zinc-800 text-[14px] font-bold text-white shadow-sm border border-zinc-200 dark:border-zinc-700">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-[14px] font-bold text-primary-foreground shadow-sm border border-border">
                         {initials}
                       </div>
-                      <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-zinc-950 bg-emerald-500" />
+                      <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-green-500" />
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[13.5px] font-semibold text-zinc-900 dark:text-zinc-100 leading-none mb-1">
+                      <div className="truncate text-[13.5px] font-semibold text-foreground leading-none mb-1">
                         {displayName}
                       </div>
                       {email && (
-                        <div className="truncate text-[11px] text-zinc-500 dark:text-zinc-500 font-medium leading-none">
+                        <div className="truncate text-[11px] text-muted-foreground font-medium leading-none">
                           {email}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="mt-3.5 flex items-center gap-2 rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 shadow-sm">
+                  <div className="mt-3.5 flex items-center gap-2 rounded-xl border-border/60 bg-card px-3 py-2 shadow-sm">
                     <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />
-                    <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                    <span className="text-[11px] font-semibold text-foreground">
                       Free plan
                     </span>
-                    <button className="ml-auto text-[10px] font-bold text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                    <button className="ml-auto text-[10px] font-bold text-primary-foreground bg-primary px-2 py-0.5 rounded-lg hover:bg-primary/90 transition-colors">
                       Upgrade
                     </button>
                   </div>
@@ -204,11 +204,11 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                   />
                   {/* Appearance Theme Selector Panel */}
                   <div className="px-2.5 py-1.5 space-y-1.5">
-                    <div className="flex items-center gap-2 px-1 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                    <div className="flex items-center gap-2 px-1 text-[11px] font-semibold text-muted-foreground">
                       <Palette className="h-3.5 w-3.5" />
                       <span>Appearance</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-1 p-1 bg-zinc-100/60 dark:bg-zinc-900/60 rounded-lg border border-zinc-200/40 dark:border-zinc-800/40">
+                    <div className="grid grid-cols-3 gap-1 p-1 bg-muted/60 rounded-lg border border-border/40">
                       {[
                         { id: "light", label: "Light", icon: Sun },
                         { id: "dark", label: "Dark", icon: Moon },
@@ -224,8 +224,8 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                             className={cn(
                               "flex items-center justify-center gap-1.5 rounded-md py-1.5 text-center transition-all duration-150 select-none text-[11px] font-medium leading-none cursor-pointer",
                               active
-                                ? "bg-white text-zinc-950 shadow-sm dark:bg-zinc-950 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-800"
-                                : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50"
+                                ? "bg-card text-card-foreground shadow-sm border border-border"
+                                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                             )}
                           >
                             <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -238,28 +238,27 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                   <MenuItem
                     icon={Globe}
                     label="Language"
-                    suffix={<ChevronRight className="h-3 w-3 text-zinc-400" />}
+                    suffix={<ChevronRight className="h-3 w-3 text-muted-foreground" />}
                   />
                   <MenuItem
                     icon={HelpCircle}
                     label="Get help"
-                    suffix={<ChevronRight className="h-3 w-3 text-zinc-400" />}
+                    suffix={<ChevronRight className="h-3 w-3 text-muted-foreground" />}
                   />
                 </div>
 
-                <div className="mx-3 h-px bg-zinc-100 dark:bg-zinc-800/80" />
+                <div className="mx-3 h-px bg-border/80" />
 
                 <div className="p-1.5 space-y-0.5">
-                  {/* Upgrade — Magic UI shimmer card */}
                   <div className="relative overflow-hidden rounded-xl">
-                    <button className="group relative flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left transition-all duration-150 hover:bg-amber-50 dark:hover:bg-amber-500/10 active:scale-[0.98]">
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-500/10">
+                    <button className="group relative flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left transition-all duration-150 hover:bg-amber-500/10 active:scale-[0.98]">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
                         <Crown className="h-3.5 w-3.5 text-amber-500" />
                       </div>
-                      <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                      <span className="font-medium text-foreground">
                         Upgrade plan
                       </span>
-                      <span className="ml-auto rounded-full bg-gradient-to-r from-amber-400 to-orange-400 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">
+                      <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground shadow-sm">
                         PRO
                       </span>
                     </button>
@@ -268,11 +267,11 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                   <MenuItem
                     icon={BookOpen}
                     label="Learn more"
-                    suffix={<ChevronRight className="h-3 w-3 text-zinc-400" />}
+                    suffix={<ChevronRight className="h-3 w-3 text-muted-foreground" />}
                   />
                 </div>
 
-                <div className="mx-3 h-px bg-zinc-100 dark:bg-zinc-800/80" />
+                <div className="mx-3 h-px bg-border/80" />
 
                 <div className="p-1.5">
                   <MenuItem
