@@ -17,7 +17,6 @@ import {
   ThumbsUp,
   ThumbsDown,
   Stethoscope,
-  Pill,
   BookOpen,
   FileText,
   FileType,
@@ -27,6 +26,7 @@ import {
   File as FileIcon,
   Archive,
   Presentation,
+  Bot,
 } from "lucide-react";
 import { TriVisionXLogo } from "./TriVisionXLogo";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,6 +36,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { Textarea } from "./ui/textarea";
+import { Card, CardContent } from "./ui/card";
+import { ScrollArea } from "./ui/scroll-area";
+import { Badge } from "./ui/badge";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import ScrambleHover from "./ui/scramble";
 
 // â”€â”€â”€ File icon helper (mirrors Composer.jsx) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getFileInfo(filename) {
@@ -51,22 +56,24 @@ function getFileInfo(filename) {
   return { icon: FileIcon, bg: "bg-zinc-600", label: ext.toUpperCase() || "File" };
 }
 
-// â”€â”€â”€ File card shown on sent user messages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ——— File card shown on sent user messages ———————————————————————————————————
 function MessageFileCard({ attachedFile }) {
   const info = getFileInfo(attachedFile.name);
   const Icon = info.icon;
-  const shortName = attachedFile.name.length > 32 ? attachedFile.name.slice(0, 30) + "â€¦" : attachedFile.name;
+  const shortName = attachedFile.name.length > 32 ? attachedFile.name.slice(0, 30) + "…" : attachedFile.name;
   return (
-    <div className="flex justify-end mb-1.5">
-      <div className="flex items-center gap-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/80 px-3 py-2 shadow-sm max-w-[260px]">
-        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", info.bg)}>
-          <Icon className="h-4 w-4 text-white" />
+    <div className="flex justify-end mb-2">
+      <Card className="flex items-center gap-2.5 rounded-xl border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 px-3 py-2 shadow-xs max-w-[280px]">
+        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm text-white", info.bg)}>
+          <Icon className="h-4 w-4" />
         </div>
         <div className="overflow-hidden">
-          <p className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100 truncate leading-snug">{shortName}</p>
-          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">{info.label}</p>
+          <p className="text-[13px] font-semibold text-zinc-800 dark:text-zinc-100 truncate leading-snug">{shortName}</p>
+          <Badge variant="secondary" className="mt-0.5 text-[9px] px-1.5 py-0.5 font-bold tracking-wider leading-none">
+            {info.label}
+          </Badge>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -89,23 +96,11 @@ function ThinkingMessage({ onPause, agentState }) {
       className="flex gap-4 px-2 w-full justify-start"
     >
       {/* AI avatar */}
-      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shadow-sm">
-        <svg
-          className="w-[50%] h-[50%] text-zinc-700 dark:text-zinc-300"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <line x1="12" y1="3" x2="12" y2="21" />
-          <path d="M5 7 C5 3 19 3 19 7" />
-          <line x1="5" y1="7" x2="5" y2="13" />
-          <line x1="19" y1="7" x2="19" y2="13" />
-          <line x1="8" y1="21" x2="16" y2="21" />
-        </svg>
-      </div>
+      <Avatar className="mt-1 h-8 w-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm">
+        <AvatarFallback className="bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300">
+          <Bot className="h-4 w-4" />
+        </AvatarFallback>
+      </Avatar>
       <div className="flex items-center gap-3 py-1">
         {/* Staggered dots */}
         <div className="flex items-center gap-[5px]">
@@ -130,10 +125,11 @@ function ThinkingMessage({ onPause, agentState }) {
           variant="outline"
           size="sm"
           onClick={onPause}
-          className="ml-2 h-7 rounded-full px-3 text-[11px] font-medium transition-all"
+          className="ml-2 h-7 rounded-full px-3 text-[11px] font-semibold transition-all border-zinc-200 hover:border-red-500/50 hover:bg-red-50 dark:border-zinc-800 dark:hover:border-red-500/30 dark:hover:bg-red-950/20 text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400"
         >
-          <Square className="h-2.5 w-2.5 mr-1" /> Stop
+          <Square className="h-2 w-2 mr-1.5 fill-current" /> Stop
         </Button>
+
       </div>
     </motion.div>
   );
@@ -165,6 +161,7 @@ const ChatPane = forwardRef(function ChatPane(
     providerSwitchEvent,
     onDismissProviderSwitch,
     selectedBot,
+    user,
   },
   ref,
 ) {
@@ -244,43 +241,57 @@ const ChatPane = forwardRef(function ChatPane(
   if (!conversation) return null;
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col bg-white dark:bg-[#1C1C1E]">
+    <div className="flex h-full min-h-0 flex-1 flex-col bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden">
+      {/* Background patterns to contrast with the sidebar's translucent look */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808006_1px,transparent_1px),linear-gradient(to_bottom,#80808006_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-60" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_75%)] pointer-events-none" />
+
       {messages.length === 0 ? (
-        /* â”€â”€ Odysseus Centered Empty State â”€â”€ */
-        <div className="flex flex-1 flex-col justify-between overflow-y-auto px-4 py-8 bg-zinc-50/20 dark:bg-[#1C1C1E]">
+        /* —— Centered Empty State —— */
+        <div className="flex flex-1 flex-col justify-between overflow-y-auto px-4 py-8 bg-transparent relative z-10">
           <div className="flex flex-1 flex-col items-center justify-center w-full">
             <div className="w-full max-w-3xl flex flex-col items-center justify-center">
-              {/* Logo & Headline */}
-              <div className="flex flex-col items-center justify-center text-center mb-6">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4 }}
-                  className="mb-3 flex flex-col items-center gap-3"
-                >
-                  <TriVisionXLogo size="lg" glow animate={false} />
-                  <h1 className="text-2xl font-bold tracking-wider text-fuchsia-600 dark:text-fuchsia-400 mb-1 leading-none">
-                    TriVisionX
-                  </h1>
-                </motion.div>
+              {/* Logo & Greeting (no surrounding card box border/bg) */}
+              <Card className="mb-8 border-none shadow-none bg-transparent max-w-md w-full">
+                <CardContent className="flex flex-col items-center justify-center text-center pt-6 pb-0">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="flex flex-col items-center gap-4 w-full"
+                  >
+                    <div className="relative">
+                      <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse" />
+                      <TriVisionXLogo size="lg" glow animate={false} />
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-4xl bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-600 dark:from-white dark:via-zinc-200 dark:to-zinc-400 bg-clip-text text-transparent">
+                        Hello{user?.first_name ? (
+                          <motion.span
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            ,&nbsp;
+                            <ScrambleHover
+                              text={user.first_name}
+                              scrambleSpeed={80}
+                              maxIterations={8}
+                              characters="!<>-_\/[]{}—=+*^?#@"
+                              className="text-primary"
+                            />
+                          </motion.span>
+                        ) : ''}
+                      </h2>
+                      <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-1">
+                        How can I help you today?
+                      </p>
+                    </div>
+                  </motion.div>
+                </CardContent>
+              </Card>
 
-                <p className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 mt-2">
-                  Type <code className="px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-fuchsia-500 font-mono text-[11px] border border-zinc-200/50 dark:border-zinc-700/50">/setup</code> to get started.
-                </p>
-
-                <p className="text-[11.5px] text-zinc-500 dark:text-zinc-500 mt-1">
-                  Type /setup, then choose Local models or API.
-                </p>
-
-                <div className="mt-4.5">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-3 py-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500" />
-                    Nobody
-                  </span>
-                </div>
-              </div>
-
-              <div className="w-full">
+              <div className="w-full relative z-10">
                 <Composer
                   ref={composerRef}
                   onSend={async (text, mode, fileRef) => {
@@ -298,8 +309,8 @@ const ChatPane = forwardRef(function ChatPane(
                 />
               </div>
 
-              {/* Suggestion pills â€” directly below Composer */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-4 px-1">
+              {/* Suggestion pills — directly below Composer */}
+              <div className="flex flex-wrap items-center justify-center gap-1.5 mt-4 relative z-10">
                 {SUGGESTIONS.map((s, i) => (
                   <motion.div
                     key={s.label}
@@ -312,14 +323,12 @@ const ChatPane = forwardRef(function ChatPane(
                     <Button
                       variant="outline"
                       onClick={() => handleSuggestion(s.label)}
-                      className="group rounded-full bg-background/50 backdrop-blur-sm shadow-sm transition-all hover:bg-background border-border dark:bg-zinc-900/40 dark:border-zinc-800/80 dark:hover:bg-zinc-900/80 h-9"
+                      className="group rounded-full h-8 px-4 border border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md shadow-xs text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-white dark:hover:bg-zinc-900 transition-all duration-200 cursor-pointer"
                     >
                       {s.icon && (
-                        <s.icon className="mr-2 h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <s.icon className="mr-1.5 h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />
                       )}
-                      <span className="text-[13px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                        {s.label}
-                      </span>
+                      <span>{s.label}</span>
                     </Button>
                   </motion.div>
                 ))}
@@ -329,11 +338,11 @@ const ChatPane = forwardRef(function ChatPane(
 
           {/* Footer Hint stays down of the chat panel */}
           <p className="mx-auto mt-7 text-center text-[11px] text-zinc-400/70 dark:text-zinc-600">
-            trivisionx-ai can make mistakes. Verify important information.
+            AI can make mistakes. Verify important information.
           </p>
         </div>
       ) : (
-        /* â”€â”€ Active Conversation Layout â”€â”€ */
+        /* —— Active Conversation Layout —— */
         <>
           {/* Provider Switch Notification Banner */}
           <AnimatePresence>
@@ -342,7 +351,7 @@ const ChatPane = forwardRef(function ChatPane(
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="flex items-center justify-center gap-2 bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800/40 px-4 py-2 text-[12px] text-amber-800 dark:text-amber-200"
+                className="flex items-center justify-center gap-2 bg-amber-50/90 dark:bg-amber-950/30 backdrop-blur-md border-b border-amber-200/60 dark:border-amber-800/30 px-4 py-2.5 text-[12px] text-amber-800 dark:text-amber-300 font-medium shadow-xs relative z-10"
               >
                 <span>
                   Switched from <strong>{providerSwitchEvent.from}</strong> to{" "}
@@ -353,16 +362,16 @@ const ChatPane = forwardRef(function ChatPane(
                 </span>
                 <button
                   onClick={onDismissProviderSwitch}
-                  className="ml-2 rounded-full p-0.5 hover:bg-amber-200/50 dark:hover:bg-amber-800/50 transition-colors"
+                  className="ml-2 rounded-full p-0.5 hover:bg-amber-200/50 dark:hover:bg-amber-800/50 transition-colors cursor-pointer"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* Messages scroll area */}
-          <div className="flex-1 overflow-y-auto scroll-smooth scrollbar-thin">
+          <ScrollArea className="flex-1 relative z-10">
             <div className="mx-auto max-w-3xl px-4 py-8">
               <div className="space-y-6">
                 <AnimatePresence initial={false}>
@@ -379,40 +388,43 @@ const ChatPane = forwardRef(function ChatPane(
                         <motion.div
                           initial={{ opacity: 0, y: 6 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 p-3 shadow-xs"
                         >
-                          <Textarea
-                            value={draft}
-                            onChange={(e) => setDraft(e.target.value)}
-                            className="w-full resize-none border-none bg-white dark:bg-zinc-950 p-3 text-[14.5px] rounded-lg shadow-sm focus-visible:ring-1 focus-visible:ring-zinc-300 dark:focus-visible:ring-zinc-700 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:ring-offset-0 focus-visible:border-transparent min-h-[85px] leading-relaxed"
-                            autoFocus
-                            placeholder="Edit message..."
-                          />
-                          <div className="mt-2.5 flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              onClick={cancelEdit}
-                              className="h-8 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 px-3 cursor-pointer select-none"
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={saveAndResend}
-                              className="h-8 rounded-lg text-xs font-semibold px-3 cursor-pointer select-none"
-                            >
-                              Save & Resend
-                            </Button>
-                            <Button
-                              onClick={saveEdit}
-                              className="h-8 rounded-lg text-xs font-semibold px-3 cursor-pointer bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 select-none"
-                            >
-                              Save
-                            </Button>
-                          </div>
+                          <Card className="border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/50 shadow-md backdrop-blur-md">
+                            <CardContent className="p-3">
+                              <Textarea
+                                value={draft}
+                                onChange={(e) => setDraft(e.target.value)}
+                                className="w-full resize-none border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 text-[14px] rounded-lg shadow-xs focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-[90px] leading-relaxed transition-all"
+                                autoFocus
+                                placeholder="Edit message..."
+                              />
+                              <div className="mt-3 flex items-center justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  onClick={cancelEdit}
+                                  className="h-8 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 px-3 cursor-pointer select-none"
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={saveAndResend}
+                                  className="h-8 rounded-lg text-xs font-semibold px-3 cursor-pointer select-none border-zinc-200 dark:border-zinc-800"
+                                >
+                                  Save & Resend
+                                </Button>
+                                <Button
+                                  onClick={saveEdit}
+                                  className="h-8 rounded-lg text-xs font-semibold px-3 cursor-pointer bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 select-none shadow-xs"
+                                >
+                                  Save
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
                         </motion.div>
                       ) : (
-                        /* â”€â”€ Normal Message â”€â”€ */
+                        /* —— Normal Message —— */
                         <div className="relative">
                           {/* File card above user message */}
                           {m.role === "user" && m.attachedFile && (
@@ -428,7 +440,7 @@ const ChatPane = forwardRef(function ChatPane(
                           {/* Hover action bar */}
                           <div
                             className={cn(
-                              "mt-1.5 flex items-center gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100",
+                              "mt-1.5 flex items-center gap-1.5 opacity-0 transition-all duration-200 group-hover:opacity-100",
                               m.role === "user"
                                 ? "justify-end pr-1"
                                 : "justify-start pl-12",
@@ -438,10 +450,10 @@ const ChatPane = forwardRef(function ChatPane(
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="icon"
                                   onClick={() => copyToClipboard(m.content, m.id)}
-                                  className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground shrink-0"
+                                  className="h-7 w-7 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs transition-colors shrink-0"
                                 >
                                   {copiedId === m.id ? (
                                     <Check className="h-4 w-4 text-emerald-500" />
@@ -458,10 +470,10 @@ const ChatPane = forwardRef(function ChatPane(
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button
-                                      variant="ghost"
+                                      variant="outline"
                                       size="icon"
                                       onClick={() => startEdit(m)}
-                                      className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground shrink-0"
+                                      className="h-7 w-7 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs transition-colors shrink-0"
                                     >
                                       <Pencil className="h-4 w-4" />
                                     </Button>
@@ -471,10 +483,10 @@ const ChatPane = forwardRef(function ChatPane(
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button
-                                      variant="ghost"
+                                      variant="outline"
                                       size="icon"
                                       onClick={() => onResendMessage?.(m.id)}
-                                      className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground shrink-0"
+                                      className="h-7 w-7 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs transition-colors shrink-0"
                                     >
                                       <RefreshCw className="h-4 w-4" />
                                     </Button>
@@ -485,10 +497,10 @@ const ChatPane = forwardRef(function ChatPane(
                             )}
 
                             {m.role === "assistant" && (
-                              <div className="flex items-center gap-0.5 ml-1">
+                              <div className="flex items-center gap-1.5 ml-1">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground">
+                                    <Button variant="outline" size="icon" className="h-7 w-7 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs transition-colors">
                                       <ThumbsUp className="h-3 w-3" />
                                     </Button>
                                   </TooltipTrigger>
@@ -496,7 +508,7 @@ const ChatPane = forwardRef(function ChatPane(
                                 </Tooltip>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground">
+                                    <Button variant="outline" size="icon" className="h-7 w-7 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs transition-colors">
                                       <ThumbsDown className="h-3 w-3" />
                                     </Button>
                                   </TooltipTrigger>
@@ -522,29 +534,32 @@ const ChatPane = forwardRef(function ChatPane(
                 <div ref={bottomRef} className="h-1" />
               </div>
             </div>
-          </div>
+          </ScrollArea>
 
           {/* Composer at the bottom */}
-          <Composer
-            ref={composerRef}
-            onSend={async (text, mode, fileRef) => {
-              if (isThinking || isResponding || busy) {
-                onPauseThinking?.();
-                return;
-              }
-              if (!text.trim() && !fileRef) return;
-              setBusy(true);
-              await onSend?.(text, mode, fileRef);
-              setBusy(false);
-            }}
-            busy={busy || isThinking || isResponding}
-            selectedBot={selectedBot}
-          />
+          <div className="relative z-10">
+            <Composer
+              ref={composerRef}
+              onSend={async (text, mode, fileRef) => {
+                if (isThinking || isResponding || busy) {
+                  onPauseThinking?.();
+                  return;
+                }
+                if (!text.trim() && !fileRef) return;
+                setBusy(true);
+                await onSend?.(text, mode, fileRef);
+                setBusy(false);
+              }}
+              busy={busy || isThinking || isResponding}
+              selectedBot={selectedBot}
+            />
+          </div>
 
           {/* Footer Hint below Composer */}
-          <p className="mx-auto pb-4 text-center text-[11px] text-zinc-400/70 dark:text-zinc-600">
-            trivisionx-aican make mistakes. Verify important information.
+          <p className="mx-auto pb-4 text-center text-[11px] text-zinc-400/70 dark:text-zinc-600 relative z-10">
+            AI can make mistakes. Verify important information.
           </p>
+
         </>
       )}
     </div>

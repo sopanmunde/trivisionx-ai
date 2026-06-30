@@ -249,8 +249,8 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
                 activeAction={activeAction}
               >
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shrink-0 cursor-pointer">
-                    <Plus className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="group h-7 w-7 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shrink-0 cursor-pointer">
+                    <Plus className="h-4 w-4 transition-transform duration-300 ease-in-out group-data-[state=open]:rotate-90" />
                   </Button>
                 </TooltipTrigger>
               </ComposerActionsPopover>

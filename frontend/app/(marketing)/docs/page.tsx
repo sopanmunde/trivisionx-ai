@@ -35,13 +35,17 @@ export default function DocsPage() {
           </TabsList>
 
           <TabsContent value="python">
-            <Card className="border-border bg-card overflow-hidden">
-              <div className="bg-muted px-4 py-3 text-xs font-mono text-muted-foreground border-b border-border flex justify-between items-center">
-                <span>pip install trivisionx</span>
-                <Badge variant="secondary" className="font-mono text-[10px]">Official</Badge>
+            <Card className="relative border-border/60 bg-card/50 backdrop-blur-sm overflow-hidden group">
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="bg-muted/50 px-4 py-3 text-xs font-mono text-muted-foreground border-b border-border/50 flex justify-between items-center">
+                <span className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/70" />
+                  pip install trivisionx
+                </span>
+                <Badge variant="secondary" className="font-mono text-[10px] shadow-sm">Official</Badge>
               </div>
               <ScrollArea className="p-4 w-full">
-                <pre className="text-xs font-mono text-foreground leading-relaxed">
+                <pre className="text-xs font-mono text-foreground/90 leading-relaxed">
                   <span className="text-primary">from</span> trivisionx <span className="text-primary">import</span> Client{'\n\n'}
                   client = Client(api_key=<span className="text-emerald-500">tvx_...</span>){'\n\n'}
                   <span className="text-muted-foreground"># Run a research agent</span>{'\n'}
@@ -56,13 +60,17 @@ export default function DocsPage() {
           </TabsContent>
 
           <TabsContent value="typescript">
-            <Card className="border-border bg-card overflow-hidden">
-              <div className="bg-muted px-4 py-3 text-xs font-mono text-muted-foreground border-b border-border flex justify-between items-center">
-                <span>npm install @trivisionx/client</span>
-                <Badge variant="secondary" className="font-mono text-[10px]">Official</Badge>
+            <Card className="relative border-border/60 bg-card/50 backdrop-blur-sm overflow-hidden group">
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="bg-muted/50 px-4 py-3 text-xs font-mono text-muted-foreground border-b border-border/50 flex justify-between items-center">
+                <span className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500/70" />
+                  npm install @trivisionx/client
+                </span>
+                <Badge variant="secondary" className="font-mono text-[10px] shadow-sm">Official</Badge>
               </div>
               <ScrollArea className="p-4 w-full">
-                <pre className="text-xs font-mono text-foreground leading-relaxed">
+                <pre className="text-xs font-mono text-foreground/90 leading-relaxed">
                   <span className="text-primary">import</span> {'{'} TriVisionX {'}'} <span className="text-primary">from</span> <span className="text-emerald-500">@trivisionx/client</span>;{'\n\n'}
                   <span className="text-primary">const</span> client = <span className="text-primary">new</span> TriVisionX({'{'} apiKey: <span className="text-emerald-500">tvx_...</span> {'}'});{'\n\n'}
                   <span className="text-muted-foreground">Run a research agent</span>{'\n'}
@@ -78,13 +86,15 @@ export default function DocsPage() {
         </Tabs>
 
         <div className="grid grid-cols-2 gap-4 mt-8">
-          <Card className="p-5 hover:border-primary/50 transition-colors cursor-pointer flex flex-col items-center justify-center text-center">
-            <h4 className="font-semibold text-sm mb-1">LangChain Integration</h4>
-            <p className="text-xs text-muted-foreground">Use TriVisionX as a tool in LangChain.</p>
+          <Card className="group relative p-5 hover:border-primary/30 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center overflow-hidden bg-card/50 backdrop-blur-sm hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5">
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors relative">LangChain Integration</h4>
+            <p className="text-xs text-muted-foreground relative">Use TriVisionX as a tool in LangChain.</p>
           </Card>
-          <Card className="p-5 hover:border-primary/50 transition-colors cursor-pointer flex flex-col items-center justify-center text-center">
-            <h4 className="font-semibold text-sm mb-1">LangGraph Integration</h4>
-            <p className="text-xs text-muted-foreground">Use TriVisionX as a tool in LangGraph.</p>
+          <Card className="group relative p-5 hover:border-primary/30 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center overflow-hidden bg-card/50 backdrop-blur-sm hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5">
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors relative">LangGraph Integration</h4>
+            <p className="text-xs text-muted-foreground relative">Use TriVisionX as a tool in LangGraph.</p>
           </Card>
         </div>
       </Section>
