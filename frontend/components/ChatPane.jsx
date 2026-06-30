@@ -6,6 +6,7 @@ import {
   useImperativeHandle,
   useRef,
   useEffect,
+  useCallback,
 } from "react";
 import {
   Pencil,
@@ -27,6 +28,7 @@ import {
   Archive,
   Presentation,
   Bot,
+  ChevronDown,
 } from "lucide-react";
 import { TriVisionXLogo } from "./TriVisionXLogo";
 import { motion, AnimatePresence } from "framer-motion";
@@ -169,8 +171,10 @@ const ChatPane = forwardRef(function ChatPane(
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
   const composerRef = useRef(null);
   const bottomRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
   const switchTimerRef = useRef(null);
 
@@ -197,13 +201,34 @@ const ChatPane = forwardRef(function ChatPane(
     [],
   );
 
-  // Auto-scroll to bottom when messages change
+  // Track scroll position — show button when not at the bottom
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollBtn(distFromBottom > 150);
+  }, []);
+
+  // Auto-scroll to bottom when messages change (only if already at bottom)
   const messages = Array.isArray(conversation?.messages)
     ? conversation.messages
     : [];
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    // Only auto-scroll if user is near the bottom (within 250px)
+    if (distFromBottom < 250) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }
   }, [messages.length, isThinking]);
+
+  function scrollToBottom() {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    setShowScrollBtn(false);
+  }
 
   function handleSuggestion(text) {
     composerRef.current?.setValue?.(text);
@@ -370,8 +395,12 @@ const ChatPane = forwardRef(function ChatPane(
             )}
           </AnimatePresence>
 
-          {/* Messages scroll area */}
-          <ScrollArea className="flex-1 relative z-10">
+          {/* Messages scroll area — native div so scrollIntoView works reliably */}
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto relative z-10 scroll-smooth"
+          >
             <div className="mx-auto max-w-3xl px-4 py-8">
               <div className="space-y-6">
                 <AnimatePresence initial={false}>
@@ -534,7 +563,39 @@ const ChatPane = forwardRef(function ChatPane(
                 <div ref={bottomRef} className="h-1" />
               </div>
             </div>
-          </ScrollArea>
+          </div>
+
+
+
+          {/* Liquid fade gradient above composer */}
+          <div className="pointer-events-none absolute bottom-[var(--composer-h,140px)] left-0 right-0 h-20 z-10 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent" />
+
+          {/* Scroll-to-bottom button — sits just above the composer */}
+          <AnimatePresence>
+            {showScrollBtn && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.18 }}
+                className="relative z-20 flex justify-center py-1.5"
+              >
+                <motion.button
+                  onClick={scrollToBottom}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-secondary-foreground border border-border shadow-sm hover:bg-accent transition-all duration-200 cursor-pointer"
+                  aria-label="Scroll to bottom"
+                >
+                  <motion.span
+                    animate={{ y: [0, 3, 0] }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+                    className="flex items-center justify-center"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </motion.span>
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Composer at the bottom */}
           <div className="relative z-10">
