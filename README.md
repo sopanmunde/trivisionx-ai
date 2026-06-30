@@ -13,7 +13,8 @@
     <a href="#features">Features</a> ·
     <a href="#quick-start">Quick Start</a> ·
     <a href="#api">API</a> ·
-    <a href="#deployment">Deployment</a>
+    <a href="#deployment">Deployment</a> ·
+    <a href="#-contributing">Contributing</a>
   </p>
 
   <p>
@@ -174,7 +175,18 @@ The FastAPI backend is pre-configured for **Render**.
 
 ---
 
+## 🤝 Contributing
+
+We welcome contributions from the community! Whether you are fixing bugs, adding new features, or improving documentation, please feel free to help improve TriVisionX.
+
+To get started:
+1. Review our **[Contributing Guidelines](.github/CONTRIBUTING.md)** for local development setup, testing, and coding standards.
+2. Read and abide by our **[Code of Conduct](.github/CODE_OF_CONDUCT.md)** to keep our community healthy and welcoming.
+3. Review our **[Security Policy](.github/SECURITY.md)** to report any security vulnerabilities responsibly.
+
+---
+
 <p align="center">
-  Released under the <a href="LICENSE">MIT License</a>.<br/>
+  Released under the <a href="License">MIT License</a>.<br/>
   Built with ❤️ using LangGraph, Pinecone, Google Gemini, and Next.js.
 </p>
