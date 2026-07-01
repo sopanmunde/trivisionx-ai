@@ -14,6 +14,7 @@ import { INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/api";
 import { DashboardDocsTable } from "./DashboardDocsTable";
+import { EmailDashboard } from "./EmailDashboard";
 
 export default function AIAssistantUI() {
   const router = useRouter();
@@ -736,6 +737,8 @@ export default function AIAssistantUI() {
                 <DashboardDocsTable />
               </div>
             </div>
+          ) : selectedId === "email" ? (
+            <EmailDashboard />
           ) : (
             <ChatPane
               ref={composerRef}
