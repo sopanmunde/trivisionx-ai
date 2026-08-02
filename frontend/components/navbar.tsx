@@ -82,7 +82,7 @@ export function Navbar() {
             variant="outline"
             size="sm"
             onClick={() => window.dispatchEvent(new CustomEvent("toggle-command-palette"))}
-            className="hidden lg:flex items-center gap-2 font-mono text-xs text-muted-foreground hover:text-foreground h-9 px-3"
+            className="hidden lg:flex items-center gap-2 font-mono text-xs text-muted-foreground hover:text-foreground h-9 px-3.5"
             title="Open Command Palette (Cmd+K / Ctrl+K)"
           >
             <Search className="w-3.5 h-3.5 text-primary" />
