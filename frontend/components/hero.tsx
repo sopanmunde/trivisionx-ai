@@ -34,7 +34,7 @@ export function Hero() {
       <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
         {/* Meteors Effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <Meteors number={15} />
+          <Meteors number={12} />
         </div>
         {/* Animated Feature Badge */}
         <motion.div
