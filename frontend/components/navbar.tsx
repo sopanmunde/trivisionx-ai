@@ -49,7 +49,7 @@ export function Navbar() {
             size="sm"
             showWordmark
             wordmark="TriVisionX"
-            animate={false}
+            animate={true}
           />
         </Link>
 
