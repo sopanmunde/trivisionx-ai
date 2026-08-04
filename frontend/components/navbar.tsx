@@ -138,12 +138,12 @@ export function Navbar() {
           exit={{ opacity: 0, y: -10 }}
           className="absolute top-full left-0 right-0 mt-2 p-4 rounded-xl bg-card/95 backdrop-blur-md border border-border text-foreground shadow-lg"
         >
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                className="px-3.5 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.label}
