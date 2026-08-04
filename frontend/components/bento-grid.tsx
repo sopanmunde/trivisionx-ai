@@ -227,7 +227,7 @@ function RetrievalVisual() {
                 <Database className="w-3 h-3 text-primary" />
                 {chunk.id}
               </span>
-              <Badge variant="outline" className="text-[8px] font-bold text-emerald-500 border-emerald-500/30 px-1 py-0">
+              <Badge variant="outline" className="text-[8px] font-bold text-primary border-primary/30 px-1 py-0">
                 {chunk.score * 100}% sim
               </Badge>
             </div>
