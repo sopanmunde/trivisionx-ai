@@ -132,6 +132,16 @@ export function Hero() {
           </Button>
         </motion.div>
 
+        {/* Trust bar */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.65 }}
+          className="text-xs text-muted-foreground font-medium"
+        >
+          No credit card required · Free tier includes 10k execution cycles/month
+        </motion.p>
+
         {/* Interactive Feature Pill Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
