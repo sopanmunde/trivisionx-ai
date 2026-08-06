@@ -45,7 +45,7 @@ export function Hero() {
         >
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card/80 backdrop-blur-md text-xs font-semibold text-foreground shadow-2xs hover:bg-accent transition-all cursor-pointer group">
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-mono text-muted-foreground group-hover:text-foreground transition-colors">
+            <span className="font-mono text-emerald-400 group-hover:text-emerald-300 transition-colors">
               LangGraph 5-Agent Pipeline Active
             </span>
             <ChevronRight className="size-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
