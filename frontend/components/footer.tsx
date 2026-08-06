@@ -105,7 +105,7 @@ export function Footer() {
               href="https://github.com/sopanmunde/trivisionx-ai"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors font-mono"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors font-mono"
             >
               GitHub
             </a>
