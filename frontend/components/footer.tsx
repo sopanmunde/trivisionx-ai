@@ -56,7 +56,8 @@ export function Footer() {
               <TriVisionXLogo size="sm" shimmer={true} glow={true} showWordmark={true} animate={false} />
             </Link>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Enterprise-grade multi-agent orchestration and context retrieval engines.
+              Enterprise-grade multi-agent orchestration, semantic context
+              retrieval, and autonomous research workflows — all in one platform.
             </p>
             {/* System Status */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border text-[9px] font-mono tracking-wider text-muted-foreground">
