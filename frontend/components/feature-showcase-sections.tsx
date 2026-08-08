@@ -176,7 +176,7 @@ export function FeatureShowcaseSections() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3.5">
+              <Badge variant="secondary" className="font-mono gap-2 py-1 px-3.5">
                 <Activity className="w-3.5 h-3.5 text-emerald-500" />
                 REAL-TIME EXECUTION VELOCITY
               </Badge>
