@@ -27,7 +27,7 @@ export function LogoMarquee() {
         className="text-center mb-10"
       >
         <p className="text-sm text-zinc-500 uppercase tracking-wider font-medium">
-          Trusted by industry leaders
+          Trusted by teams shipping agentic experiences
         </p>
       </motion.div>
 
