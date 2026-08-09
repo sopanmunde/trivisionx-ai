@@ -25,7 +25,7 @@ export function FinalCTA() {
         initial={{ opacity: 0, y: 30 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="max-w-4xl mx-auto text-center relative z-10 border border-border bg-card/60 backdrop-blur-xl rounded-3xl p-12 md:p-16 shadow-2xl"
+        className="max-w-4xl mx-auto text-center relative z-10 border border-border bg-card/70 backdrop-blur-xl rounded-3xl p-12 md:p-16 shadow-2xl"
       >
         {/* Dynamic platform tag */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary mb-6 tracking-wide uppercase font-mono">
