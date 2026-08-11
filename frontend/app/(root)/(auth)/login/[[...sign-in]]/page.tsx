@@ -427,7 +427,7 @@ function AuthPageContent() {
       {/* Home button — top left */}
       <Link
         href="/"
-        className="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 rounded-md border border-border bg-card/80 px-3 py-1.5 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors"
+        className="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/80 px-3 py-1.5 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Home
