@@ -531,6 +531,7 @@ function AuthPageContent() {
                     value={form.password}
                     onChange={handleChange}
                     placeholder="Enter your password"
+                    autoComplete="current-password"
                     required
                     className={inputCls + " pr-9"}
                   />
