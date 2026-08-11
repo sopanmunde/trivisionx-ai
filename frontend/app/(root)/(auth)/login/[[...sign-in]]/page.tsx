@@ -508,7 +508,8 @@ function AuthPageContent() {
                   type="email"
                   value={form.email}
                   onChange={handleChange}
-                  placeholder="Enter your email address (e.g. name@company.com)"
+                  placeholder="name@company.com"
+                  autoComplete="email"
                   required
                   className={inputCls}
                 />
