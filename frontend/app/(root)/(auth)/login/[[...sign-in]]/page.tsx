@@ -459,7 +459,7 @@ function AuthPageContent() {
               Welcome back
             </h1>
             <p className="text-xs text-muted-foreground mt-1.5 font-medium">
-              Enter your account credentials to sign in.
+              Sign in to access your dashboards and agent workspace.
             </p>
           </div>
 
