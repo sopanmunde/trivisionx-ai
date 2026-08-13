@@ -477,26 +477,28 @@ function SignUpPageContent() {
               <div className="grid grid-cols-2 gap-3">
                 <FormItem>
                   <Label htmlFor="first_name">First name</Label>
-                  <input
-                    id="first_name"
-                    name="first_name"
-                    value={form.first_name}
-                    onChange={handleChange}
-                    placeholder="E.g. Alex"
-                    required
-                    className={inputCls}
-                  />
+<input
+                  id="first_name"
+                  name="first_name"
+                  value={form.first_name}
+                  onChange={handleChange}
+                  placeholder="E.g. Alex"
+                  autoComplete="given-name"
+                  required
+                  className={inputCls}
+                />
                 </FormItem>
                 <FormItem>
                   <Label htmlFor="last_name">Last name</Label>
-                  <input
-                    id="last_name"
-                    name="last_name"
-                    value={form.last_name}
-                    onChange={handleChange}
-                    placeholder="E.g. Morgan"
-                    className={inputCls}
-                  />
+<input
+                  id="last_name"
+                  name="last_name"
+                  value={form.last_name}
+                  onChange={handleChange}
+                  placeholder="E.g. Morgan"
+                  autoComplete="family-name"
+                  className={inputCls}
+                />
                 </FormItem>
               </div>
 
