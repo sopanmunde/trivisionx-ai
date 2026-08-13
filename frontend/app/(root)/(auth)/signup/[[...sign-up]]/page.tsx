@@ -446,7 +446,7 @@ function SignUpPageContent() {
               Create your account
             </h1>
             <p className="text-xs text-muted-foreground mt-1.5 font-medium">
-              Join TriVisionX AI platform in seconds.
+              Get started with TriVisionX in under a minute.
             </p>
           </div>
 
