@@ -62,7 +62,7 @@ export function FinalCTA() {
         </div>
 
         <p className="mt-8 text-[11px] font-mono text-muted-foreground">
-          Free tier includes 10k execution cycles/month. Enterprise SLAs available.
+          Free tier includes 10k execution cycles/month. Enterprise SLAs and SSO available.
         </p>
       </motion.div>
     </section>
