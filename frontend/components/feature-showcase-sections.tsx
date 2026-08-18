@@ -182,7 +182,7 @@ export function FeatureShowcaseSections() {
               </Badge>
             </motion.div>
 
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-[1.15]">
               <TextAnimate animation="blurInUp" by="word" startOnView once>
                 Sub-Second Agent Concurrency & Throughput
               </TextAnimate>
@@ -339,7 +339,7 @@ export function FeatureShowcaseSections() {
               </Badge>
             </motion.div>
 
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-[1.15]">
               <TextAnimate animation="blurInUp" by="word" startOnView once>
                 Semantic Context Injection with Pinecone MMR
               </TextAnimate>
@@ -389,7 +389,7 @@ export function FeatureShowcaseSections() {
               </Badge>
             </motion.div>
 
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-[1.15]">
               <TextAnimate animation="blurInUp" by="word" startOnView once>
                 Intelligent Multi-Model Load Balancing
               </TextAnimate>
@@ -511,7 +511,7 @@ export function FeatureShowcaseSections() {
               </Badge>
             </motion.div>
 
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-[1.15]">
               <TextAnimate animation="blurInUp" by="word" startOnView once>
                 Full-Stack Tracing & Live Event Log Telemetry
               </TextAnimate>
