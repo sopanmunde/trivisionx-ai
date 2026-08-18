@@ -454,7 +454,7 @@ function SignUpPageContent() {
             <AnimatePresence>
               {error && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                  <div className="flex items-start gap-2.5 rounded-md border border-red-800/60 bg-red-950/50 px-3 py-2.5 text-sm text-red-400">
+                  <div className="flex items-start gap-2.5 rounded-md border border-red-800/60 bg-red-950/50 px-3.5 py-3 text-sm text-red-400">
                     <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                     <p>{error}</p>
                   </div>
