@@ -29,7 +29,7 @@ export function Hero() {
     <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 pt-32 pb-24 overflow-hidden bg-background text-foreground">
       {/* Background Radial Glow & Grid Mesh */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.3)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.3)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
-      <div className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 w-[600px] h-[350px] rounded-full blur-[140px] opacity-10 bg-primary" />
+      <div className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 w-[600px] h-[350px] rounded-full blur-[120px] opacity-[0.07] bg-primary" />
 
       <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
         {/* Meteors Effect */}
