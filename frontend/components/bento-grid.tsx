@@ -414,7 +414,7 @@ export function BentoGrid() {
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
             Enterprise-Grade Agentic Automation
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base mb-6">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base mb-8">
             Streamline complex workflows with self-correcting agent systems, semantic memory retrieval, and autonomous code execution loops.
           </p>
           <Button asChild variant="outline" size="sm" className="gap-2 font-mono text-xs">
