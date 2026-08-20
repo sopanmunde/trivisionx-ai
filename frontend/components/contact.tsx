@@ -121,7 +121,7 @@ export function ContactSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-zinc-400 max-w-xl mx-auto text-sm sm:text-base"
           >
-            Submit an inquiry below to witness our dispatch router parse, classify, and route your request to the right department autonomously.
+            Submit an inquiry below to watch our dispatch router parse, classify, and route your request to the right department autonomously.
           </motion.p>
         </div>
 
