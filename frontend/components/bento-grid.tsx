@@ -18,7 +18,7 @@ function AgentWorkflowVisual() {
   useEffect(() => {
     const interval = setInterval(() => {
       setStep((prev) => (prev + 1) % 6);
-    }, 2000);
+    }, 2400);
     return () => clearInterval(interval);
   }, []);
 
