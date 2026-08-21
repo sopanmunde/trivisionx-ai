@@ -165,7 +165,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 1: AGENT EXECUTION VELOCITY (FIXED HYDRATION NESTED P TAG)
          ========================================================================= */}
-      <section className="py-24 px-4 bg-background border-t border-border overflow-hidden">
+      <section className="py-24 px-4 bg-background border-t border-border/60 overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* LEFT SIDE: Description & Metrics */}
@@ -275,7 +275,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 2: VECTOR RAG INTELLIGENCE (TEXT ANIMATIONS)
          ========================================================================= */}
-      <section className="py-24 px-4 bg-background border-t border-border overflow-hidden">
+      <section className="py-24 px-4 bg-background border-t border-border/60 overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* LEFT SIDE: VECTOR MATRIX */}
@@ -373,7 +373,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 3: DYNAMIC MULTI-LLM GATEWAY (TEXT ANIMATIONS)
          ========================================================================= */}
-      <section className="py-24 px-4 bg-background border-t border-border overflow-hidden">
+      <section className="py-24 px-4 bg-background border-t border-border/60 overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* LEFT SIDE: Description & Metrics */}
@@ -458,7 +458,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 4: REAL-TIME LOGS & OBSERVABILITY (TEXT ANIMATIONS)
          ========================================================================= */}
-      <section className="py-24 px-4 bg-background border-t border-border overflow-hidden">
+      <section className="py-24 px-4 bg-background border-t border-border/60 overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* LEFT SIDE: STREAMING LOG LINES */}
