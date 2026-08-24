@@ -144,7 +144,7 @@ export default function Header({
           </DropdownMenu>
 
           {/* Active status indicator pill */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10.5px] font-bold leading-none">
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold leading-none">
             <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shrink-0" />
             <span>Agent Active</span>
           </div>
