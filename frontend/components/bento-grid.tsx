@@ -434,7 +434,7 @@ export function BentoGrid() {
         >
           {/* 1. Large Card: Agentic Workflow Orchestration */}
           <motion.div variants={itemVariants} className="md:col-span-2">
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-6 flex flex-col justify-between">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-6 flex flex-col justify-between">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="flex-1">
                   <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-4">
@@ -470,7 +470,7 @@ export function BentoGrid() {
 
           {/* 2. Autonomous Context Retrieval */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
               <div className="mb-4">
                 <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
                   <Search className="w-4 h-4 text-primary" strokeWidth={1.5} />
@@ -486,7 +486,7 @@ export function BentoGrid() {
 
           {/* 3. Dynamic Model Routing */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
               <div className="mb-4">
                 <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
                   <Cpu className="w-4 h-4 text-primary" strokeWidth={1.5} />
@@ -502,7 +502,7 @@ export function BentoGrid() {
 
           {/* 4. Automated Report Synthesis */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
               <div className="mb-4">
                 <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
                   <FileText className="w-4 h-4 text-primary" strokeWidth={1.5} />
@@ -518,7 +518,7 @@ export function BentoGrid() {
 
           {/* 5. Self-Correcting Coding Loop */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
               <div className="mb-4">
                 <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
                   <Code className="w-4 h-4 text-primary" strokeWidth={1.5} />
