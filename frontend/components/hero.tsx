@@ -63,7 +63,7 @@ export function Hero() {
         </motion.div>
 
         {/* Magic Typography Headline */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1] max-w-4xl mx-auto">
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.05] max-w-4xl mx-auto">
           <span className="block overflow-hidden">
             <motion.span
               className="block"
