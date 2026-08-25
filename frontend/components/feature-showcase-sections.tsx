@@ -262,7 +262,7 @@ export function FeatureShowcaseSections() {
                     <XAxis dataKey="time" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} />
                     <YAxis stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} domain={['dataMin - 20', 'dataMax + 20']} />
                     <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                    <Area type="monotone" dataKey="tps" stroke="#10b981" strokeWidth={3} fill="url(#fillGreenTps)" />
+                    <Area type="monotone" dataKey="tps" stroke="#10b981" strokeWidth={2} fill="url(#fillGreenTps)" />
                   </AreaChart>
                 </ChartContainer>
               </div>
