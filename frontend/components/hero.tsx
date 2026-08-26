@@ -125,7 +125,7 @@ export function Hero() {
             variant="outline"
             size="lg"
             onClick={() => setIsVideoOpen(true)}
-            className="h-12 px-7 rounded-md text-sm font-semibold border-border bg-card hover:bg-accent text-foreground shadow-2xs transition-all duration-200 cursor-pointer gap-2"
+            className="h-12 px-7 rounded-md text-sm font-semibold border-border bg-card hover:bg-accent text-foreground shadow-2xs transition-all duration-200 cursor-pointer gap-2.5"
           >
             <Play className="size-4 text-foreground fill-foreground/20" />
             <span>Watch Demo</span>
