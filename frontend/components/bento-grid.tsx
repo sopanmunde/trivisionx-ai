@@ -353,7 +353,7 @@ function CodingLoopVisual() {
       <div className="border border-border bg-muted/60 p-2 rounded text-muted-foreground select-none">
         <div className="flex items-center gap-1 mb-1 border-b border-border/60 pb-1 text-[8px] text-foreground font-bold">
           <Terminal className="w-2.5 h-2.5 text-primary" />
-          agent_test.py
+          agent_test_2.py
         </div>
         <pre className="text-primary font-mono whitespace-pre leading-relaxed h-[42px]">{codeSnippet}</pre>
       </div>
