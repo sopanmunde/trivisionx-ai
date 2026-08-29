@@ -244,7 +244,7 @@ export function FeatureShowcaseSections() {
                     Execution Telemetry Stream
                   </TextAnimate>
                 </span>
-                <Badge variant="secondary" className="font-mono text-emerald-500 border-emerald-500/30 bg-emerald-500/10">
+                <Badge variant="secondary" className="font-mono text-emerald-400 border-emerald-400/30 bg-emerald-500/10">
                   142 REQ/S LIVE
                 </Badge>
               </div>
