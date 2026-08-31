@@ -78,7 +78,7 @@ export function GlobalCommandPalette() {
     <CommandDialog open={open} onOpenChange={setOpen} title="Global Key Palette">
       <CommandInput className="px-3.5" placeholder="Type a command or search shortcuts (Cmd+K)..." />
       <CommandList className="max-h-[350px]">
-        <CommandEmpty>No matching commands found.</CommandEmpty>
+        <CommandEmpty className="text-[11px]">No matching commands found.</CommandEmpty>
 
         {/* Navigation Group */}
         <CommandGroup heading="Navigation & Pages">
