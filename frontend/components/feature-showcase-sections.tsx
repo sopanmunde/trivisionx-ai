@@ -482,7 +482,7 @@ export function FeatureShowcaseSections() {
                   <div
                     key={log.id}
                     onClick={() => setSelectedLog(log)}
-                    className="py-2 px-3 rounded-lg border-l-2 border-l-emerald-500 border border-border bg-card text-card-foreground cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                    className="py-2.5 px-3.5 rounded-lg border-l-2 border-l-emerald-500 border border-border bg-card text-card-foreground cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all duration-200"
                   >
                     <div className="flex items-center justify-between text-[10.5px]">
                       <span className="text-muted-foreground">{log.timestamp}</span>
