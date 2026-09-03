@@ -603,7 +603,7 @@ function SignUpPageContent() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3.5">
               <button
                 type="button"
                 onClick={handleGoogleLogin}
