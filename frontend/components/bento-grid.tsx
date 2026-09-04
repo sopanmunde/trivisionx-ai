@@ -289,7 +289,7 @@ function ReportVisual() {
           <FileText className="w-3.5 h-3.5 text-primary" />
           report_generator.md
         </span>
-        <Badge variant="outline" className="text-[8px] text-emerald-500 border-emerald-500/30 gap-1 px-1.5 py-0 font-bold">
+        <Badge variant="outline" className="text-[8px] text-emerald-500 border-emerald-500/30 gap-1 px-1.5 py-0">
           <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />
           SUCCESS
         </Badge>
