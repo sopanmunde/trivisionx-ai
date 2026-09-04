@@ -503,7 +503,7 @@ function SignUpPageContent() {
               </div>
 
               <FormItem>
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">Username *</Label>
                 <input
                   id="username"
                   name="username"
