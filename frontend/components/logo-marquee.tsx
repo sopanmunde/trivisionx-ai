@@ -24,7 +24,7 @@ export function LogoMarquee() {
         initial={{ opacity: 0 }}
         animate={isInView ? { opacity: 1 } : {}}
         transition={{ duration: 0.6 }}
-        className="text-center mb-10"
+        className="text-center mb-8"
       >
         <p className="text-sm text-zinc-500 uppercase tracking-wider font-medium">
           Trusted by teams shipping agentic experiences
