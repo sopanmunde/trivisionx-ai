@@ -117,7 +117,7 @@ export function Hero() {
               className="h-12 px-8 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transition-all hover:scale-[1.02] cursor-pointer gap-2"
             >
               <span>Get Started</span>
-              <ArrowRight className="size-4" />
+              <ArrowRight className="size-[18px]" />
             </Button>
           </a>
 
