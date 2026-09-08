@@ -473,7 +473,7 @@ function SignUpPageContent() {
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+            <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
               <div className="grid grid-cols-2 gap-3">
                 <FormItem>
                   <Label htmlFor="first_name">First name</Label>
