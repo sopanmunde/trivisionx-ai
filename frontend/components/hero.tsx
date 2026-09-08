@@ -147,7 +147,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="pt-6 flex flex-wrap items-center justify-center gap-3 text-xs font-mono text-muted-foreground"
+          className="pt-6 flex flex-wrap items-center justify-center gap-2.5 text-xs font-mono text-muted-foreground"
         >
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-border bg-card/60 transition-colors hover:bg-card hover:text-foreground">
             <Cpu className="size-3.5" /> 5-Agent Swarm
