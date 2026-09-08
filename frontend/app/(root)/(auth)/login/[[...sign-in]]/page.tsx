@@ -498,7 +498,7 @@ function AuthPageContent() {
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+            <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
               {/* Email */}
               <FormItem>
                 <Label htmlFor="email">Email address</Label>
