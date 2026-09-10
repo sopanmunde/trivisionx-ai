@@ -519,7 +519,7 @@ function AuthPageContent() {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Link href="#" className="text-xs font-bold text-primary hover:underline underline-offset-4 transition-colors">
+                  <Link href="#" className="text-xs font-semibold text-primary hover:underline underline-offset-4 transition-colors">
                     Forgot password?
                   </Link>
                 </div>
