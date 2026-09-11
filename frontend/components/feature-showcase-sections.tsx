@@ -446,7 +446,7 @@ export function FeatureShowcaseSections() {
                     </span>
                     <span className="text-muted-foreground">{model.usage}% ({model.latency})</span>
                   </div>
-                  <Progress value={model.usage} className="h-2 bg-muted border border-border" style={{ "--primary": model.color } as React.CSSProperties} />
+                  <Progress value={model.usage} className="h-1.5 bg-muted border border-border" style={{ "--primary": model.color } as React.CSSProperties} />
                 </div>
               ))}
             </div>
