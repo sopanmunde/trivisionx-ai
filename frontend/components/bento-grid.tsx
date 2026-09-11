@@ -31,7 +31,7 @@ function AgentWorkflowVisual() {
   ];
 
   return (
-    <div className="flex flex-col items-center gap-3 p-3 bg-card border border-border rounded-xl w-full max-w-lg mx-auto shadow-sm">
+    <div className="flex flex-col items-center gap-3 p-3.5 bg-card border border-border rounded-xl w-full max-w-lg mx-auto shadow-sm">
       <div className="relative w-full aspect-[320/120]">
         <svg viewBox="0 0 320 120" className="w-full h-full">
           {/* Base Connection Lines */}
