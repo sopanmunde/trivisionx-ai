@@ -61,7 +61,7 @@ export function FinalCTA() {
           </Button>
         </div>
 
-        <p className="mt-8 text-xs font-mono text-muted-foreground">
+        <p className="mt-8 text-[11px] font-mono text-muted-foreground">
           Free tier includes 10k execution cycles/month. Enterprise SLAs available.
         </p>
       </motion.div>
