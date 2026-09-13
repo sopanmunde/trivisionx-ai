@@ -96,7 +96,7 @@ export function Footer() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-14 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4"
         >
-          <p className="text-[11px] text-muted-foreground font-mono">
+          <p className="text-[11px] text-muted-foreground/90 font-mono">
             &copy; {new Date().getFullYear()} TriVisionX, Inc. All rights
             reserved.
           </p>
