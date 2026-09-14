@@ -438,7 +438,7 @@ function SignUpPageContent() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.05 }}
-          className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-[#0C0C0D]/95 backdrop-blur-2xl text-foreground shadow-2xl"
+          className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-[#0C0C0D]/95 backdrop-blur-2xl text-foreground shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]"
         >
           {/* CardHeader */}
           <div className="flex flex-col space-y-1 p-6 pb-4">
