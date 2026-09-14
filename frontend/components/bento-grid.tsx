@@ -443,7 +443,7 @@ export function BentoGrid() {
                   <h3 className="text-lg font-bold text-foreground mb-2">
                     Agentic Workflow Orchestration
                   </h3>
-                  <p className="text-muted-foreground text-xs max-w-md mb-4 leading-relaxed">
+                  <p className="text-muted-foreground text-sm max-w-md mb-4 leading-relaxed">
                     Autonomous orchestration of specialized AI agents built with LangGraph. Intelligently routes and schedules tasks across planning, semantic querying, logic synthesis, and reporter agents.
                   </p>
                   <div className="space-y-2">
