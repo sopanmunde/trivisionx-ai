@@ -48,7 +48,7 @@ export function Hero() {
             <span className="font-mono text-emerald-400 group-hover:text-emerald-300 transition-colors">
               LangGraph 5-Agent Pipeline Active
             </span>
-            <ChevronRight className="size-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="size-3.5 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </motion.div>
 
