@@ -176,7 +176,7 @@ export function FeatureShowcaseSections() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3">
+              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3.5">
                 <Activity className="w-3.5 h-3.5 text-emerald-500" />
                 REAL-TIME EXECUTION VELOCITY
               </Badge>
@@ -333,7 +333,7 @@ export function FeatureShowcaseSections() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3">
+              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3.5">
                 <Database className="w-3.5 h-3.5 text-emerald-500" />
                 AUTONOMOUS VECTOR RAG
               </Badge>
@@ -383,7 +383,7 @@ export function FeatureShowcaseSections() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3">
+              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3.5">
                 <Cpu className="w-3.5 h-3.5 text-emerald-500" />
                 DYNAMIC MODEL GATEWAY
               </Badge>
@@ -505,7 +505,7 @@ export function FeatureShowcaseSections() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3">
+              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3.5">
                 <TerminalIcon className="w-3.5 h-3.5 text-emerald-500" />
                 REAL-TIME OBSERVABILITY
               </Badge>
