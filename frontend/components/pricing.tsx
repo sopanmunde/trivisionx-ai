@@ -86,7 +86,7 @@ export function Pricing() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-4 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-3 tracking-tight">
             Predictable pricing built for agent execution
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-8 text-sm sm:text-base">

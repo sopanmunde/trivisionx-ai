@@ -421,7 +421,7 @@ function CompactCanvasNode({
         <div className="p-0.5 rounded bg-accent text-accent-foreground border border-border shrink-0">
           <Icon className="w-3 h-3" />
         </div>
-        <span className="font-bold truncate text-foreground text-[10px] leading-none">
+        <span className="font-bold truncate text-foreground text-[11px] leading-none">
           {node.label}
         </span>
       </div>

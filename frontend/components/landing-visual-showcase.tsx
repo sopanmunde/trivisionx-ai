@@ -277,7 +277,7 @@ export function LandingVisualShowcase() {
                         <h4 className="text-lg font-bold text-white">Agent Execution Velocity</h4>
                         <p className="text-xs text-zinc-400">High-frequency prompt synthesis & sub-agent token rates</p>
                       </div>
-                      <span className="text-xs font-mono text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">
+                      <span className="text-xs font-mono text-purple-300 bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">
                         Peak: 184 req/s
                       </span>
                     </div>

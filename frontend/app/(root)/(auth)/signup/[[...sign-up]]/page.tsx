@@ -48,7 +48,7 @@ function PasswordStrength({ password }: { password: string }) {
 }
 
 const inputCls =
-  "flex h-10 w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/70 px-3.5 py-2 text-xs font-semibold text-foreground shadow-2xs placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50";
+  "flex h-10 w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/70 px-3.5 py-2 text-xs font-semibold text-foreground shadow-xs placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50";
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -474,7 +474,7 @@ function SignUpPageContent() {
             </AnimatePresence>
 
             <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3.5">
                 <FormItem>
                   <Label htmlFor="first_name">First name</Label>
                   <input
@@ -603,7 +603,7 @@ function SignUpPageContent() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3.5">
               <button
                 type="button"
                 onClick={handleGoogleLogin}

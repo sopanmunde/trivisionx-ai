@@ -34,7 +34,7 @@ export function Hero() {
       <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
         {/* Meteors Effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <Meteors number={15} />
+          <Meteors number={12} />
         </div>
         {/* Animated Feature Badge */}
         <motion.div
@@ -117,7 +117,7 @@ export function Hero() {
               className="h-12 px-8 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transition-all hover:scale-[1.02] cursor-pointer gap-2"
             >
               <span>Get Started</span>
-              <ArrowRight className="size-4" />
+              <ArrowRight className="size-[18px]" />
             </Button>
           </a>
 
@@ -125,7 +125,7 @@ export function Hero() {
             variant="outline"
             size="lg"
             onClick={() => setIsVideoOpen(true)}
-            className="h-12 px-7 rounded-md text-sm font-semibold border-border bg-card hover:bg-accent text-foreground shadow-2xs transition-all duration-200 cursor-pointer gap-2"
+            className="h-12 px-7 rounded-md text-sm font-semibold border-border bg-card hover:bg-accent text-foreground shadow-2xs transition-all duration-200 cursor-pointer gap-2.5"
           >
             <Play className="size-4 text-foreground fill-foreground/20" />
             <span>Watch Demo</span>

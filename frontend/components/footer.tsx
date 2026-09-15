@@ -60,7 +60,7 @@ export function Footer() {
               retrieval, and autonomous research workflows — all in one platform.
             </p>
             {/* System Status */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/60 border border-border/60 text-[9px] font-mono tracking-wider text-muted-foreground">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/60 border border-border/60 text-[9px] font-mono tracking-wider text-muted-foreground">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
@@ -94,9 +94,9 @@ export function Footer() {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-16 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4"
+          className="mt-14 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4"
         >
-          <p className="text-[11px] text-muted-foreground font-mono">
+          <p className="text-[11px] text-muted-foreground/90 font-mono">
             &copy; {new Date().getFullYear()} TriVisionX, Inc. All rights
             reserved.
           </p>

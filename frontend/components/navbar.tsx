@@ -82,7 +82,7 @@ export function Navbar() {
             variant="outline"
             size="sm"
             onClick={() => window.dispatchEvent(new CustomEvent("toggle-command-palette"))}
-            className="hidden lg:flex items-center gap-2 font-mono text-xs text-muted-foreground hover:text-foreground h-9 px-3"
+            className="hidden lg:flex items-center gap-2 font-mono text-xs text-muted-foreground hover:text-foreground h-9 px-3.5"
             title="Open Command Palette (Cmd+K / Ctrl+K)"
           >
             <Search className="w-3.5 h-3.5 text-primary" />
@@ -110,7 +110,7 @@ export function Navbar() {
           <Button
             asChild
             size="sm"
-            className="relative overflow-hidden shimmer-btn bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 h-9 font-semibold transition-all shadow-xs"
+            className="relative overflow-hidden shimmer-btn bg-primary text-primary-foreground hover:bg-primary/80 rounded-md px-4 h-9 font-semibold transition-all shadow-xs"
           >
             <Link href="/signup">
               <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent" />

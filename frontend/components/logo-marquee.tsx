@@ -24,7 +24,7 @@ export function LogoMarquee() {
         initial={{ opacity: 0 }}
         animate={isInView ? { opacity: 1 } : {}}
         transition={{ duration: 0.6 }}
-        className="text-center mb-10"
+        className="text-center mb-8"
       >
         <p className="text-sm text-zinc-500 uppercase tracking-wider font-medium">
           Trusted by teams shipping agentic experiences
@@ -44,7 +44,7 @@ export function LogoMarquee() {
               className="flex items-center justify-center min-w-[160px] h-16 mx-8 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
             >
               <div className="flex items-center gap-2 text-zinc-400">
-                <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-zinc-800/80 flex items-center justify-center">
                   <span className="text-xs font-bold">{logo.name[0]}</span>
                 </div>
                 <span className="font-medium">{logo.name}</span>

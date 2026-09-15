@@ -31,7 +31,7 @@ function AgentWorkflowVisual() {
   ];
 
   return (
-    <div className="flex flex-col items-center gap-3 p-3.5 bg-card border border-border rounded-xl w-full max-w-lg mx-auto shadow-sm">
+    <div className="flex flex-col items-center gap-3 p-3.5 bg-card border border-border rounded-2xl w-full max-w-lg mx-auto shadow-sm">
       <div className="relative w-full aspect-[320/120]">
         <svg viewBox="0 0 320 120" className="w-full h-full">
           {/* Base Connection Lines */}
@@ -353,7 +353,7 @@ function CodingLoopVisual() {
       <div className="border border-border bg-muted/60 p-2 rounded text-muted-foreground select-none">
         <div className="flex items-center gap-1 mb-1 border-b border-border/60 pb-1 text-[8px] text-foreground font-bold">
           <Terminal className="w-2.5 h-2.5 text-primary" />
-          agent_test.py
+          agent_test_2.py
         </div>
         <pre className="text-primary font-mono whitespace-pre leading-relaxed h-[42px]">{codeSnippet}</pre>
       </div>
@@ -409,7 +409,7 @@ export function BentoGrid() {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-14"
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
             Enterprise-Grade Agentic Automation
