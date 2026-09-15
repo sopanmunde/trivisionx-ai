@@ -25,7 +25,6 @@ import { SettingsDashboard } from "./SettingsDashboard";
 import IntegrationsPanel from "./IntegrationsPanel";
 import AuditLogsModal from "./AuditLogsModal";
 import WorkflowsModal from "./WorkflowsModal";
-import ThemeConfigPanel from "./ThemeConfigPanel";
 
 export default function AIAssistantUI() {
   const router = useRouter();
@@ -167,12 +166,12 @@ export default function AIAssistantUI() {
   const [isResponding, setIsResponding] = useState(false);
   const [agentState, setAgentState] = useState(null);
   const [providerSwitchEvent, setProviderSwitchEvent] = useState(null);
+  const [supervisorDecision, setSupervisorDecision] = useState(null);
   const [user, setUser] = useState(null);
   const [selectedBot, setSelectedBot] = useState("Gemini 2.5 Flash");
   const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
   const [isAuditLogsOpen, setIsAuditLogsOpen] = useState(false);
   const [isWorkflowsOpen, setIsWorkflowsOpen] = useState(false);
-  const [isThemeConfigOpen, setIsThemeConfigOpen] = useState(false);
 
   const fetchUser = async () => {
     try {
@@ -491,6 +490,7 @@ export default function AIAssistantUI() {
     setIsResponding(true);
     setAgentState(null);
     setProviderSwitchEvent(null);
+    setSupervisorDecision(null);
 
     try {
       const apiUrl = API_BASE_URL;
@@ -617,6 +617,19 @@ export default function AIAssistantUI() {
                   setProviderSwitchEvent({ from: data.from, to: data.to, reason: data.reason });
                 }
 
+                if (data.type === "supervisor_decision" && data.data) {
+                  setSupervisorDecision(data.data);
+                  setConversations((prev) =>
+                    prev.map((c) => {
+                      if (c.id !== targetConvId) return c;
+                      const msgs = c.messages.map((m) =>
+                        m.id === asstMsgId ? { ...m, supervisor_decision: data.data } : m,
+                      );
+                      return { ...c, messages: msgs };
+                    }),
+                  );
+                }
+
                 if (data.done) {
                   setConversations((prev) =>
                     prev.map((c) => {
@@ -630,6 +643,7 @@ export default function AIAssistantUI() {
                   setAgentState(null);
                   setIsThinking(false);
                   setThinkingConvId(null);
+                  setSupervisorDecision(null);
                   setIsResponding(false);
                   setProviderSwitchEvent(null);
                 }
@@ -819,7 +833,6 @@ export default function AIAssistantUI() {
               onToggleIntegrations={() => setSelectedId(selectedId === "integrations" || selectedId === "plugins" ? null : "integrations")}
               onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
               onOpenWorkflows={() => setIsWorkflowsOpen(true)}
-              onOpenThemeConfig={() => setIsThemeConfigOpen(true)}
             />
           )}
           {["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings"].includes(selectedId) && (
@@ -888,6 +901,7 @@ export default function AIAssistantUI() {
               agentState={agentState}
               providerSwitchEvent={providerSwitchEvent}
               onDismissProviderSwitch={() => setProviderSwitchEvent(null)}
+              supervisorDecision={supervisorDecision}
               selectedBot={selectedBot}
               onNavigateTo={(id) => setSelectedId(id)}
               onAddNewSkill={() => setSelectedId("integrations")}
@@ -904,10 +918,6 @@ export default function AIAssistantUI() {
           <WorkflowsModal
             isOpen={isWorkflowsOpen}
             onClose={() => setIsWorkflowsOpen(false)}
-          />
-          <ThemeConfigPanel
-            isOpen={isThemeConfigOpen}
-            onClose={() => setIsThemeConfigOpen(false)}
           />
         </main>
       </div>

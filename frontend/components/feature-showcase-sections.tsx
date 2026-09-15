@@ -165,7 +165,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 1: AGENT EXECUTION VELOCITY (FIXED HYDRATION NESTED P TAG)
          ========================================================================= */}
-      <section className="py-24 px-4 bg-background border-t border-border overflow-hidden">
+      <section className="py-24 px-4 bg-background border-t border-border/60 overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* LEFT SIDE: Description & Metrics */}
@@ -176,13 +176,13 @@ export function FeatureShowcaseSections() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3">
+              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3.5">
                 <Activity className="w-3.5 h-3.5 text-emerald-500" />
                 REAL-TIME EXECUTION VELOCITY
               </Badge>
             </motion.div>
 
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-[1.15]">
               <TextAnimate animation="blurInUp" by="word" startOnView once>
                 Sub-Second Agent Concurrency & Throughput
               </TextAnimate>
@@ -262,7 +262,7 @@ export function FeatureShowcaseSections() {
                     <XAxis dataKey="time" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} />
                     <YAxis stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} domain={['dataMin - 20', 'dataMax + 20']} />
                     <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                    <Area type="monotone" dataKey="tps" stroke="#10b981" strokeWidth={3} fill="url(#fillGreenTps)" />
+                    <Area type="monotone" dataKey="tps" stroke="#10b981" strokeWidth={2} fill="url(#fillGreenTps)" />
                   </AreaChart>
                 </ChartContainer>
               </div>
@@ -275,7 +275,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 2: VECTOR RAG INTELLIGENCE (TEXT ANIMATIONS)
          ========================================================================= */}
-      <section className="py-24 px-4 bg-background border-t border-border overflow-hidden">
+      <section className="py-24 px-4 bg-background border-t border-border/60 overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* LEFT SIDE: VECTOR MATRIX */}
@@ -333,13 +333,13 @@ export function FeatureShowcaseSections() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3">
+              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3.5">
                 <Database className="w-3.5 h-3.5 text-emerald-500" />
                 AUTONOMOUS VECTOR RAG
               </Badge>
             </motion.div>
 
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-[1.15]">
               <TextAnimate animation="blurInUp" by="word" startOnView once>
                 Semantic Context Injection with Pinecone MMR
               </TextAnimate>
@@ -373,7 +373,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 3: DYNAMIC MULTI-LLM GATEWAY (TEXT ANIMATIONS)
          ========================================================================= */}
-      <section className="py-24 px-4 bg-background border-t border-border overflow-hidden">
+      <section className="py-24 px-4 bg-background border-t border-border/60 overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* LEFT SIDE: Description & Metrics */}
@@ -383,13 +383,13 @@ export function FeatureShowcaseSections() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3">
+              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3.5">
                 <Cpu className="w-3.5 h-3.5 text-emerald-500" />
                 DYNAMIC MODEL GATEWAY
               </Badge>
             </motion.div>
 
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-[1.15]">
               <TextAnimate animation="blurInUp" by="word" startOnView once>
                 Intelligent Multi-Model Load Balancing
               </TextAnimate>
@@ -446,7 +446,7 @@ export function FeatureShowcaseSections() {
                     </span>
                     <span className="text-muted-foreground">{model.usage}% ({model.latency})</span>
                   </div>
-                  <Progress value={model.usage} className="h-2 bg-muted border border-border" style={{ "--primary": model.color } as React.CSSProperties} />
+                  <Progress value={model.usage} className="h-1.5 bg-muted border border-border" style={{ "--primary": model.color } as React.CSSProperties} />
                 </div>
               ))}
             </div>
@@ -458,7 +458,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 4: REAL-TIME LOGS & OBSERVABILITY (TEXT ANIMATIONS)
          ========================================================================= */}
-      <section className="py-24 px-4 bg-background border-t border-border overflow-hidden">
+      <section className="py-24 px-4 bg-background border-t border-border/60 overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* LEFT SIDE: STREAMING LOG LINES */}
@@ -482,7 +482,7 @@ export function FeatureShowcaseSections() {
                   <div
                     key={log.id}
                     onClick={() => setSelectedLog(log)}
-                    className="py-2 px-3 rounded-lg border-l-2 border-l-emerald-500 border border-border bg-card text-card-foreground cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                    className="py-2.5 px-3.5 rounded-lg border-l-2 border-l-emerald-500 border border-border bg-card text-card-foreground cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all duration-200"
                   >
                     <div className="flex items-center justify-between text-[10.5px]">
                       <span className="text-muted-foreground">{log.timestamp}</span>
@@ -505,13 +505,13 @@ export function FeatureShowcaseSections() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3">
+              <Badge variant="secondary" className="font-mono gap-1.5 py-1 px-3.5">
                 <TerminalIcon className="w-3.5 h-3.5 text-emerald-500" />
                 REAL-TIME OBSERVABILITY
               </Badge>
             </motion.div>
 
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight leading-[1.15]">
               <TextAnimate animation="blurInUp" by="word" startOnView once>
                 Full-Stack Tracing & Live Event Log Telemetry
               </TextAnimate>
@@ -545,7 +545,7 @@ export function FeatureShowcaseSections() {
       {/* JSON Inspection Modal */}
       {selectedLog && (
         <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedLog(null)}
         >
           <div

@@ -438,7 +438,7 @@ function SignUpPageContent() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.05 }}
-          className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-[#0C0C0D]/95 backdrop-blur-2xl text-foreground shadow-2xl"
+          className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-[#0C0C0D]/95 backdrop-blur-2xl text-foreground shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]"
         >
           {/* CardHeader */}
           <div className="flex flex-col space-y-1 p-6 pb-4">
@@ -446,7 +446,7 @@ function SignUpPageContent() {
               Create your account
             </h1>
             <p className="text-xs text-muted-foreground mt-1.5 font-medium">
-              Join TriVisionX AI platform in seconds.
+              Get started with TriVisionX in under a minute.
             </p>
           </div>
 
@@ -454,7 +454,7 @@ function SignUpPageContent() {
             <AnimatePresence>
               {error && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                  <div className="flex items-start gap-2.5 rounded-md border border-red-800/60 bg-red-950/50 px-3 py-2.5 text-sm text-red-400">
+                  <div className="flex items-start gap-2.5 rounded-md border border-red-800/60 bg-red-950/50 px-3.5 py-3 text-sm text-red-400">
                     <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                     <p>{error}</p>
                   </div>
@@ -473,7 +473,7 @@ function SignUpPageContent() {
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+            <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
               <div className="grid grid-cols-2 gap-3">
                 <FormItem>
                   <Label htmlFor="first_name">First name</Label>
@@ -483,6 +483,7 @@ function SignUpPageContent() {
                     value={form.first_name}
                     onChange={handleChange}
                     placeholder="E.g. Alex"
+                    autoComplete="given-name"
                     required
                     className={inputCls}
                   />
@@ -495,13 +496,14 @@ function SignUpPageContent() {
                     value={form.last_name}
                     onChange={handleChange}
                     placeholder="E.g. Morgan"
+                    autoComplete="family-name"
                     className={inputCls}
                   />
                 </FormItem>
               </div>
 
               <FormItem>
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">Username *</Label>
                 <input
                   id="username"
                   name="username"

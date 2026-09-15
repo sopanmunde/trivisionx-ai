@@ -18,7 +18,7 @@ function AgentWorkflowVisual() {
   useEffect(() => {
     const interval = setInterval(() => {
       setStep((prev) => (prev + 1) % 6);
-    }, 2000);
+    }, 2400);
     return () => clearInterval(interval);
   }, []);
 
@@ -31,7 +31,7 @@ function AgentWorkflowVisual() {
   ];
 
   return (
-    <div className="flex flex-col items-center gap-3 p-3 bg-card border border-border rounded-xl w-full max-w-lg mx-auto shadow-sm">
+    <div className="flex flex-col items-center gap-3 p-3.5 bg-card border border-border rounded-xl w-full max-w-lg mx-auto shadow-sm">
       <div className="relative w-full aspect-[320/120]">
         <svg viewBox="0 0 320 120" className="w-full h-full">
           {/* Base Connection Lines */}
@@ -227,7 +227,7 @@ function RetrievalVisual() {
                 <Database className="w-3 h-3 text-primary" />
                 {chunk.id}
               </span>
-              <Badge variant="outline" className="text-[8px] font-bold text-emerald-500 border-emerald-500/30 px-1 py-0">
+              <Badge variant="outline" className="text-[8px] font-bold text-primary border-primary/30 px-1 py-0">
                 {chunk.score * 100}% sim
               </Badge>
             </div>
@@ -289,7 +289,7 @@ function ReportVisual() {
           <FileText className="w-3.5 h-3.5 text-primary" />
           report_generator.md
         </span>
-        <Badge variant="outline" className="text-[8px] text-emerald-500 border-emerald-500/30 gap-1 px-1.5 py-0 font-bold">
+        <Badge variant="outline" className="text-[8px] text-emerald-500 border-emerald-500/30 gap-1 px-1.5 py-0">
           <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />
           SUCCESS
         </Badge>
@@ -403,7 +403,7 @@ export function BentoGrid() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="features" className="py-24 px-4 bg-background text-foreground transition-colors">
+    <section id="features" className="py-20 px-4 bg-background text-foreground transition-colors">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -414,7 +414,7 @@ export function BentoGrid() {
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
             Enterprise-Grade Agentic Automation
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base mb-6">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base mb-8">
             Streamline complex workflows with self-correcting agent systems, semantic memory retrieval, and autonomous code execution loops.
           </p>
           <Button asChild variant="outline" size="sm" className="gap-2 font-mono text-xs">
@@ -434,7 +434,7 @@ export function BentoGrid() {
         >
           {/* 1. Large Card: Agentic Workflow Orchestration */}
           <motion.div variants={itemVariants} className="md:col-span-2">
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-6 flex flex-col justify-between">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-6 flex flex-col justify-between">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="flex-1">
                   <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-4">
@@ -443,7 +443,7 @@ export function BentoGrid() {
                   <h3 className="text-lg font-bold text-foreground mb-2">
                     Agentic Workflow Orchestration
                   </h3>
-                  <p className="text-muted-foreground text-xs max-w-md mb-4 leading-relaxed">
+                  <p className="text-muted-foreground text-sm max-w-md mb-4 leading-relaxed">
                     Autonomous orchestration of specialized AI agents built with LangGraph. Intelligently routes and schedules tasks across planning, semantic querying, logic synthesis, and reporter agents.
                   </p>
                   <div className="space-y-2">
@@ -470,7 +470,7 @@ export function BentoGrid() {
 
           {/* 2. Autonomous Context Retrieval */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
               <div className="mb-4">
                 <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
                   <Search className="w-4 h-4 text-primary" strokeWidth={1.5} />
@@ -486,7 +486,7 @@ export function BentoGrid() {
 
           {/* 3. Dynamic Model Routing */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
               <div className="mb-4">
                 <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
                   <Cpu className="w-4 h-4 text-primary" strokeWidth={1.5} />
@@ -502,7 +502,7 @@ export function BentoGrid() {
 
           {/* 4. Automated Report Synthesis */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
               <div className="mb-4">
                 <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
                   <FileText className="w-4 h-4 text-primary" strokeWidth={1.5} />
@@ -518,7 +518,7 @@ export function BentoGrid() {
 
           {/* 5. Self-Correcting Coding Loop */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
               <div className="mb-4">
                 <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
                   <Code className="w-4 h-4 text-primary" strokeWidth={1.5} />

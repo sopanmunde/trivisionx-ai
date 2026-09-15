@@ -8,7 +8,7 @@ class QueryRequest(BaseModel):
 
     mode: str = "agent"
 
-    workflow_type: str = "research"
+    workflow_type: str = "auto"
 
     model_provider: Optional[str] = None
 
@@ -30,9 +30,9 @@ class QueryRequest(BaseModel):
     @classmethod
     def normalize_workflow(cls, v: str) -> str:
         allowed = {
-            "research", "summary", "technical", "competitive",
+            "auto", "research", "summary", "technical", "competitive",
             "coding", "data_analysis",
         }
         if v not in allowed:
-            return "research"
+            return "auto"
         return v

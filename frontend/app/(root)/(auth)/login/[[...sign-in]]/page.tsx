@@ -427,7 +427,7 @@ function AuthPageContent() {
       {/* Home button — top left */}
       <Link
         href="/"
-        className="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 rounded-md border border-border bg-card/80 px-3 py-1.5 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors"
+        className="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/80 px-3 py-1.5 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Home
@@ -451,7 +451,7 @@ function AuthPageContent() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.05 }}
-          className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-[#0C0C0D]/95 backdrop-blur-2xl text-foreground shadow-2xl"
+          className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-[#0C0C0D]/95 backdrop-blur-2xl text-foreground shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]"
         >
           {/* CardHeader */}
           <div className="flex flex-col space-y-1 p-6 pb-4">
@@ -459,7 +459,7 @@ function AuthPageContent() {
               Welcome back
             </h1>
             <p className="text-xs text-muted-foreground mt-1.5 font-medium">
-              Enter your account credentials to sign in.
+              Sign in to access your dashboards and agent workspace.
             </p>
           </div>
 
@@ -488,7 +488,7 @@ function AuthPageContent() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.97 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-2.5 rounded-md border border-emerald-800/60 bg-emerald-950/50 px-3 py-2.5 text-sm text-emerald-400"
+                  className="flex items-center gap-2.5 rounded-md border border-emerald-800/60 bg-emerald-950/50 px-3.5 py-3 text-sm text-emerald-400"
                 >
                   <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500">
                     <Check className="h-2.5 w-2.5 text-foreground" />
@@ -498,7 +498,7 @@ function AuthPageContent() {
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+            <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
               {/* Email */}
               <FormItem>
                 <Label htmlFor="email">Email address</Label>
@@ -508,7 +508,8 @@ function AuthPageContent() {
                   type="email"
                   value={form.email}
                   onChange={handleChange}
-                  placeholder="Enter your email address (e.g. name@company.com)"
+                  placeholder="name@company.com"
+                  autoComplete="email"
                   required
                   className={inputCls}
                 />
@@ -530,6 +531,7 @@ function AuthPageContent() {
                     value={form.password}
                     onChange={handleChange}
                     placeholder="Enter your password"
+                    autoComplete="current-password"
                     required
                     className={inputCls + " pr-9"}
                   />

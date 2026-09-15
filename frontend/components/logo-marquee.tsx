@@ -19,7 +19,7 @@ export function LogoMarquee() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} className="py-16 overflow-hidden">
+    <section ref={ref} className="py-12 overflow-hidden">
       <motion.div
         initial={{ opacity: 0 }}
         animate={isInView ? { opacity: 1 } : {}}
@@ -27,7 +27,7 @@ export function LogoMarquee() {
         className="text-center mb-10"
       >
         <p className="text-sm text-zinc-500 uppercase tracking-wider font-medium">
-          Trusted by industry leaders
+          Trusted by teams shipping agentic experiences
         </p>
       </motion.div>
 

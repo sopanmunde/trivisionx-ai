@@ -26,10 +26,10 @@ export function Hero() {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   return (
-    <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 pt-28 pb-20 overflow-hidden bg-background text-foreground">
+    <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 pt-32 pb-24 overflow-hidden bg-background text-foreground">
       {/* Background Radial Glow & Grid Mesh */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.3)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.3)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
-      <div className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 w-[600px] h-[350px] rounded-full blur-[140px] opacity-10 bg-primary" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.25)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.25)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+      <div className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 w-[600px] h-[350px] rounded-full blur-[120px] opacity-[0.07] bg-primary" />
 
       <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
         {/* Meteors Effect */}
@@ -45,10 +45,10 @@ export function Hero() {
         >
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card/80 backdrop-blur-md text-xs font-semibold text-foreground shadow-2xs hover:bg-accent transition-all cursor-pointer group">
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-mono text-muted-foreground group-hover:text-foreground transition-colors">
+            <span className="font-mono text-emerald-400 group-hover:text-emerald-300 transition-colors">
               LangGraph 5-Agent Pipeline Active
             </span>
-            <ChevronRight className="size-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="size-3.5 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </motion.div>
 
@@ -63,7 +63,7 @@ export function Hero() {
         </motion.div>
 
         {/* Magic Typography Headline */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1] max-w-4xl mx-auto">
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.05] max-w-4xl mx-auto">
           <span className="block overflow-hidden">
             <motion.span
               className="block"
@@ -109,7 +109,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2"
         >
           <a href="/dashboard">
             <Button
@@ -132,20 +132,30 @@ export function Hero() {
           </Button>
         </motion.div>
 
+        {/* Trust bar */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.65 }}
+          className="text-xs text-muted-foreground font-medium"
+        >
+          No credit card required · Free tier includes 10k execution cycles/month
+        </motion.p>
+
         {/* Interactive Feature Pill Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="pt-6 flex flex-wrap items-center justify-center gap-3 text-xs font-mono text-muted-foreground"
+          className="pt-6 flex flex-wrap items-center justify-center gap-2.5 text-xs font-mono text-muted-foreground"
         >
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-border bg-card/60">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-border bg-card/60 transition-colors hover:bg-card hover:text-foreground">
             <Cpu className="size-3.5" /> 5-Agent Swarm
           </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-border bg-card/60">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-border bg-card/60 transition-colors hover:bg-card hover:text-foreground">
             <Database className="size-3.5" /> Pinecone Vector RAG
           </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-border bg-card/60">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-border bg-card/60 transition-colors hover:bg-card hover:text-foreground">
             <ShieldCheck className="size-3.5" /> Citation Audited
           </span>
         </motion.div>

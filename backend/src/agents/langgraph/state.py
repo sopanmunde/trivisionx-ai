@@ -61,6 +61,9 @@ class AgentState(TypedDict):
     final_output: str
     quality_score: Dict[str, Any]
 
+    # Supervisor agent auto-routing decision
+    supervisor_decision: Dict[str, Any]
+
     terminate: bool
     errors: List[str]
     current_node: str

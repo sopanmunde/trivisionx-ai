@@ -9,7 +9,7 @@ export default function MarketingLayout({
 }) {
   return (
     <SmoothScroll>
-      <div className="dark min-h-screen bg-background text-foreground transition-colors duration-300 flex flex-col">
+      <div className="min-h-screen bg-background text-foreground transition-colors duration-300 flex flex-col">
         <Navbar />
         <main className="flex-1">
           {children}
