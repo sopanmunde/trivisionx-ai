@@ -15,7 +15,6 @@ import {
   Cpu,
   Flame,
   Server,
-  Palette,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -80,7 +79,6 @@ export default function Header({
   onToggleIntegrations = () => { },
   onOpenAuditLogs = () => { },
   onOpenWorkflows = () => { },
-  onOpenThemeConfig = () => { },
 }) {
   const currentBot = CHATBOTS.find((b) => b.name === selectedBot || b.name.toLowerCase().startsWith((selectedBot || "").toLowerCase())) || CHATBOTS[0];
 
@@ -176,17 +174,6 @@ export default function Header({
           >
             <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
             <span className="hidden sm:inline">Audit Logs</span>
-          </Button>
-
-          {/* Theme Studio Container */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onOpenThemeConfig}
-            className="h-8 w-8 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-2xs transition-all cursor-pointer flex items-center justify-center select-none"
-            title="Theme & Color Studio"
-          >
-            <Palette className="h-3.5 w-3.5 text-primary shrink-0" />
           </Button>
         </div>
       </div>

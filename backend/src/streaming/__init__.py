@@ -49,6 +49,11 @@ def sse_provider_switch_event(from_provider: str, to_provider: str, reason: str)
     return f"data: {json.dumps({'type': 'provider_switch', 'from': from_provider, 'to': to_provider, 'reason': reason})}\n\n"
 
 
+def sse_supervisor_decision_event(decision: dict) -> str:
+    """Format a supervisor agent decision event for SSE."""
+    return f"data: {json.dumps({'type': 'supervisor_decision', 'data': decision})}\n\n"
+
+
 async def stream_tokens(llm, messages, streamed_text: list) -> AsyncGenerator[str, None]:
     """
     Generic token streamer that works with any LangChain chat model.

@@ -1,9 +1,12 @@
-
-import React from 'react';
-export default function DemoDemo() {
+import React from 'react'
+export const Demo = () => {
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold">Demo Component</h2>
+    <div className="p-20">
+      <h1>TriVsionX </h1>
     </div>
-  );
+
+
+  )
+
+
 }

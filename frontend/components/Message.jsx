@@ -351,6 +351,7 @@ export default function Message({ role, content, sources, quality_score, agent_s
                     <div className="mt-3.5 pl-2.5 border-l border-zinc-200 dark:border-zinc-850 space-y-4">
                       {agent_steps.map((step, idx) => {
                         const nodeConfig = {
+                          supervisor: { title: "Supervisor Agent", desc: "Analyzing user query and routing to the optimal agent pipeline." },
                           voice_preprocessor: { title: "Voice Preprocessing", desc: "Transcribing and optimizing voice audio input." },
                           planner: { title: "Research Planner", desc: "Analyzing user query, routing, and creating research task list." },
                           memory_retriever: { title: "Memory Recall", desc: "Searching conversation history and persistent memories." },

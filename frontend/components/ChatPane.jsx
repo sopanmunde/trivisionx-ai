@@ -35,6 +35,8 @@ import {
   Globe,
   FileSearch,
   Sparkles,
+  Route,
+  BrainCircuit,
 } from "lucide-react";
 import { TriVisionXLogo } from "./TriVisionXLogo";
 import { motion, AnimatePresence } from "framer-motion";
@@ -87,38 +89,45 @@ function MessageFileCard({ attachedFile }) {
 function ThinkingMessage({ onPause, agentState }) {
   const getAgentInfo = (state) => {
     switch (state) {
+      case "supervisor":
+        return { label: "Supervisor Agent", desc: "Analyzing request intent & selecting optimal pipeline...", color: "border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-300" };
       case "voice_preprocessor":
-        return { label: "Voice Preprocessor", desc: "Transcribing and cleaning voice input..." };
+        return { label: "Voice Preprocessor", desc: "Transcribing and cleaning voice input...", color: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-300" };
       case "planner":
-        return { label: "Research Planner", desc: "Formulating multi-step research plan & query routing..." };
+        return { label: "Research Planner", desc: "Formulating multi-step research plan & query routing...", color: "border-indigo-500/30 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300" };
       case "memory_retriever":
-        return { label: "Memory Recall", desc: "Querying historical conversation memory database..." };
+        return { label: "Memory Recall", desc: "Querying historical conversation memory database...", color: "border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-300" };
       case "vision_extractor":
-        return { label: "Vision Document Extractor", desc: "Extracting OCR text, charts, and tables from file..." };
+        return { label: "Vision Document Extractor", desc: "Extracting OCR text, charts, and tables from file...", color: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-300" };
       case "retriever":
-        return { label: "Document Vector Retriever", desc: "Executing MMR semantic search over Pinecone chunks..." };
+        return { label: "Document Vector Retriever", desc: "Executing MMR semantic search over Pinecone chunks...", color: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" };
       case "web_researcher":
-        return { label: "Web Search Analyst", desc: "Performing web query search for live data..." };
+        return { label: "Web Search Analyst", desc: "Performing web query search for live data...", color: "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-300" };
       case "citation":
-        return { label: "Citation Validator", desc: "Scoring snippet relevance confidence & deduplicating..." };
+        return { label: "Citation Validator", desc: "Scoring snippet relevance confidence & deduplicating...", color: "border-teal-500/30 bg-teal-500/10 text-teal-600 dark:text-teal-300" };
       case "summarizer":
-        return { label: "Synthesis Summarizer", desc: "Synthesizing evidence & drafting structured response..." };
+        return { label: "Synthesis Summarizer", desc: "Synthesizing evidence & drafting structured response...", color: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-300" };
       case "reporter":
-        return { label: "Report Assembly", desc: "Formatting final markdown report & quality evaluation..." };
+        return { label: "Report Assembly", desc: "Formatting final markdown report & quality evaluation...", color: "border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-300" };
       case "code_generation":
-        return { label: "Code Generator", desc: "Synthesizing clean code implementation..." };
+        return { label: "Code Generator", desc: "Synthesizing clean code implementation...", color: "border-indigo-500/30 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300" };
       case "code_review":
-        return { label: "Code Reviewer", desc: "Scanning generated code for logic & security..." };
+        return { label: "Code Reviewer", desc: "Scanning generated code for logic & security...", color: "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-300" };
       case "testing":
-        return { label: "Test Runner", desc: "Executing verification test cases..." };
+        return { label: "Test Runner", desc: "Executing verification test cases...", color: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" };
       case "data_analysis":
-        return { label: "Data Analyst", desc: "Processing numerical data datasets..." };
+        return { label: "Data Analyst", desc: "Processing numerical data datasets...", color: "border-teal-500/30 bg-teal-500/10 text-teal-600 dark:text-teal-300" };
       default:
-        return { label: "Agent Pipeline", desc: "Orchestrating agent workflow execution..." };
+        return { label: "Agent Pipeline", desc: "Orchestrating agent workflow execution...", color: "border-primary/30 bg-primary/10 text-primary" };
     }
   };
 
   const agentInfo = getAgentInfo(agentState);
+  const dotColors = [
+    "var(--color-1, #9E7AFF)",
+    "var(--color-2, #FE8BBB)",
+    "var(--color-3, #54A3FF)",
+  ];
 
   return (
     <motion.div
@@ -126,46 +135,47 @@ function ThinkingMessage({ onPause, agentState }) {
       animate={{ opacity: 1, y: 0 }}
       className="flex gap-4 px-2 w-full justify-start"
     >
-      {/* AI avatar */}
-      <Avatar className="mt-1 h-8 w-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm">
-        <AvatarFallback className="bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300">
-          <Bot className="h-4 w-4" />
+      {/* AI avatar with Magic UI pulse glow */}
+      <Avatar className="mt-1 h-8 w-8 border border-primary/20 bg-primary/5 shadow-xs ring-2 ring-primary/10">
+        <AvatarFallback className="bg-card text-foreground">
+          <Bot className="h-4 w-4 text-primary animate-pulse" />
         </AvatarFallback>
       </Avatar>
       <div className="flex flex-col gap-1 py-1">
-        <div className="flex items-center gap-2">
-          {/* Staggered dots */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Staggered Magic UI dots */}
           <div className="flex items-center gap-[4px]">
-            {[0, 160, 320].map((delay) => (
+            {dotColors.map((col, idx) => (
               <motion.div
-                key={delay}
-                className="h-2 w-2 rounded-full bg-emerald-500"
-                animate={{ scale: [0.7, 1.2, 0.7], opacity: [0.35, 1, 0.35] }}
+                key={idx}
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: col }}
+                animate={{ scale: [0.7, 1.3, 0.7], opacity: [0.4, 1, 0.4] }}
                 transition={{
                   duration: 1.2,
                   repeat: Infinity,
-                  delay: delay / 1000,
+                  delay: (idx * 180) / 1000,
                   ease: "easeInOut",
                 }}
               />
             ))}
           </div>
 
-          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+          <Badge variant="outline" className={cn("text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 shadow-2xs backdrop-blur-md", agentInfo.color)}>
             Node: {agentInfo.label}
-          </span>
+          </Badge>
 
           <Button
             variant="outline"
             size="sm"
             onClick={onPause}
-            className="ml-2 h-6 rounded-full px-2.5 text-[10px] font-semibold transition-all border-zinc-200 hover:border-red-500/50 hover:bg-red-50 dark:border-zinc-800 dark:hover:border-red-500/30 dark:hover:bg-red-950/20 text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400"
+            className="ml-2 h-6 rounded-full px-2.5 text-[10px] font-semibold transition-all border-border hover:border-destructive/40 hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
           >
             <Square className="h-2 w-2 mr-1 fill-current" /> Stop
           </Button>
         </div>
 
-        <p className="text-[12.5px] font-mono text-zinc-500 dark:text-zinc-400 mt-0.5">
+        <p className="text-[12.5px] font-mono text-muted-foreground mt-0.5">
           {agentInfo.desc}
         </p>
       </div>
@@ -207,6 +217,7 @@ const ChatPane = forwardRef(function ChatPane(
     agentState,
     providerSwitchEvent,
     onDismissProviderSwitch,
+    supervisorDecision,
     selectedBot,
     user,
     onNavigateTo,
@@ -404,7 +415,7 @@ const ChatPane = forwardRef(function ChatPane(
                     </motion.div>
                   );
                 })}
-                f               </div>
+              </div>
             </div>
           </div>
 
@@ -601,10 +612,88 @@ const ChatPane = forwardRef(function ChatPane(
                 </AnimatePresence>
 
                 {isThinking && (
-                  <ThinkingMessage
-                    onPause={onPauseThinking}
-                    agentState={agentState}
-                  />
+                  <>
+                    {/* Supervisor Decision Inline Card — Shadcn UI + Magic UI Colors */}
+                    {supervisorDecision && agentState !== "supervisor" && (() => {
+                      const agentThemeMap = {
+                        coding: {
+                          bg: "from-indigo-500/15 via-blue-500/10 to-cyan-500/15 dark:from-indigo-950/50 dark:via-blue-950/40 dark:to-cyan-950/50 border-indigo-500/40 dark:border-indigo-400/40 shadow-indigo-500/10",
+                          text: "text-indigo-600 dark:text-indigo-400",
+                          badge: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30",
+                        },
+                        data_analysis: {
+                          bg: "from-emerald-500/15 via-teal-500/10 to-cyan-500/15 dark:from-emerald-950/50 dark:via-teal-950/40 dark:to-cyan-950/50 border-emerald-500/40 dark:border-emerald-400/40 shadow-emerald-500/10",
+                          text: "text-emerald-600 dark:text-emerald-400",
+                          badge: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+                        },
+                        research: {
+                          bg: "from-violet-500/15 via-purple-500/10 to-indigo-500/15 dark:from-violet-950/50 dark:via-purple-950/40 dark:to-indigo-950/50 border-violet-500/40 dark:border-violet-400/40 shadow-violet-500/10",
+                          text: "text-violet-600 dark:text-violet-400",
+                          badge: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30",
+                        },
+                        technical: {
+                          bg: "from-amber-500/15 via-orange-500/10 to-yellow-500/15 dark:from-amber-950/50 dark:via-orange-950/40 dark:to-yellow-950/50 border-amber-500/40 dark:border-amber-400/40 shadow-amber-500/10",
+                          text: "text-amber-600 dark:text-amber-400",
+                          badge: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+                        },
+                        competitive: {
+                          bg: "from-rose-500/15 via-pink-500/10 to-purple-500/15 dark:from-rose-950/50 dark:via-pink-950/40 dark:to-purple-950/50 border-rose-500/40 dark:border-rose-400/40 shadow-rose-500/10",
+                          text: "text-rose-600 dark:text-rose-400",
+                          badge: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
+                        },
+                        summary: {
+                          bg: "from-blue-500/15 via-sky-500/10 to-indigo-500/15 dark:from-blue-950/50 dark:via-sky-950/40 dark:to-indigo-950/50 border-blue-500/40 dark:border-blue-400/40 shadow-blue-500/10",
+                          text: "text-blue-600 dark:text-blue-400",
+                          badge: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30",
+                        },
+                      };
+
+                      const agentKey = supervisorDecision.selected_agent?.toLowerCase() || "research";
+                      const theme = agentThemeMap[agentKey] || agentThemeMap.research;
+
+                      return (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          transition={{ duration: 0.25, ease: "easeOut" }}
+                          className="flex gap-4 px-2 w-full justify-start mb-2"
+                        >
+                          <div className={cn(
+                            "ml-12 flex items-start gap-3 rounded-2xl border bg-gradient-to-r backdrop-blur-md px-4 py-3 shadow-md max-w-[500px]",
+                            theme.bg
+                          )}>
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-background/80 shadow-xs border border-border">
+                              <Route className={cn("h-4 w-4", theme.text)} />
+                            </div>
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={cn("text-[10px] font-extrabold uppercase tracking-wider", theme.text)}>
+                                  Supervisor Agent
+                                </span>
+                                <Badge variant="secondary" className={cn("text-[9.5px] px-2 py-0.5 font-mono font-bold tracking-wider rounded-md border", theme.badge)}>
+                                  {supervisorDecision.selected_agent?.toUpperCase()}
+                                </Badge>
+                                {(supervisorDecision.trip_constraint || supervisorDecision.tripconstraint) && (
+                                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono tracking-wider text-muted-foreground border-border/70 bg-background/50">
+                                    {supervisorDecision.trip_constraint || supervisorDecision.tripconstraint}
+                                  </Badge>
+                                )}
+                              </div>
+                              {supervisorDecision.reasoning && (
+                                <p className="text-[11.5px] text-foreground/90 leading-snug font-medium">
+                                  {supervisorDecision.reasoning}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })()}
+                    <ThinkingMessage
+                      onPause={onPauseThinking}
+                      agentState={agentState}
+                    />
+                  </>
                 )}
 
                 {/* Scroll anchor */}

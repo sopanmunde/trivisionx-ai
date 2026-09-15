@@ -8,6 +8,7 @@ SSE event protocol:
   {"node": "<name>", "status": "running"}       — agent activity update
   {"node": "<name>", "status": "completed"}      — agent finished
   {"type": "citations", "data": [...]}           — citation panel update
+  {"type": "supervisor_decision", "data": {...}} — supervisor routing decision
   {"type": "token", "data": "<text>"}            — streaming text token
   {"done": true, "sources": [...]}               — stream complete
   {"error": "<message>"}                         — error
@@ -21,6 +22,7 @@ from langgraph.graph import StateGraph
 from agents.langgraph.graph import get_graph
 from core.llm_factory import get_llm
 from agents.langgraph.nodes.utils import extract_text
+from agents.langgraph.nodes.supervisor_node import supervisor_node
 from rag.memory.conversation_memory import get_conversation_history
 from database.mongodb.repositories.chat_repository import (
     insert_message,
@@ -36,6 +38,7 @@ from streaming import (
     sse_error_event,
     sse_quality_score_event,
     sse_provider_switch_event,
+    sse_supervisor_decision_event,
 )
 
 logger = get_logger(__name__)
@@ -51,7 +54,12 @@ def get_node_summary(name: str, output: dict) -> str:
     if not output:
         return "Execution completed."
 
-    if name == "voice_preprocessor":
+    if name == "supervisor":
+        decision = output.get("supervisor_decision", {})
+        selected = decision.get("selected_agent", "research")
+        reasoning = decision.get("reasoning", "")
+        return f"Analyzed request and selected '{selected}' pipeline. {reasoning}"
+    elif name == "voice_preprocessor":
         return "Audio voice input transcribed and preprocessed."
     elif name == "planner":
         req_context = output.get("requires_context", False)
@@ -369,7 +377,62 @@ async def _stream_chat_response_impl(
                 logger.error(f"Failed to write failed quick mode audit log: {audit_err}")
             return
 
-    graph = get_graph(workflow_type)
+    # --- Supervisor Agent: auto-select workflow when workflow_type is "auto" ---
+    resolved_workflow_type = workflow_type
+    supervisor_decision_data = {}
+
+    if workflow_type == "auto":
+        try:
+            yield sse_node_event("supervisor", "running")
+            run_steps["supervisor"] = {
+                "node": "supervisor",
+                "status": "running",
+                "started_at": datetime.now(timezone.utc).isoformat(),
+                "output": None,
+            }
+
+            supervisor_state = {
+                "query": query,
+                "history": history,
+                "selected_llm_provider": provider or "",
+                "selected_llm_model": model or "",
+                "filename": filename or "",
+            }
+            supervisor_result = await supervisor_node(supervisor_state)
+
+            resolved_workflow_type = supervisor_result.get("workflow_type", "research")
+            supervisor_decision_data = supervisor_result.get("supervisor_decision", {})
+
+            summary = get_node_summary("supervisor", supervisor_result)
+            run_steps["supervisor"]["status"] = "completed"
+            run_steps["supervisor"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+            run_steps["supervisor"]["output"] = summary
+
+            yield sse_node_event("supervisor", "completed", output=summary)
+            yield sse_supervisor_decision_event(supervisor_decision_data)
+
+            logger.info(
+                f"[Chat] Supervisor routed to '{resolved_workflow_type}': "
+                f"{supervisor_decision_data.get('reasoning', '')[:100]}"
+            )
+
+        except Exception as e:
+            logger.error(f"[Chat] Supervisor failed, defaulting to research: {e}")
+            resolved_workflow_type = "research"
+            supervisor_decision_data = {
+                "selected_agent": "research",
+                "trip_constraint": "supervisor_error",
+                "tripconstraint": "supervisor_error",
+                "reasoning": f"Supervisor error — defaulting to research pipeline.",
+            }
+            if "supervisor" in run_steps:
+                run_steps["supervisor"]["status"] = "completed"
+                run_steps["supervisor"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                run_steps["supervisor"]["output"] = "Supervisor failed — defaulting to research."
+            yield sse_node_event("supervisor", "completed", output="Supervisor failed — defaulting to research.")
+            yield sse_supervisor_decision_event(supervisor_decision_data)
+
+    graph = get_graph(resolved_workflow_type)
     if isinstance(graph, StateGraph):
         graph = graph.compile()
 
@@ -380,7 +443,7 @@ async def _stream_chat_response_impl(
         "filename": filename,
         "report_mode": False,
         "mode": mode,
-        "workflow_type": workflow_type,
+        "workflow_type": resolved_workflow_type,
         "selected_llm_provider": provider or "",
         "selected_llm_model": model or "",
         "requires_context": True,
@@ -397,6 +460,7 @@ async def _stream_chat_response_impl(
         "test_results": "",
         "analysis_results": "",
         "visualization_data": {},
+        "supervisor_decision": supervisor_decision_data,
         "errors": [],
         "current_node": "",
     }
@@ -408,7 +472,7 @@ async def _stream_chat_response_impl(
             data = event.get("data", {})
 
             if kind == "on_chain_start" and name in (
-                "voice_preprocessor", "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
+                "supervisor", "voice_preprocessor", "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 active_node = name
@@ -421,7 +485,7 @@ async def _stream_chat_response_impl(
                 yield sse_node_event(name, "running")
 
             elif kind == "on_chain_end" and name in (
-                "voice_preprocessor", "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
+                "supervisor", "voice_preprocessor", "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 output = data.get("output", {}) or {}

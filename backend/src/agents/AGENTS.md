@@ -8,6 +8,7 @@ This directory contains the documentation for all agents in the LangGraph workfl
 
 | Agent | Node Function | File | Purpose |
 |-------|--------------|------|---------|
+| **Supervisor** | `supervisor_node` | [supervisor_node.py](./nodes/supervisor_node.py) | Analyzes queries and auto-selects the best workflow pipeline |
 | **Smart Router** | `planner_node` | [planner_node.py](./nodes/planner_node.py) | Analyzes queries and routes to the appropriate pipeline |
 | **Retrieval Agent** | `retriever_node` | [retriever_node.py](./nodes/retriever_node.py) | MMR-based semantic search against Pinecone |
 | **Citation Agent** | `citation_node` | [citation_node.py](./nodes/citation_node.py) | Deduplicates and scores citations |
@@ -28,6 +29,19 @@ This directory contains the documentation for all agents in the LangGraph workfl
 | **Competitive** | `competitive` | planner → retriever → citation → summarizer → reporter | [competitive_graph.py](./graphs/competitive_graph.py) |
 | **Coding** | `coding` | planner → code_generation → code_review → testing → reporter | [coding_graph.py](./graphs/coding_graph.py) |
 | **Data Analysis** | `data_analysis` | planner → data_analysis → summarizer → reporter | [data_analysis_graph.py](./graphs/data_analysis_graph.py) |
+
+### Supervisor Agent (Auto-Routing)
+
+When `workflow_type="auto"` (default), the **Supervisor Agent** runs before any workflow graph.
+It uses structured LLM output to classify the user's query and select the optimal pipeline:
+
+```
+User Query → Supervisor Agent → {selected_agent, trip_constraint, reasoning}
+                                         ↓
+                              Selected Workflow Graph
+```
+
+The supervisor can be bypassed by explicitly setting `workflow_type` to a specific pipeline.
 
 ## Dual Mode System
 
