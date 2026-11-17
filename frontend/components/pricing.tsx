@@ -78,23 +78,32 @@ export function Pricing() {
   );
 
   return (
-    <section id="pricing" className="py-24 px-4 bg-background relative border-t border-border">
-      <div className="max-w-6xl mx-auto">
+    <section id="pricing" className="relative py-28 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden select-none">
+      {/* 3D Ambient Backdrop Spotlight */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
+
+      <div className="max-w-6xl mx-auto relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-16 max-w-3xl mx-auto"
         >
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-3 tracking-tight">
-            Predictable pricing built for agent execution
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-muted/50 text-foreground text-xs font-medium tracking-wide shadow-xs mb-4">
+            <Zap className="w-3.5 h-3.5 text-primary" />
+            <span>TRANSPARENT VALUE MATRIX</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground">
+            Predictable compute pricing.
+            <br />
+            <span className="text-muted-foreground font-semibold">Scale dynamically as you grow.</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto mb-8 text-sm sm:text-base">
-            Choose a plan that fits your computational throughput. Scale concurrency and agent steps dynamically as you grow.
+          <p className="max-w-2xl mx-auto text-sm sm:text-base text-muted-foreground mt-3 mb-8 leading-relaxed">
+            Choose a plan that fits your computational throughput. Scale concurrency and agent steps dynamically without hidden compute fees.
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center p-1 rounded-full bg-muted border border-border">
+          <div className="inline-flex items-center p-1 rounded-full bg-muted/80 border border-border/80 backdrop-blur-md">
             <button
               onClick={() => setBillingCycle("monthly")}
               className={`relative px-4 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer ${
@@ -124,7 +133,7 @@ export function Pricing() {
                 />
               )}
               <span className="relative z-10">Yearly</span>
-              <span className="relative z-10 ml-2 px-2 py-0.5 text-xs bg-emerald-500/20 text-emerald-400 rounded-full">
+              <span className="relative z-10 ml-2 px-2 py-0.5 text-[10px] font-mono bg-primary/10 text-primary border border-primary/20 rounded-full font-bold">
                 -20%
               </span>
             </button>
@@ -146,10 +155,10 @@ export function Pricing() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
-                className={`relative p-6 md:p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.01] flex flex-col justify-between ${
+                className={`relative p-6 md:p-8 rounded-2xl border transition-all duration-500 ease-out hover:-translate-y-1.5 flex flex-col justify-between ${
                   plan.highlighted
-                    ? "bg-card border-primary/40 shadow-lg"
-                    : "bg-card/60 border-border hover:border-border/80"
+                    ? "bg-card/95 dark:bg-card/80 border-primary/80 backdrop-blur-2xl [box-shadow:0_0_0_2px_rgba(59,130,246,0.35),0_12px_36px_rgba(0,0,0,.12),0_24px_50px_rgba(0,0,0,.1)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset,0_0_0_2px_rgba(59,130,246,0.4),0_24px_60px_rgba(0,0,0,.8)] hover:shadow-2xl"
+                    : "bg-card/85 dark:bg-card/65 border-border/80 backdrop-blur-xl hover:border-primary/40 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl"
                 }`}
               >
                 {plan.highlighted && <BorderBeam />}

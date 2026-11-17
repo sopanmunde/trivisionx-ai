@@ -271,9 +271,62 @@ export function EmailDashboard() {
     const currentPrompt = aiPrompt;
     setAiPrompt("");
 
-    setTimeout(() => {
-      let draftText = "";
+    let draftText = "";
+    let streamedSuccess = false;
 
+    try {
+      const token = localStorage.getItem("token");
+      const isReply = composeMode === "reply" && selectedEmail;
+      const contextMsg = isReply
+        ? `You are an AI Email Assistant. Draft a reply in a ${aiTone} tone to this email:\n\nSender: ${selectedEmail.name} <${selectedEmail.email}>\nSubject: ${selectedEmail.subject}\nOriginal Message:\n${selectedEmail.body}\n\nUser Instructions:\n${currentPrompt}\n\nProvide ONLY the draft email body ready to send.`
+        : `You are an AI Email Assistant. Draft an email in a ${aiTone} tone based on:\n\nSubject: ${composeSubject || "Important Update"}\nInstructions: ${currentPrompt}\n\nProvide ONLY the draft email body ready to send.`;
+
+      const res = await fetch(`${API_BASE_URL}/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          msg: contextMsg,
+          mode: "quick",
+        }),
+      });
+
+      if (res.ok && res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(trimmed.slice(6));
+                if (data.type === "token" && data.data) {
+                  draftText += data.data;
+                  setAiDraft(draftText);
+                  streamedSuccess = true;
+                }
+              } catch {}
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Real-time AI draft stream failed, falling back to smart template:", err);
+    }
+
+    if (!streamedSuccess || !draftText.trim()) {
+      // Smart Fallback generator
       if (composeMode === "reply" && selectedEmail) {
         if (aiTone === "professional") {
           draftText = `Dear ${selectedEmail.name},\n\nThank you for reaching out regarding "${selectedEmail.subject}". I have reviewed your points, and I agree that aligning on our next steps is crucial.\n\nI am available to sync tomorrow to finalize these items. Please let me know what time works best for you.\n\nBest regards,\n[Your Name]`;
@@ -290,19 +343,11 @@ export function EmailDashboard() {
         }
       }
 
-      let index = 0;
-      setIsGenerating(false);
+      setAiDraft(draftText);
+    }
 
-      const interval = setInterval(() => {
-        if (index < draftText.length) {
-          setAiDraft((prev) => prev + draftText.substring(prev.length, prev.length + 5));
-          index += 5;
-        } else {
-          clearInterval(interval);
-          setAiChat((prev) => [...prev, { role: "assistant", text: draftText }]);
-        }
-      }, 30);
-    }, 1200);
+    setAiChat((prev) => [...prev, { role: "assistant", text: draftText }]);
+    setIsGenerating(false);
   };
 
   const handleApplyDraft = () => {

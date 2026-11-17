@@ -34,14 +34,9 @@ export function Footer() {
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <footer ref={ref} className="border-t border-border bg-background relative overflow-hidden">
-      {/* Background radial glow */}
-      <div
-        className="pointer-events-none absolute left-1/4 bottom-0 w-[400px] h-[300px] rounded-full blur-[120px] opacity-[0.02]"
-        style={{
-          background: "radial-gradient(circle, #8b5cf6 0%, #3b82f6 50%, transparent 100%)",
-        }}
-      />
+    <footer ref={ref} className="relative bg-background overflow-hidden select-none">
+      {/* 3D Ambient Backdrop Spotlight */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
 
       <div className="max-w-6xl mx-auto px-4 py-16 relative z-10">
         <motion.div
@@ -60,7 +55,7 @@ export function Footer() {
               retrieval, and autonomous research workflows — all in one platform.
             </p>
             {/* System Status */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/60 border border-border/60 text-[9px] font-mono tracking-wider text-muted-foreground">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-card/85 dark:bg-card/55 border border-border/80 text-[10px] font-mono tracking-wider text-muted-foreground shadow-xs">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>

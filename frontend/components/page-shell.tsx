@@ -23,21 +23,23 @@ export function PageShell({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen bg-background pt-24 pb-16 overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_60%)] pointer-events-none" />
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl relative">
-        <div className="flex flex-col items-center text-center space-y-4 mb-12">
+    <div className="relative min-h-screen bg-background pt-28 pb-20 overflow-hidden select-none">
+      {/* 3D Ambient Backdrop Spotlight */}
+      <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
+
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl relative z-10">
+        <div className="flex flex-col items-center text-center space-y-4 mb-14">
           {badge && (
-            <div className="relative mb-2">
-              <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl" />
-              <Badge variant="secondary" className="relative">{badge}</Badge>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-muted/50 text-foreground text-xs font-medium tracking-wide shadow-xs mb-2">
+              <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+              <span>{badge}</span>
             </div>
           )}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-foreground">
             {title}
           </h1>
           {subtitle && (
-            <p className="max-w-2xl text-lg text-muted-foreground">
+            <p className="max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
               {subtitle}
             </p>
           )}
@@ -61,8 +63,7 @@ export function Section({
 }) {
   return (
     <section className={`relative py-12 mt-12 ${className}`}>
-      <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-      {title && <h2 className="text-2xl font-bold mb-6 text-foreground">{title}</h2>}
+      {title && <h2 className="text-2xl font-bold mb-6 text-foreground tracking-tight">{title}</h2>}
       {children}
     </section>
   );
@@ -94,16 +95,16 @@ export function FeatureCard({
   const IconComponent = icon ? getIconComponent(icon) : null;
   
   return (
-    <Card className={`group relative h-full transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 hover:-translate-y-0.5 bg-card/80 backdrop-blur-sm ${className}`}>
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-b from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+    <Card className={`group relative h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 backdrop-blur-xl transition-all duration-500 ease-out hover:-translate-y-1.5 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:border-primary/50 ${className}`}>
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
       <CardHeader className="relative">
         {IconComponent && (
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center mb-4 border border-border/60 shadow-sm group-hover:border-primary/30 group-hover:shadow-primary/10 transition-all duration-300">
+          <div className="w-10 h-10 rounded-xl bg-accent text-accent-foreground flex items-center justify-center mb-4 border border-border/70 shadow-xs group-hover:border-primary/40 group-hover:text-primary transition-all duration-300">
             <IconComponent className="w-5 h-5 text-foreground group-hover:text-primary transition-colors" />
           </div>
         )}
-        <CardTitle className="group-hover:text-primary transition-colors">{title}</CardTitle>
-        {description && <CardDescription className="leading-relaxed">{description}</CardDescription>}
+        <CardTitle className="group-hover:text-primary transition-colors font-bold tracking-tight">{title}</CardTitle>
+        {description && <CardDescription className="leading-relaxed text-sm">{description}</CardDescription>}
       </CardHeader>
       {children && <CardContent className="relative">{children}</CardContent>}
     </Card>
@@ -112,8 +113,8 @@ export function FeatureCard({
 
 export function MacPanel({ children, className = "" }: { children: React.ReactNode, className?: string }) {
   return (
-    <Card className={`overflow-hidden border border-border ${className}`}>
-      <div className="h-10 bg-muted/50 border-b border-border flex items-center px-4 gap-2">
+    <div className={`overflow-hidden rounded-2xl border border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-2xl [box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_12px_36px_rgba(0,0,0,.1)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff10_inset,0_0_0_1px_rgba(255,255,255,.06),0_16px_40px_rgba(0,0,0,.8)] ${className}`}>
+      <div className="h-10 bg-muted/50 border-b border-border/70 flex items-center px-4 gap-2">
         <div className="w-3 h-3 rounded-full bg-red-500/80" />
         <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
         <div className="w-3 h-3 rounded-full bg-green-500/80" />
@@ -121,7 +122,7 @@ export function MacPanel({ children, className = "" }: { children: React.ReactNo
       <div className="p-0 bg-background">
         {children}
       </div>
-    </Card>
+    </div>
   );
 }
 

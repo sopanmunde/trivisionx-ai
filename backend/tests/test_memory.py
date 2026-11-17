@@ -90,6 +90,7 @@ class TestMemoryRetrievalNode:
             "workflow_type": "research",
         }
 
+        # pyrefly: ignore[bad-argument-type]
         result = await memory_retrieval_node(state)
 
         assert result["current_node"] == "memory_retriever"

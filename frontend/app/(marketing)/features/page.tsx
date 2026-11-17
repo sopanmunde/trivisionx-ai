@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { ProductExplode } from "@/components/product-explode";
 
 export const metadata: Metadata = {
   title: "Features — TriVisionX",
@@ -81,7 +82,7 @@ export default function FeaturesPage() {
 
           {pipelineSteps.map((step) => (
             <TabsContent key={step.id} value={step.id}>
-              <Card className="border-border bg-card/50 overflow-hidden">
+              <Card className="rounded-3xl border border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-2xl [box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_20px_50px_rgba(0,0,0,.1),0_40px_80px_rgba(0,0,0,.06)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff10_inset,0_0_0_1px_rgba(255,255,255,.06),0_20px_60px_rgba(0,0,0,.8)] overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-2">
                   <div className="p-8 flex flex-col justify-center border-b md:border-b-0 md:border-r border-border">
                     <Badge className="w-max mb-4 font-mono">{step.name} Agent</Badge>
@@ -107,6 +108,10 @@ export default function FeaturesPage() {
           ))}
         </Tabs>
       </Section>
+
+      <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+        <ProductExplode />
+      </div>
     </PageShell>
   );
 }

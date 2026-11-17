@@ -34,9 +34,9 @@ import {
   BarChart3,
   Globe,
   FileSearch,
-  Sparkles,
   Route,
   BrainCircuit,
+  Layers,
 } from "lucide-react";
 import { TriVisionXLogo } from "./TriVisionXLogo";
 import { motion, AnimatePresence } from "framer-motion";
@@ -133,22 +133,22 @@ function ThinkingMessage({ onPause, agentState }) {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex gap-4 px-2 w-full justify-start"
+      className="flex gap-2.5 sm:gap-4 px-1 sm:px-2 w-full justify-start"
     >
       {/* AI avatar with Magic UI pulse glow */}
-      <Avatar className="mt-1 h-8 w-8 border border-primary/20 bg-primary/5 shadow-xs ring-2 ring-primary/10">
+      <Avatar className="mt-1 h-7 w-7 sm:h-8 sm:w-8 border border-primary/20 bg-primary/5 shadow-xs ring-2 ring-primary/10 shrink-0">
         <AvatarFallback className="bg-card text-foreground">
-          <Bot className="h-4 w-4 text-primary animate-pulse" />
+          <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary animate-pulse" />
         </AvatarFallback>
       </Avatar>
-      <div className="flex flex-col gap-1 py-1">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex flex-col gap-1 py-0.5 min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           {/* Staggered Magic UI dots */}
-          <div className="flex items-center gap-[4px]">
+          <div className="flex items-center gap-[3px] sm:gap-[4px]">
             {dotColors.map((col, idx) => (
               <motion.div
                 key={idx}
-                className="h-2 w-2 rounded-full"
+                className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full"
                 style={{ backgroundColor: col }}
                 animate={{ scale: [0.7, 1.3, 0.7], opacity: [0.4, 1, 0.4] }}
                 transition={{
@@ -161,7 +161,7 @@ function ThinkingMessage({ onPause, agentState }) {
             ))}
           </div>
 
-          <Badge variant="outline" className={cn("text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 shadow-2xs backdrop-blur-md", agentInfo.color)}>
+          <Badge variant="outline" className={cn("text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 shadow-2xs backdrop-blur-md truncate max-w-[200px] sm:max-w-none", agentInfo.color)}>
             Node: {agentInfo.label}
           </Badge>
 
@@ -169,13 +169,13 @@ function ThinkingMessage({ onPause, agentState }) {
             variant="outline"
             size="sm"
             onClick={onPause}
-            className="ml-2 h-6 rounded-full px-2.5 text-[10px] font-semibold transition-all border-border hover:border-destructive/40 hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+            className="ml-auto sm:ml-2 h-5 sm:h-6 rounded-full px-2 sm:px-2.5 text-[9px] sm:text-[10px] font-semibold transition-all border-border hover:border-destructive/40 hover:bg-destructive/10 text-muted-foreground hover:text-destructive shrink-0"
           >
             <Square className="h-2 w-2 mr-1 fill-current" /> Stop
           </Button>
         </div>
 
-        <p className="text-[12.5px] font-mono text-muted-foreground mt-0.5">
+        <p className="text-[11.5px] sm:text-[12.5px] font-mono text-muted-foreground mt-0.5 break-words">
           {agentInfo.desc}
         </p>
       </div>
@@ -183,27 +183,38 @@ function ThinkingMessage({ onPause, agentState }) {
   );
 }
 
-const SUGGESTIONS = [
+const QUICK_PROMPTS = [
   {
-    label: "Deep Research & Citations",
-    prompt: "Execute a deep cited research overview on my uploaded documents.",
+    label: "Deep Cited Research",
     icon: FlaskConical,
+    mode: "research",
+    prompt: "Execute a deep cited research overview on my uploaded documents.",
   },
   {
     label: "Run Code Sandbox",
-    prompt: "Write and execute Python code in sandbox to analyze data.",
     icon: Code2,
+    mode: "agent",
+    prompt: "Write and execute Python code in sandbox to analyze data.",
+  },
+  {
+    label: "Live Web Grounding",
+    icon: Globe,
+    mode: "web",
+    prompt: "Search the live web for current breakthrough updates and summarize findings.",
+  },
+  {
+    label: "Workspace Briefing",
+    icon: Layers,
+    mode: "chat",
+    prompt: "Review my upcoming calendar schedule and summarize high-priority tasks.",
   },
   {
     label: "Competitive Matrix",
-    prompt: "Generate a competitive comparison matrix between market solutions.",
     icon: BarChart3,
+    mode: "research",
+    prompt: "Generate a competitive comparison matrix between market solutions.",
   },
 ];
-
-function EmptyState({ onSuggestion }) {
-  return null;
-}
 
 const ChatPane = forwardRef(function ChatPane(
   {
@@ -255,6 +266,12 @@ const ChatPane = forwardRef(function ChatPane(
         composerRef.current?.insertTemplate(templateContent),
       getSelectedBot: () =>
         composerRef.current?.getSelectedBot(),
+      setMode: (m) =>
+        composerRef.current?.setMode?.(m),
+      setValue: (val) =>
+        composerRef.current?.setValue?.(val),
+      focus: () =>
+        composerRef.current?.focus?.(),
     }),
     [],
   );
@@ -284,6 +301,16 @@ const ChatPane = forwardRef(function ChatPane(
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     setShowScrollBtn(false);
   }
+
+  const handleFeatureLaunch = (item) => {
+    if (item.mode && composerRef.current?.setMode) {
+      composerRef.current.setMode(item.mode);
+    }
+    if (composerRef.current?.setValue) {
+      composerRef.current.setValue(item.prompt);
+      composerRef.current.focus?.();
+    }
+  };
 
   function handleSuggestion(text) {
     composerRef.current?.setValue?.(text);
@@ -327,107 +354,135 @@ const ChatPane = forwardRef(function ChatPane(
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_75%)] pointer-events-none" />
 
       {messages.length === 0 ? (
-        <div className="flex flex-1 flex-col justify-between overflow-y-auto px-4 py-8 bg-transparent relative z-10">
-          <div className="flex flex-1 flex-col items-center justify-center w-full">
-            <div className="w-full max-w-3xl flex flex-col items-center justify-center">
-              {/* Logo & Greeting (no surrounding card box border/bg) */}
-              <Card className="mb-8 border-none shadow-none bg-transparent max-w-md w-full">
-                <CardContent className="flex flex-col items-center justify-center text-center pt-6 pb-0">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4 }}
-                    className="flex flex-col items-center gap-4 w-full"
+        <div className="flex flex-1 flex-col justify-between overflow-y-auto px-3 sm:px-6 py-5 sm:py-8 bg-transparent relative z-10 scrollbar-thin">
+          <div className="flex flex-1 flex-col items-center justify-center w-full max-w-5xl mx-auto pt-6 sm:pt-0">
+            {/* Top Logo & Greeting */}
+            <div className="w-full max-w-2xl flex flex-col items-center justify-center mb-4 sm:mb-6 text-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="flex flex-col items-center gap-3 sm:gap-4 w-full"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse" />
+                  <TriVisionXLogo size="lg" glow animate={false} />
+                </div>
+                <div className="flex flex-col items-center gap-1 sm:gap-1.5 px-2">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-600 dark:from-white dark:via-zinc-200 dark:to-zinc-400 bg-clip-text text-transparent">
+                    Hello{user?.first_name ? (
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        ,&nbsp;
+                        <ScrambleHover
+                          text={user.first_name}
+                          scrambleSpeed={80}
+                          maxIterations={8}
+                          characters="!<>-_\/[]{}—=+*^?#@"
+                          className="text-primary"
+                        />
+                      </motion.span>
+                    ) : ""}
+                  </h2>
+                  <p className="text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400 max-w-md">
+                    <span>Autonomous Multi-Agent Workspace with Deep Citations & Live Sandbox</span>
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Central Composer Input */}
+            <div className="w-full max-w-3xl relative z-10 mb-4 sm:mb-5">
+              <Composer
+                ref={composerRef}
+                onSend={async (text, mode, fileRef, activeFeatures) => {
+                  if (isThinking || isResponding || busy) {
+                    onPauseThinking?.();
+                    return;
+                  }
+                  if (!text.trim() && !fileRef) return;
+                  setBusy(true);
+                  await onSend?.(text, mode, fileRef, activeFeatures);
+                  setBusy(false);
+                }}
+                busy={busy || isThinking || isResponding}
+                selectedBot={selectedBot}
+                onNavigateTo={onNavigateTo}
+                onAddNewSkill={onAddNewSkill}
+              />
+            </div>
+
+            {/* Quick Prompt Pills — Touch-friendly centered pills below Composer */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-3.5 relative z-10">
+              {QUICK_PROMPTS.map((s, i) => {
+                const Icon = s.icon;
+                return (
+                  <motion.button
+                    key={s.label}
+                    type="button"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + i * 0.03, duration: 0.2 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => handleFeatureLaunch(s)}
+                    className="group flex items-center gap-1.5 shrink-0 rounded-full border border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/70 px-3 py-1.5 shadow-2xs hover:shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-900 transition-all duration-200 cursor-pointer backdrop-blur-md"
                   >
-                    <div className="relative">
-                      <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse" />
-                      <TriVisionXLogo size="lg" glow animate={false} />
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-4xl bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-600 dark:from-white dark:via-zinc-200 dark:to-zinc-400 bg-clip-text text-transparent">
-                        Hello{user?.first_name ? (
-                          <motion.span
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            ,&nbsp;
-                            <ScrambleHover
-                              text={user.first_name}
-                              scrambleSpeed={80}
-                              maxIterations={8}
-                              characters="!<>-_\/[]{}—=+*^?#@"
-                              className="text-primary"
-                            />
-                          </motion.span>
-                        ) : ''}
-                      </h2>
-                      <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-1 flex flex-col items-center gap-1">
-                        <span>How can I help you today?</span>
-                        <span className="text-[12px] font-medium text-zinc-400 dark:text-zinc-500">
-                          If you want to setup, write <code className="px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-mono text-[11px] border border-zinc-300/60 dark:border-zinc-700/60 font-bold">/</code>
-                        </span>
-                      </p>
-                    </div>
-                  </motion.div>
-                </CardContent>
-              </Card>
+                    <Icon className="h-3.5 w-3.5 text-primary shrink-0 transition-transform group-hover:scale-110" />
+                    <span className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-950 dark:group-hover:text-white transition-colors whitespace-nowrap">
+                      {s.label}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
 
-              <div className="w-full relative z-10">
-                <Composer
-                  ref={composerRef}
-                  onSend={async (text, mode, fileRef, activeFeatures) => {
-                    if (isThinking || isResponding || busy) {
-                      onPauseThinking?.();
-                      return;
-                    }
-                    if (!text.trim() && !fileRef) return;
-                    setBusy(true);
-                    await onSend?.(text, mode, fileRef, activeFeatures);
-                    setBusy(false);
-                  }}
-                  busy={busy || isThinking || isResponding}
-                  selectedBot={selectedBot}
-                  onNavigateTo={onNavigateTo}
-                  onAddNewSkill={onAddNewSkill}
-                />
+          {/* Footer Hint */}
+          <div className="mx-auto mt-6 text-center text-[10.5px] sm:text-[11px] text-zinc-500/80 dark:text-zinc-400/80 flex items-center justify-center gap-2 flex-wrap">
+            <span>AI can make mistakes. Verify important information.</span>
+            <span className="opacity-40">•</span>
+            <span className="font-medium text-zinc-600 dark:text-zinc-300">
+              Type <code className="px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-mono text-[10.5px] border border-zinc-300/60 dark:border-zinc-700/60 font-bold">/</code> for skills & tools
+            </span>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Active Conversation Telemetry & Session Header */}
+          <div className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-zinc-200/60 dark:border-zinc-800/60 bg-white/75 dark:bg-zinc-950/75 backdrop-blur-md px-3 sm:px-4 py-2 sm:py-2.5">
+            <div className="flex items-center gap-2 min-w-0 pl-11 lg:pl-0">
+              <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-lg border border-border bg-card shadow-2xs shrink-0">
+                <Bot className="h-3.5 w-3.5 text-primary" />
               </div>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-[12px] sm:text-[13px] font-semibold text-foreground truncate max-w-[130px] sm:max-w-[200px] md:max-w-none">
+                  {typeof selectedBot === "string" ? selectedBot : (selectedBot?.name || "TriVisionX Autonomous Core")}
+                </span>
+                <Badge variant="outline" className="hidden sm:inline-flex text-[9.5px] px-1.5 py-0 font-medium tracking-wide border-primary/20 text-primary bg-primary/5">
+                  Autonomous Swarm
+                </Badge>
+              </div>
+            </div>
 
-              {/* Compact Centered Suggestion Pills — directly below Composer */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-3.5 relative z-10">
-                {SUGGESTIONS.map((s, i) => {
-                  const Icon = s.icon;
-                  return (
-                    <motion.div
-                      key={s.label}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.15 + i * 0.04, duration: 0.25 }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => handleSuggestion(s.prompt || s.label)}
-                      className="group relative flex items-center gap-2 rounded-full border border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/70 px-3 py-1.5 shadow-2xs hover:shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-900 transition-all duration-200 cursor-pointer backdrop-blur-md"
-                    >
-                      <Icon className="h-3.5 w-3.5 text-primary group-hover:text-primary transition-colors shrink-0" />
-                      <span className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-950 dark:group-hover:text-white transition-colors whitespace-nowrap">
-                        {s.label}
-                      </span>
-                    </motion.div>
-                  );
-                })}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-full border border-border/50">
+                <span className={cn(
+                  "h-1.5 w-1.5 rounded-full",
+                  isThinking || isResponding ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
+                )} />
+                <span className="hidden xs:inline">
+                  {isThinking ? "Thinking" : isResponding ? "Responding" : "Ready"}
+                </span>
+                <span className="text-muted-foreground/60">•</span>
+                <span>{messages.length} msg{messages.length === 1 ? "" : "s"}</span>
               </div>
             </div>
           </div>
 
-          {/* Footer Hint stays down of the chat panel */}
-          <p className="mx-auto mt-7 text-center text-[11px] text-zinc-500/80 dark:text-zinc-400/80 flex items-center justify-center gap-2 flex-wrap">
-            <span>AI can make mistakes. Verify important information.</span>
-            <span className="opacity-40">•</span>
-            <span className="font-medium text-zinc-600 dark:text-zinc-300">If you want to setup, write <code className="px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-mono text-[10.5px] border border-zinc-300/60 dark:border-zinc-700/60 font-bold">/</code></span>
-          </p>
-        </div>
-      ) : (
-        <>
           {/* Provider Switch Notification Banner */}
           <AnimatePresence>
             {providerSwitchEvent && (
@@ -435,9 +490,9 @@ const ChatPane = forwardRef(function ChatPane(
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="flex items-center justify-center gap-2 bg-amber-50/90 dark:bg-amber-950/30 backdrop-blur-md border-b border-amber-200/60 dark:border-amber-800/30 px-4 py-2.5 text-[12px] text-amber-800 dark:text-amber-300 font-medium shadow-xs relative z-10"
+                className="flex items-center justify-center gap-2 bg-amber-50/90 dark:bg-amber-950/30 backdrop-blur-md border-b border-amber-200/60 dark:border-amber-800/30 px-4 py-2 text-[11.5px] sm:text-[12px] text-amber-800 dark:text-amber-300 font-medium shadow-xs relative z-10"
               >
-                <span>
+                <span className="truncate">
                   Switched from <strong>{providerSwitchEvent.from}</strong> to{" "}
                   <strong>{providerSwitchEvent.to}</strong>
                   {providerSwitchEvent.reason === "quota_exhausted"
@@ -446,7 +501,7 @@ const ChatPane = forwardRef(function ChatPane(
                 </span>
                 <button
                   onClick={onDismissProviderSwitch}
-                  className="ml-2 rounded-full p-0.5 hover:bg-amber-200/50 dark:hover:bg-amber-800/50 transition-colors cursor-pointer"
+                  className="ml-2 rounded-full p-0.5 hover:bg-amber-200/50 dark:hover:bg-amber-800/50 transition-colors cursor-pointer shrink-0"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -460,8 +515,8 @@ const ChatPane = forwardRef(function ChatPane(
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto relative z-10 scroll-smooth"
           >
-            <div className="mx-auto max-w-3xl px-4 py-8">
-              <div className="space-y-6">
+            <div className="mx-auto max-w-4xl px-2.5 sm:px-4 md:px-6 py-4 sm:py-6">
+              <div className="space-y-4 sm:space-y-6">
                 <AnimatePresence initial={false}>
                   {messages.map((m, idx) => (
                     <motion.div
@@ -481,28 +536,28 @@ const ChatPane = forwardRef(function ChatPane(
                               <Textarea
                                 value={draft}
                                 onChange={(e) => setDraft(e.target.value)}
-                                className="w-full resize-none border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 text-[14px] rounded-lg shadow-xs focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-[90px] leading-relaxed transition-all"
+                                className="w-full resize-none border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 sm:p-3 text-[13.5px] sm:text-[14px] rounded-lg shadow-xs focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-[90px] leading-relaxed transition-all"
                                 autoFocus
                                 placeholder="Edit message..."
                               />
-                              <div className="mt-3 flex items-center justify-end gap-2">
+                              <div className="mt-3 flex items-center justify-end gap-1.5 sm:gap-2">
                                 <Button
                                   variant="ghost"
                                   onClick={cancelEdit}
-                                  className="h-8 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 px-3 cursor-pointer select-none"
+                                  className="h-8 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 px-2.5 sm:px-3 cursor-pointer select-none"
                                 >
                                   Cancel
                                 </Button>
                                 <Button
                                   variant="outline"
                                   onClick={saveAndResend}
-                                  className="h-8 rounded-lg text-xs font-semibold px-3 cursor-pointer select-none border-zinc-200 dark:border-zinc-800"
+                                  className="h-8 rounded-lg text-xs font-semibold px-2.5 sm:px-3 cursor-pointer select-none border-zinc-200 dark:border-zinc-800"
                                 >
                                   Save & Resend
                                 </Button>
                                 <Button
                                   onClick={saveEdit}
-                                  className="h-8 rounded-lg text-xs font-semibold px-3 cursor-pointer bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 select-none shadow-xs"
+                                  className="h-8 rounded-lg text-xs font-semibold px-2.5 sm:px-3 cursor-pointer bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 select-none shadow-xs"
                                 >
                                   Save
                                 </Button>
@@ -525,13 +580,13 @@ const ChatPane = forwardRef(function ChatPane(
                             source_heatmap={m.source_heatmap}
                           />
 
-                          {/* Hover action bar */}
+                          {/* Hover action bar — accessible touch on mobile, hover on desktop */}
                           <div
                             className={cn(
-                              "mt-1.5 flex items-center gap-1.5 opacity-0 transition-all duration-200 group-hover:opacity-100",
+                              "mt-1.5 flex items-center gap-1 sm:gap-1.5 transition-all duration-200 opacity-90 sm:opacity-0 sm:group-hover:opacity-100",
                               m.role === "user"
-                                ? "justify-end pr-1"
-                                : "justify-start pl-12",
+                                ? "justify-end pr-1 sm:pr-2"
+                                : "justify-start pl-8 sm:pl-10 md:pl-12",
                             )}
                           >
                             {/* Copy */}
@@ -544,9 +599,9 @@ const ChatPane = forwardRef(function ChatPane(
                                   className="h-7 w-7 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs transition-colors shrink-0"
                                 >
                                   {copiedId === m.id ? (
-                                    <Check className="h-4 w-4 text-emerald-500" />
+                                    <Check className="h-3.5 w-3.5 text-emerald-500" />
                                   ) : (
-                                    <Copy className="h-4 w-4" />
+                                    <Copy className="h-3.5 w-3.5" />
                                   )}
                                 </Button>
                               </TooltipTrigger>
@@ -563,7 +618,7 @@ const ChatPane = forwardRef(function ChatPane(
                                       onClick={() => startEdit(m)}
                                       className="h-7 w-7 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs transition-colors shrink-0"
                                     >
-                                      <Pencil className="h-4 w-4" />
+                                      <Pencil className="h-3.5 w-3.5" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent side="top">Edit message</TooltipContent>
@@ -576,7 +631,7 @@ const ChatPane = forwardRef(function ChatPane(
                                       onClick={() => onResendMessage?.(m.id)}
                                       className="h-7 w-7 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs transition-colors shrink-0"
                                     >
-                                      <RefreshCw className="h-4 w-4" />
+                                      <RefreshCw className="h-3.5 w-3.5" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent side="top">Resend message</TooltipContent>
@@ -585,7 +640,7 @@ const ChatPane = forwardRef(function ChatPane(
                             )}
 
                             {m.role === "assistant" && (
-                              <div className="flex items-center gap-1.5 ml-1">
+                              <div className="flex items-center gap-1 sm:gap-1.5 ml-1">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button variant="outline" size="icon" className="h-7 w-7 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs transition-colors">
@@ -656,17 +711,17 @@ const ChatPane = forwardRef(function ChatPane(
                           initial={{ opacity: 0, y: 6, scale: 0.97 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           transition={{ duration: 0.25, ease: "easeOut" }}
-                          className="flex gap-4 px-2 w-full justify-start mb-2"
+                          className="flex gap-2 sm:gap-4 px-1 sm:px-2 w-full justify-start mb-2"
                         >
                           <div className={cn(
-                            "ml-12 flex items-start gap-3 rounded-2xl border bg-gradient-to-r backdrop-blur-md px-4 py-3 shadow-md max-w-[500px]",
+                            "ml-0 sm:ml-9 md:ml-12 flex items-start gap-2.5 sm:gap-3 rounded-xl sm:rounded-2xl border bg-gradient-to-r backdrop-blur-md px-3 sm:px-4 py-2.5 sm:py-3 shadow-md w-full max-w-full sm:max-w-xl",
                             theme.bg
                           )}>
                             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-background/80 shadow-xs border border-border">
                               <Route className={cn("h-4 w-4", theme.text)} />
                             </div>
-                            <div className="flex flex-col gap-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex flex-col gap-1 min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                 <span className={cn("text-[10px] font-extrabold uppercase tracking-wider", theme.text)}>
                                   Supervisor Agent
                                 </span>
@@ -680,7 +735,7 @@ const ChatPane = forwardRef(function ChatPane(
                                 )}
                               </div>
                               {supervisorDecision.reasoning && (
-                                <p className="text-[11.5px] text-foreground/90 leading-snug font-medium">
+                                <p className="text-[11.5px] text-foreground/90 leading-snug font-medium break-words">
                                   {supervisorDecision.reasoning}
                                 </p>
                               )}
@@ -702,10 +757,8 @@ const ChatPane = forwardRef(function ChatPane(
             </div>
           </div>
 
-
-
           {/* Liquid fade gradient above composer */}
-          <div className="pointer-events-none absolute bottom-[var(--composer-h,140px)] left-0 right-0 h-20 z-10 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent" />
+          <div className="pointer-events-none absolute bottom-[var(--composer-h,140px)] left-0 right-0 h-16 sm:h-20 z-10 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent" />
 
           {/* Scroll-to-bottom button — sits just above the composer */}
           <AnimatePresence>
@@ -715,11 +768,11 @@ const ChatPane = forwardRef(function ChatPane(
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
                 transition={{ duration: 0.18 }}
-                className="relative z-20 flex justify-center py-1.5"
+                className="relative z-20 flex justify-center py-1 sm:py-1.5"
               >
                 <motion.button
                   onClick={scrollToBottom}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-secondary-foreground border border-border shadow-sm hover:bg-accent transition-all duration-200 cursor-pointer"
+                  className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground border border-border shadow-md hover:bg-accent transition-all duration-200 cursor-pointer"
                   aria-label="Scroll to bottom"
                 >
                   <motion.span
@@ -735,7 +788,7 @@ const ChatPane = forwardRef(function ChatPane(
           </AnimatePresence>
 
           {/* Composer at the bottom */}
-          <div className="relative z-10">
+          <div className="relative z-10 w-full px-2 sm:px-4">
             <Composer
               ref={composerRef}
               onSend={async (text, mode, fileRef, activeFeatures, isVoice = false) => {
@@ -756,10 +809,12 @@ const ChatPane = forwardRef(function ChatPane(
           </div>
 
           {/* Footer Hint below Composer */}
-          <p className="mx-auto pb-4 text-center text-[11px] text-zinc-500/80 dark:text-zinc-400/80 relative z-10 flex items-center justify-center gap-2 flex-wrap">
+          <p className="mx-auto pb-3 sm:pb-4 pt-1 text-center text-[10px] sm:text-[11px] text-zinc-500/80 dark:text-zinc-400/80 relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap px-2">
             <span>AI can make mistakes. Verify important information.</span>
             <span className="opacity-40">•</span>
-            <span className="font-medium text-zinc-600 dark:text-zinc-300">If you want to setup, write <code className="px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-mono text-[10.5px] border border-zinc-300/60 dark:border-zinc-700/60 font-bold">/</code></span>
+            <span className="font-medium text-zinc-600 dark:text-zinc-300">
+              Type <code className="px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-mono text-[10px] border border-zinc-300/60 dark:border-zinc-700/60 font-bold">/</code> for setup & tools
+            </span>
           </p>
 
         </>

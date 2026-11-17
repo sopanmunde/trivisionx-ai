@@ -118,6 +118,16 @@ interface ChartTooltipContentProps extends React.ComponentProps<'div'> {
   labelKey?: string
 }
 
+// Known Recharts-internal props that must NOT be forwarded to a DOM <div>
+const RECHARTS_INTERNAL_PROPS = new Set([
+  'cursor', 'cursorStyle', 'contentStyle', 'itemStyle', 'labelStyle',
+  'wrapperStyle', 'filterNull', 'isAnimationActive', 'coordinate',
+  'accessibilityLayer', 'viewBox', 'offset', 'allowEscapeViewBox',
+  'animationDuration', 'animationEasing', 'axisId', 'reverseDirection',
+  'useTranslate3d', 'activeIndex', 'activeCoordinate', 'activePayload',
+  'activeTooltipIndex', 'position',
+])
+
 function ChartTooltipContent({
   active,
   payload,
@@ -132,43 +142,12 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-  contentStyle,
-  itemStyle,
-  labelStyle,
-  wrapperStyle,
-  cursorStyle,
-  filterNull,
-  isAnimationActive,
-  coordinate,
-  accessibilityLayer,
-  viewBox,
-  offset,
-  allowEscapeViewBox,
-  animationDuration,
-  animationEasing,
-  axisId,
-  reverseDirection,
-  useTranslate3d,
-  ...props
-}: ChartTooltipContentProps & {
-  contentStyle?: any
-  itemStyle?: any
-  labelStyle?: any
-  wrapperStyle?: any
-  cursorStyle?: any
-  filterNull?: any
-  isAnimationActive?: boolean
-  coordinate?: any
-  accessibilityLayer?: any
-  viewBox?: any
-  offset?: any
-  allowEscapeViewBox?: any
-  animationDuration?: any
-  animationEasing?: any
-  axisId?: any
-  reverseDirection?: any
-  useTranslate3d?: any
-}) {
+  ...rest
+}: ChartTooltipContentProps & Record<string, any>) {
+  // Strip out all Recharts internal props before spreading onto a DOM element
+  const props = Object.fromEntries(
+    Object.entries(rest).filter(([k]) => !RECHARTS_INTERNAL_PROPS.has(k))
+  )
   const { config } = useChart()
 
   const tooltipLabel = React.useMemo(() => {
@@ -301,14 +280,23 @@ interface ChartLegendContentProps extends React.ComponentProps<'div'> {
   nameKey?: string
 }
 
+// Known Recharts-internal legend props that must NOT reach a DOM <div>
+const RECHARTS_LEGEND_INTERNAL_PROPS = new Set([
+  'align', 'layout', 'chartWidth', 'chartHeight', 'margin', 'iconSize', 'iconType',
+  'wrapperStyle', 'formatter', 'onMouseEnter', 'onMouseLeave',
+])
+
 function ChartLegendContent({
   className,
   hideIcon = false,
   payload,
   verticalAlign = 'bottom',
   nameKey,
-  ...props
-}: ChartLegendContentProps) {
+  ...rest
+}: ChartLegendContentProps & Record<string, any>) {
+  const props = Object.fromEntries(
+    Object.entries(rest).filter(([k]) => !RECHARTS_LEGEND_INTERNAL_PROPS.has(k))
+  )
   const { config } = useChart()
 
   if (!payload?.length) {

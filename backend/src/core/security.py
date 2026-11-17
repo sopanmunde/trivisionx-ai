@@ -4,10 +4,13 @@ from datetime import datetime, timedelta
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 import hashlib
+import logging
 from core.config import settings
 from database.mongodb.connection import get_database
 from core.constants import COLLECTION_USERS
 from schemas.user import TokenData
+
+logger = logging.getLogger(__name__)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
@@ -75,16 +78,25 @@ async def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 async def get_user(email: str):
     import asyncio
-    from pymongo.errors import PyMongoError
+    from pymongo.errors import PyMongoError, NetworkTimeout, ServerSelectionTimeoutError
     try:
         return await _users().find_one({"email": email})
+    except (NetworkTimeout, ServerSelectionTimeoutError) as e:
+        logger.error(f"[Security] MongoDB SSL/network timeout fetching user '{email}': {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "Cannot reach the database — SSL handshake timed out. "
+                "Check your internet connection and MongoDB Atlas IP whitelist."
+            ),
+        )
     except PyMongoError as e:
         if type(e).__name__ == "_OperationCancelled":
             raise asyncio.CancelledError() from e
         logger.error(f"[Security] Database connectivity error fetching user '{email}': {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Database cluster unreachable (network/DNS issue). Please check your internet connection or MongoDB Atlas cluster whitelist.",
+            detail="Database cluster unreachable. Please check your connection or MongoDB Atlas cluster whitelist.",
         )
 
 

@@ -41,7 +41,7 @@ function CodeBlock({ children, className, ...props }) {
           )}
         </button>
       </div>
-      <pre className="overflow-x-auto p-4 text-[13.5px] leading-relaxed">
+      <pre className="overflow-x-auto p-3 sm:p-4 text-[12.5px] sm:text-[13.5px] leading-relaxed scrollbar-thin">
         <code className={className} {...props}>
           {children}
         </code>
@@ -121,13 +121,13 @@ export default function Message({ role, content, sources, quality_score, agent_s
   return (
     <div
       className={cls(
-        "flex gap-4 px-2 w-full",
+        "flex gap-2.5 sm:gap-4 px-1 sm:px-2 w-full",
         isUser ? "justify-end" : "justify-start",
       )}
     >
       {/* AI avatar */}
       {!isUser && (
-        <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shadow-sm">
+        <div className="mt-1 flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shadow-sm">
           <svg
             className="w-[50%] h-[50%] text-zinc-700 dark:text-zinc-300"
             viewBox="0 0 24 24"
@@ -148,10 +148,10 @@ export default function Message({ role, content, sources, quality_score, agent_s
 
       <div
         className={cls(
-          "text-[15px] leading-relaxed max-w-[85%] sm:max-w-[75%] transition-all duration-200",
+          "text-[14px] sm:text-[15px] leading-relaxed max-w-[92%] sm:max-w-[85%] md:max-w-[78%] transition-all duration-200",
           isUser
-            ? "rounded-2xl bg-zinc-100 dark:bg-zinc-800 px-4 py-2.5 text-zinc-800 dark:text-zinc-100 select-text"
-            : "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-sm px-4 py-3.5 text-zinc-800 dark:text-zinc-100 shadow-sm w-full"
+            ? "rounded-2xl bg-zinc-100 dark:bg-zinc-800 px-3.5 sm:px-4 py-2 sm:py-2.5 text-zinc-800 dark:text-zinc-100 select-text"
+            : "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-sm px-3.5 sm:px-4 py-3 sm:py-3.5 text-zinc-800 dark:text-zinc-100 shadow-sm w-full"
         )}
       >
         {content !== undefined ? (

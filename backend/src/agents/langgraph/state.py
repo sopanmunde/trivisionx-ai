@@ -13,7 +13,7 @@ from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage
 
 
-class AgentState(TypedDict):
+class AgentState(TypedDict, total=False):
     """
     Shared state passed between all LangGraph nodes.
     All fields must have sensible defaults — nodes only update fields they own.

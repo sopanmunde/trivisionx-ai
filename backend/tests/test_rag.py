@@ -104,6 +104,7 @@ class TestCitationNode:
             for i in range(5)
         ]
         state = {"citations": citations, "retrieved_docs": [], "current_node": ""}
+        # pyrefly: ignore[bad-argument-type]
         result = await citation_node(state)
         confs = [c["confidence"] for c in result["citations"]]
         assert confs == sorted(confs, reverse=True), "Confidence should decay with rank"
@@ -160,6 +161,7 @@ class TestReportNode:
             "report_mode": True,
             "current_node": "",
         }
+        # pyrefly: ignore[bad-argument-type]
         result = await report_node(state)
         assert "semantic MMR retrieval" in result["final_output"]
 

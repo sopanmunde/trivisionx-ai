@@ -2,11 +2,11 @@
 
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { TriVisionXLogo } from "@/components/TriVisionXLogo";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import Link from "next/link";
 
 function GithubIcon({ className }: { className?: string }) {
@@ -19,7 +19,6 @@ function GithubIcon({ className }: { className?: string }) {
 
 const navItems = [
   { label: "Features", href: "/features" },
-  { label: "Pricing", href: "/pricing" },
   { label: "Docs", href: "/docs" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
@@ -41,7 +40,7 @@ export function Navbar() {
     >
       <nav
         ref={navRef}
-        className="relative flex items-center justify-between px-6 py-3 rounded-xl bg-card/70 backdrop-blur-md border border-border text-foreground shadow-sm"
+        className="relative flex items-center justify-between px-6 py-3 rounded-2xl bg-card/85 dark:bg-card/65 backdrop-blur-2xl border border-border/80 text-foreground [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_8px_30px_rgba(0,0,0,.08)] dark:[box-shadow:0_-15px_40px_-15px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.06),0_10px_30px_rgba(0,0,0,.5)]"
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
@@ -78,20 +77,11 @@ export function Navbar() {
 
         {/* CTA Buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.dispatchEvent(new CustomEvent("toggle-command-palette"))}
-            className="hidden lg:flex items-center gap-2 font-mono text-xs text-muted-foreground hover:text-foreground h-9 px-3.5"
-            title="Open Command Palette (Cmd+K / Ctrl+K)"
-          >
-            <Search className="w-3.5 h-3.5 text-primary" />
-            <span>Search Commands</span>
-            <KbdGroup className="ml-1">
-              <Kbd>⌘</Kbd>
-              <Kbd>K</Kbd>
-            </KbdGroup>
-          </Button>
+          <AnimatedThemeToggler
+            variant="circle"
+            className="h-9 w-9 rounded-lg border border-border bg-card/80 hover:bg-accent hover:text-foreground flex items-center justify-center transition-colors cursor-pointer shadow-xs"
+            title="Toggle theme"
+          />
 
           <RainbowButton asChild variant="black" size="sm">
             <a href="https://github.com/sopanmunde/trivisionx-ai" target="_blank" rel="noopener noreferrer">
@@ -110,7 +100,7 @@ export function Navbar() {
           <Button
             asChild
             size="sm"
-            className="relative overflow-hidden shimmer-btn bg-primary text-primary-foreground hover:bg-primary/80 rounded-md px-4 h-9 font-semibold transition-all shadow-xs"
+            className="relative overflow-hidden shimmer-btn bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 h-9 font-semibold transition-all shadow-xs"
           >
             <Link href="/signup">
               <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent" />
@@ -121,13 +111,20 @@ export function Navbar() {
 
 
         {/* Mobile Menu Button */}
-        <button
-          className="md:hidden p-2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-md"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          <AnimatedThemeToggler
+            variant="circle"
+            className="h-9 w-9 rounded-lg border border-border bg-card/80 hover:bg-accent hover:text-foreground flex items-center justify-center transition-colors cursor-pointer shadow-xs"
+            title="Toggle theme"
+          />
+          <button
+            className="p-2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-md border border-border"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </nav>
 
       {/* Mobile Menu */}
@@ -149,17 +146,17 @@ export function Navbar() {
                 {item.label}
               </Link>
             ))}
-            <hr className="border-zinc-200 dark:border-zinc-800 my-2" />
+            <hr className="border-border my-2" />
             <Button
               asChild
               variant="ghost"
-              className="justify-start text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+              className="justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
             >
               <Link href="/login">Sign In</Link>
             </Button>
             <Button
               asChild
-              className="shimmer-btn bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-md"
+              className="shimmer-btn bg-primary text-primary-foreground hover:bg-primary/90 rounded-md font-semibold"
             >
               <Link href="/signup">Get Started</Link>
             </Button>

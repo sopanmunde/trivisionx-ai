@@ -1,174 +1,204 @@
 "use client";
 
-import { useState } from "react";
-import { motion, cubicBezier } from "framer-motion";
-import { ArrowRight, Play, Sparkles, ShieldCheck, Cpu, Database, ChevronRight, Terminal } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  Play,
+  ShieldCheck,
+  Cpu,
+  Database,
+  Zap,
+  Sparkles,
+  ChevronRight,
+  Activity,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { TriVisionXLogo } from "@/components/TriVisionXLogo";
-import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
-import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Meteors } from "@/components/ui/meteors";
-import { SparklesText } from "@/components/ui/sparkles-text";
-
-const textRevealVariants = {
-  hidden: { y: "100%" },
-  visible: (i: number) => ({
-    y: 0,
-    transition: {
-      duration: 0.8,
-      ease: cubicBezier(0.22, 1, 0.36, 1),
-      delay: i * 0.1,
-    },
-  }),
-};
+import { Highlighter } from "@/components/ui/highlighter";
+import { LogoMarquee } from "@/components/logo-marquee";
 
 export function Hero() {
-  const [isVideoOpen, setIsVideoOpen] = useState(false);
-
   return (
-    <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 pt-32 pb-24 overflow-hidden bg-background text-foreground">
-      {/* Background Radial Glow & Grid Mesh */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.25)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.25)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
-      <div className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 w-[600px] h-[350px] rounded-full blur-[120px] opacity-[0.07] bg-primary" />
+    <section className="relative min-h-[92vh] flex flex-col items-center justify-between gap-12 px-4 sm:px-6 pt-32 pb-12 overflow-hidden bg-background text-foreground select-none">
+      {/* ─── ANIMATED LIGHT EFFECTS LAYER ─── */}
 
-      <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
-        {/* Meteors Effect */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <Meteors number={12} />
-        </div>
-        {/* Animated Feature Badge */}
+      {/* 1. Top Horizon Luminous Light Beam */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent pointer-events-none" />
+
+      {/* 2. Top-Center Breathing Radial Aurora Light Cone */}
+      <motion.div
+        animate={{
+          opacity: [0.18, 0.32, 0.18],
+          scale: [1, 1.08, 1],
+        }}
+        transition={{
+          duration: 7,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] sm:w-[900px] h-[450px] rounded-full blur-[140px] bg-primary/20 dark:bg-primary/25"
+      />
+
+      {/* 3. Secondary Ambient Spotlight Behind Core Content */}
+      <motion.div
+        animate={{
+          opacity: [0.12, 0.22, 0.12],
+          scale: [0.95, 1.04, 0.95],
+        }}
+        transition={{
+          duration: 9,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1,
+        }}
+        className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[380px] sm:w-[560px] h-[300px] rounded-full blur-[120px] bg-primary/15 dark:bg-primary/20"
+      />
+
+      {/* 4. Fine Geometric Mesh Grid with Radial Spotlight Mask */}
+      <div className="pointer-events-none absolute inset-0 dot-grid [mask-image:radial-gradient(ellipse_70%_60%_at_50%_25%,#000_65%,transparent_100%)] opacity-40 dark:opacity-25" />
+
+      {/* 5. Isometric Line-Grid Coordinate Overlay */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.35)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.35)_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] [mask-image:radial-gradient(ellipse_65%_55%_at_50%_25%,#000_60%,transparent_100%)]" />
+
+      {/* 6. Subtle Drifting Light Meteors */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <Meteors number={12} />
+      </div>
+
+      {/* ─── HERO CONTENT STAGE ─── */}
+      <div className="relative z-10 max-w-5xl mx-auto w-full flex flex-col items-center text-center space-y-6 sm:space-y-8">
+        
+        {/* Animated Shimmer Announcement Badge */}
         <motion.div
-          initial={{ opacity: 0, y: -15 }}
+          initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex justify-center"
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="relative inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-card/80 backdrop-blur-md shadow-xs hover:border-primary/50 transition-all cursor-pointer group"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card/80 backdrop-blur-md text-xs font-semibold text-foreground shadow-2xs hover:bg-accent transition-all cursor-pointer group">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-mono text-emerald-400 group-hover:text-emerald-300 transition-colors">
-              LangGraph 5-Agent Pipeline Active
-            </span>
-            <ChevronRight className="size-3.5 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
-          </div>
+          {/* Pulsing Primary Light Beacon */}
+          <span className="relative flex size-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex rounded-full size-2 bg-primary" />
+          </span>
+          <span className="font-mono text-[11px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+            TriVisionX OS v2.4 · Multi-Agent Swarm Engine
+          </span>
+          <ChevronRight className="size-3 text-muted-foreground group-hover:text-foreground transition-transform group-hover:translate-x-0.5" />
         </motion.div>
 
-        {/* Logo Mark */}
+        {/* Brand Logo with Ambient Glow */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.88 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="flex justify-center"
+          className="relative flex items-center justify-center pt-1"
         >
-          <TriVisionXLogo size="xl" glow={false} animate={false} />
+          {/* Logo Radial Backlight */}
+          <div className="absolute inset-0 rounded-full blur-xl bg-primary/20 scale-125 pointer-events-none animate-pulse" />
+          <TriVisionXLogo size="lg" glow={true} shimmer={true} animate={true} />
         </motion.div>
 
-        {/* Magic Typography Headline */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.05] max-w-4xl mx-auto">
-          <span className="block overflow-hidden">
-            <motion.span
-              className="block"
-              variants={textRevealVariants}
-              initial="hidden"
-              animate="visible"
-              custom={0}
-            >
-              <SparklesText
-                sparklesCount={15}
-                colors={{ first: "#9E7AFF", second: "#FE8BBB" }}
-                className="text-4xl sm:text-6xl lg:text-7xl font-extrabold"
-              >
-                Autonomous AI Agents
-              </SparklesText>
-            </motion.span>
-          </span>
-          <span className="block overflow-hidden mt-1">
-            <motion.span
-              className="block text-muted-foreground font-semibold"
-              variants={textRevealVariants}
-              initial="hidden"
-              animate="visible"
-              custom={1}
-            >
-              Orchestrated by LangGraph.
-            </motion.span>
-          </span>
-        </h1>
+        {/* Main Headline with Animated Light Gradient */}
+        <div className="space-y-3 max-w-4xl mx-auto">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.15 }}
+            className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.08] text-foreground"
+          >
+            <span className="block bg-gradient-to-b from-foreground via-foreground/95 to-foreground/65 bg-clip-text text-transparent">
+              Autonomous AI Agents
+            </span>
+            <span className="block mt-1 sm:mt-2 text-2xl sm:text-4xl md:text-5xl font-semibold text-muted-foreground">
+              Orchestrated by{" "}
+              <span className="text-foreground">
+                <Highlighter action="underline" color="#3b82f6" strokeWidth={2.5} isView={false}>
+                  LangGraph
+                </Highlighter>
+              </span>
+              .
+            </span>
+          </motion.h1>
+        </div>
 
-        {/* Single-Line Subheadline */}
-        {/* <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto font-medium font-sans"
-        >
-          Autonomous AI Agents
-        </motion.p> */}
-
-        {/* CTAs */}
+        {/* Dual Call-To-Action with Animated Light Borders & Glows */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2"
+          transition={{ duration: 0.6, delay: 0.35 }}
+          className="flex flex-wrap items-center justify-center gap-3.5 pt-2"
         >
           <a href="/dashboard">
             <Button
               size="lg"
-              className="h-12 px-8 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transition-all hover:scale-[1.02] cursor-pointer gap-2"
+              className="relative group h-12 px-8 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer gap-2"
             >
-              <span>Get Started</span>
-              <ArrowRight className="size-[18px]" />
+              <span>Get Started Free</span>
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </a>
 
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => setIsVideoOpen(true)}
-            className="h-12 px-7 rounded-md text-sm font-semibold border-border bg-card hover:bg-accent text-foreground shadow-2xs transition-all duration-200 cursor-pointer gap-2.5"
-          >
-            <Play className="size-4 text-foreground fill-foreground/20" />
-            <span>Watch Demo</span>
-          </Button>
+          <a href="#demo-explode">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 px-7 rounded-xl text-sm font-semibold border-border bg-card/80 backdrop-blur-md hover:bg-accent text-foreground hover:border-primary/40 shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer gap-2.5"
+            >
+              <Play className="size-4 text-primary fill-primary/20" />
+              <span>Explore Interactive Demo</span>
+            </Button>
+          </a>
         </motion.div>
 
-        {/* Trust bar */}
-        <motion.p
+        {/* Trust Metric Micro-Ribbon */}
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.65 }}
-          className="text-xs text-muted-foreground font-medium"
+          transition={{ duration: 0.6, delay: 0.45 }}
+          className="flex items-center gap-2 text-xs font-mono text-muted-foreground"
         >
-          No credit card required · Free tier includes 10k execution cycles/month
-        </motion.p>
+          <span className="size-1.5 rounded-full bg-primary" />
+          <span>Zero credit card required</span>
+          <span className="text-muted-foreground/40">·</span>
+          <span>10k free execution runs/month</span>
+          <span className="text-muted-foreground/40">·</span>
+          <span>99.9% Uptime SLA</span>
+        </motion.div>
 
-        {/* Interactive Feature Pill Bar */}
+        {/* Interactive Glassmorphic Feature Light Chips with 3D Depth */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="pt-6 flex flex-wrap items-center justify-center gap-2.5 text-xs font-mono text-muted-foreground"
+          transition={{ duration: 0.7, delay: 0.55 }}
+          className="pt-4 grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center gap-3 max-w-3xl"
         >
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-border bg-card/60 transition-colors hover:bg-card hover:text-foreground">
-            <Cpu className="size-3.5" /> 5-Agent Swarm
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-border bg-card/60 transition-colors hover:bg-card hover:text-foreground">
-            <Database className="size-3.5" /> Pinecone Vector RAG
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-border bg-card/60 transition-colors hover:bg-card hover:text-foreground">
-            <ShieldCheck className="size-3.5" /> Citation Audited
-          </span>
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-border/80 bg-card/80 dark:bg-card/60 backdrop-blur-xl text-xs font-mono text-foreground hover:border-primary/50 hover:bg-card/95 transition-all duration-300 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_12px_rgba(0,0,0,.04)] dark:[box-shadow:0_-15px_50px_-15px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_8px_20px_rgba(0,0,0,.4)] hover:shadow-lg hover:-translate-y-0.5 cursor-default">
+            <Cpu className="size-3.5 text-primary shrink-0" />
+            <span className="truncate">5-Agent Swarm</span>
+          </div>
+
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-border/80 bg-card/80 dark:bg-card/60 backdrop-blur-xl text-xs font-mono text-foreground hover:border-primary/50 hover:bg-card/95 transition-all duration-300 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_12px_rgba(0,0,0,.04)] dark:[box-shadow:0_-15px_50px_-15px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_8px_20px_rgba(0,0,0,.4)] hover:shadow-lg hover:-translate-y-0.5 cursor-default">
+            <Database className="size-3.5 text-primary shrink-0" />
+            <span className="truncate">Pinecone Vector RAG</span>
+          </div>
+
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-border/80 bg-card/80 dark:bg-card/60 backdrop-blur-xl text-xs font-mono text-foreground hover:border-primary/50 hover:bg-card/95 transition-all duration-300 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_12px_rgba(0,0,0,.04)] dark:[box-shadow:0_-15px_50px_-15px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_8px_20px_rgba(0,0,0,.4)] hover:shadow-lg hover:-translate-y-0.5 cursor-default">
+            <ShieldCheck className="size-3.5 text-primary shrink-0" />
+            <span className="truncate">Citation Audited</span>
+          </div>
+
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-border/80 bg-card/80 dark:bg-card/60 backdrop-blur-xl text-xs font-mono text-foreground hover:border-primary/50 hover:bg-card/95 transition-all duration-300 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_12px_rgba(0,0,0,.04)] dark:[box-shadow:0_-15px_50px_-15px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_8px_20px_rgba(0,0,0,.4)] hover:shadow-lg hover:-translate-y-0.5 cursor-default">
+            <Zap className="size-3.5 text-primary shrink-0" />
+            <span className="truncate">Real-Time SSE Streams</span>
+          </div>
         </motion.div>
 
-        {/* Video Dialog */}
-        <HeroVideoDialog
-          animationStyle="from-bottom"
-          hideTrigger={true}
-          isOpen={isVideoOpen}
-          onOpenChange={setIsVideoOpen}
-          videoSrc="https://youtu.be/yVSE9QFFcTU"
-        />
       </div>
+
+      {/* Bottom Ecosystem Brand Marquee Inside Hero */}
+      <LogoMarquee />
     </section>
   );
 }

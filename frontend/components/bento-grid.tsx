@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import {
   Bot, Search, FileText, Code, Cpu, Database,
@@ -27,7 +27,7 @@ function AgentWorkflowVisual() {
     { id: "retriever", label: "Retriever", x: 120, y: 20, color: "text-primary" },
     { id: "coder", label: "Code Dev", x: 120, y: 80, color: "text-primary" },
     { id: "summarizer", label: "Summarizer", x: 200, y: 50, color: "text-primary" },
-    { id: "reporter", label: "Reporter", x: 280, y: 50, color: "text-emerald-500" },
+    { id: "reporter", label: "Reporter", x: 280, y: 50, color: "text-primary" },
   ];
 
   return (
@@ -377,86 +377,110 @@ function CodingLoopVisual() {
   );
 }
 
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.22, 1, 0.36, 1] as const,
-    },
-  },
-};
-
 export function BentoGrid() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Link scatter-snap explosion animation to page scroll
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 90,
+    damping: 24,
+    mass: 0.5,
+  });
+
+  // As you scroll into view:
+  // [0.06, 0.42]: Scattered cards converge & snap into rigid grid
+  // [0.42, 0.72]: Held in snapped position
+  // [0.72, 0.95]: Disperse on scroll past
+  const assemble = useTransform(smoothProgress, [0.06, 0.42, 0.72, 0.95], [0, 1, 1, 0]);
+  const cardOpacity = useTransform(assemble, [0, 0.25], [0.3, 1]);
+
+  // Card 1: Top-Left Large card (slides in from left with tilt)
+  const c1X = useTransform(assemble, [0, 1], [-80, 0]);
+  const c1Y = useTransform(assemble, [0, 1], [-40, 0]);
+  const c1R = useTransform(assemble, [0, 1], [-4, 0]);
+
+  // Card 2: Top-Right card (slides in from right with tilt)
+  const c2X = useTransform(assemble, [0, 1], [80, 0]);
+  const c2Y = useTransform(assemble, [0, 1], [-40, 0]);
+  const c2R = useTransform(assemble, [0, 1], [5, 0]);
+
+  // Card 3: Bottom-Left card (slides in from bottom-left)
+  const c3X = useTransform(assemble, [0, 1], [-70, 0]);
+  const c3Y = useTransform(assemble, [0, 1], [60, 0]);
+  const c3R = useTransform(assemble, [0, 1], [3, 0]);
+
+  // Card 4: Bottom-Middle card (drops in vertically with scale)
+  const c4Y = useTransform(assemble, [0, 1], [80, 0]);
+  const c4Scale = useTransform(assemble, [0, 1], [0.92, 1]);
+
+  // Card 5: Bottom-Right card (slides in from bottom-right)
+  const c5X = useTransform(assemble, [0, 1], [70, 0]);
+  const c5Y = useTransform(assemble, [0, 1], [60, 0]);
+  const c5R = useTransform(assemble, [0, 1], [-3, 0]);
 
   return (
-    <section id="features" className="py-20 px-4 bg-background text-foreground transition-colors">
-      <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-14"
-        >
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
-            Enterprise-Grade Agentic Automation
+    <section ref={sectionRef} id="features" className="relative py-28 px-4 sm:px-6 lg:px-8 bg-background text-foreground transition-colors overflow-hidden select-none">
+      {/* 3D Ambient Backdrop Spotlight */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
+
+      <div className="relative z-10 max-w-6xl mx-auto">
+        {/* Unified 3D Section Header */}
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-muted/50 text-foreground text-xs font-medium tracking-wide shadow-xs mb-4">
+            <Bot className="w-3.5 h-3.5 text-primary" />
+            <span>AUTONOMOUS AGENT ORCHESTRATION</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground">
+            Self-correcting agent loops.
+            <br />
+            <span className="text-muted-foreground font-semibold">Engineered for enterprise scale.</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base mb-8">
+          <p className="max-w-2xl mx-auto text-sm sm:text-base text-muted-foreground mt-3 leading-relaxed">
             Streamline complex workflows with self-correcting agent systems, semantic memory retrieval, and autonomous code execution loops.
           </p>
-          <Button asChild variant="outline" size="sm" className="gap-2 font-mono text-xs">
-            <a href="#automation-graph">
-              <span>Explore Interactive Agent Canvas</span>
-              <span className="text-sm">→</span>
-            </a>
-          </Button>
-        </motion.div>
+        </div>
 
-        <motion.div
-          ref={ref}
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
+        {/* Bento Grid with Kinetic Parallax Scatter-Snap Explode */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" style={{ perspective: "1200px" }}>
           {/* 1. Large Card: Agentic Workflow Orchestration */}
-          <motion.div variants={itemVariants} className="md:col-span-2">
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-6 flex flex-col justify-between">
+          <motion.div
+            style={{
+              x: c1X,
+              y: c1Y,
+              rotateZ: c1R,
+              opacity: cardOpacity,
+              transformStyle: "preserve-3d",
+            }}
+            className="md:col-span-2"
+          >
+            <div className="h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 hover:bg-card/95 hover:border-primary/50 backdrop-blur-xl transition-all duration-500 ease-out p-6 flex flex-col justify-between [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:-translate-y-1">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="flex-1">
-                  <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-4">
+                  <div className="p-2.5 rounded-xl bg-accent text-accent-foreground w-fit mb-4 border border-border/70">
                     <Bot className="w-5 h-5 text-primary" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">
+                  <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">
                     Agentic Workflow Orchestration
                   </h3>
                   <p className="text-muted-foreground text-sm max-w-md mb-4 leading-relaxed">
                     Autonomous orchestration of specialized AI agents built with LangGraph. Intelligently routes and schedules tasks across planning, semantic querying, logic synthesis, and reporter agents.
                   </p>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span>State-Machine loops (LangGraph backend)</span>
                     </div>
-                    <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span>Dynamic task routing with parallel execution</span>
                     </div>
-                    <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span>Self-healing cyclic planning loops</span>
                     </div>
                   </div>
@@ -465,73 +489,104 @@ export function BentoGrid() {
                   <AgentWorkflowVisual />
                 </div>
               </div>
-            </Card>
+            </div>
           </motion.div>
 
           {/* 2. Autonomous Context Retrieval */}
-          <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+          <motion.div
+            style={{
+              x: c2X,
+              y: c2Y,
+              rotateZ: c2R,
+              opacity: cardOpacity,
+              transformStyle: "preserve-3d",
+            }}
+          >
+            <div className="h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 hover:bg-card/95 hover:border-primary/50 backdrop-blur-xl transition-all duration-500 ease-out p-5 flex flex-col justify-between [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:-translate-y-1">
               <div className="mb-4">
-                <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
+                <div className="p-2 rounded-xl bg-accent text-accent-foreground w-fit mb-3 border border-border/70">
                   <Search className="w-4 h-4 text-primary" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-base font-bold text-foreground mb-1.5">Autonomous Context Retrieval</h3>
+                <h3 className="text-base font-bold text-foreground mb-1.5 tracking-tight">Autonomous Context Retrieval</h3>
                 <p className="text-muted-foreground text-xs leading-relaxed">
-                  Automated semantic memory extraction using MMR over Pinecone vector stores, providing agents with contextually dense and noise-filtered local knowledge.
+                  Automated semantic memory extraction using MMR over Pinecone vector stores, providing agents with contextually dense local knowledge.
                 </p>
               </div>
               <RetrievalVisual />
-            </Card>
+            </div>
           </motion.div>
 
           {/* 3. Dynamic Model Routing */}
-          <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+          <motion.div
+            style={{
+              x: c3X,
+              y: c3Y,
+              rotateZ: c3R,
+              opacity: cardOpacity,
+              transformStyle: "preserve-3d",
+            }}
+          >
+            <div className="h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 hover:bg-card/95 hover:border-primary/50 backdrop-blur-xl transition-all duration-500 ease-out p-5 flex flex-col justify-between [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:-translate-y-1">
               <div className="mb-4">
-                <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
+                <div className="p-2 rounded-xl bg-accent text-accent-foreground w-fit mb-3 border border-border/70">
                   <Cpu className="w-4 h-4 text-primary" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-base font-bold text-foreground mb-1.5">Dynamic Model Routing</h3>
+                <h3 className="text-base font-bold text-foreground mb-1.5 tracking-tight">Dynamic Model Routing</h3>
                 <p className="text-muted-foreground text-xs leading-relaxed">
-                  Automated routing of model calls across Gemini, Claude, OpenAI, and DeepSeek, dynamically matching individual agent tasks to the most efficient LLM runtime.
+                  Automated routing of model calls across Gemini, Claude, OpenAI, and DeepSeek, dynamically matching tasks to the most efficient LLM.
                 </p>
               </div>
               <MultiLlmVisual />
-            </Card>
+            </div>
           </motion.div>
 
           {/* 4. Automated Report Synthesis */}
-          <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+          <motion.div
+            style={{
+              y: c4Y,
+              scale: c4Scale,
+              opacity: cardOpacity,
+              transformStyle: "preserve-3d",
+            }}
+          >
+            <div className="h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 hover:bg-card/95 hover:border-primary/50 backdrop-blur-xl transition-all duration-500 ease-out p-5 flex flex-col justify-between [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:-translate-y-1">
               <div className="mb-4">
-                <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
+                <div className="p-2 rounded-xl bg-accent text-accent-foreground w-fit mb-3 border border-border/70">
                   <FileText className="w-4 h-4 text-primary" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-base font-bold text-foreground mb-1.5">Automated Report Synthesis</h3>
+                <h3 className="text-base font-bold text-foreground mb-1.5 tracking-tight">Automated Report Synthesis</h3>
                 <p className="text-muted-foreground text-xs leading-relaxed">
                   Hands-free compilation of verified research reports, complete with auto-generated tables, references, and inline citation mapping.
                 </p>
               </div>
               <ReportVisual />
-            </Card>
+            </div>
           </motion.div>
 
           {/* 5. Self-Correcting Coding Loop */}
-          <motion.div variants={itemVariants}>
-            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/50 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+          <motion.div
+            style={{
+              x: c5X,
+              y: c5Y,
+              rotateZ: c5R,
+              opacity: cardOpacity,
+              transformStyle: "preserve-3d",
+            }}
+          >
+            <div className="h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 hover:bg-card/95 hover:border-primary/50 backdrop-blur-xl transition-all duration-500 ease-out p-5 flex flex-col justify-between [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:-translate-y-1">
               <div className="mb-4">
-                <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
+                <div className="p-2 rounded-xl bg-accent text-accent-foreground w-fit mb-3 border border-border/70">
                   <Code className="w-4 h-4 text-primary" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-base font-bold text-foreground mb-1.5">Self-Correcting Coding Loop</h3>
+                <h3 className="text-base font-bold text-foreground mb-1.5 tracking-tight">Self-Correcting Coding Loop</h3>
                 <p className="text-muted-foreground text-xs leading-relaxed">
-                  An autonomous loop that generates, executes, audits, and debugs code scripts until all unit tests pass successfully without human intervention.
+                  An autonomous loop that generates, executes, audits, and debugs code scripts until all unit tests pass without human intervention.
                 </p>
               </div>
               <CodingLoopVisual />
-            </Card>
+            </div>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

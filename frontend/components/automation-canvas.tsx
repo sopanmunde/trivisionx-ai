@@ -559,20 +559,25 @@ export function AutomationCanvas() {
   };
 
   return (
-    <section id="automation-graph" className="py-20 px-4 bg-background text-foreground transition-colors relative border-t border-border select-none">
+    <section id="automation-graph" className="relative py-28 px-4 sm:px-6 lg:px-8 bg-background text-foreground transition-colors overflow-hidden select-none">
+      {/* 3D Ambient Backdrop Spotlight */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
+
       <div className="max-w-6xl mx-auto relative z-10">
-        {/* Header Section */}
-        <div className="text-center mb-10">
-          <Badge variant="secondary" className="mb-3 gap-1.5 px-3 py-1 text-xs font-mono uppercase tracking-wider">
+        {/* Unified 3D Section Header */}
+        <div className="text-center mb-14 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-muted/50 text-foreground text-xs font-medium tracking-wide shadow-xs mb-4">
             <Activity className="w-3.5 h-3.5 text-primary animate-pulse" />
-            Autonomous Agent Canvas
-          </Badge>
+            <span>INTERACTIVE WORKFLOW SIMULATOR</span>
+          </div>
           
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight mb-3">
-            Enterprise-Grade Agentic Automation
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground">
+            Visual Multi-Agent Canvas.
+            <br />
+            <span className="text-muted-foreground font-semibold">Simulate state graphs in real time.</span>
           </h2>
           
-          <p className="text-muted-foreground max-w-2xl mx-auto text-sm leading-relaxed">
+          <p className="max-w-2xl mx-auto text-sm sm:text-base text-muted-foreground mt-3 leading-relaxed">
             Orchestrate multi-agent systems with self-correcting planning loops, vector memory retrieval, real-time code execution sandboxes, and enterprise telemetry.
           </p>
 
@@ -586,7 +591,7 @@ export function AutomationCanvas() {
                   variant={isActive ? "default" : "outline"}
                   size="sm"
                   onClick={() => setActivePresetId(preset.id)}
-                  className="gap-1.5 font-mono text-xs h-8"
+                  className="gap-1.5 font-mono text-xs h-8 border-border/80"
                 >
                   <Kbd>{idx + 1}</Kbd>
                   <Sparkles className="w-3.5 h-3.5" />
@@ -600,8 +605,8 @@ export function AutomationCanvas() {
           </div>
         </div>
 
-        {/* Compact Canvas & Telemetry Suite Container */}
-        <Card className="p-0 overflow-hidden border-border bg-card shadow-xl relative">
+        {/* Compact Canvas & Telemetry Suite Container with 3D Depth Glass Effect */}
+        <div className="p-0 rounded-3xl overflow-hidden border border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-2xl [box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_20px_50px_rgba(0,0,0,.12),0_40px_80px_rgba(0,0,0,.08)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff10_inset,0_0_0_1px_rgba(255,255,255,.06),0_20px_60px_rgba(0,0,0,.8)] relative">
           {/* Key Commands Modal Panel Overlay */}
           <AnimatePresence>
             {isShortcutsPanelOpen && (
@@ -1065,7 +1070,7 @@ export function AutomationCanvas() {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
     </section>
   );

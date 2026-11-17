@@ -151,7 +151,13 @@ async def supervisor_node(state: AgentState) -> dict:
                 temperature=0.0,
             )
             structured_llm = llm.with_structured_output(SupervisorDecision)
-            decision_obj = await structured_llm.ainvoke(messages)
+            raw_decision = await structured_llm.ainvoke(messages)
+            if isinstance(raw_decision, SupervisorDecision):
+                decision_obj = raw_decision
+            elif isinstance(raw_decision, dict):
+                decision_obj = SupervisorDecision.model_validate(raw_decision)
+            else:
+                decision_obj = None
             break
 
         except Exception as e:

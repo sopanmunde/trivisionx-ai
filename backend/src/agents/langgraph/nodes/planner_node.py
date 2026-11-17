@@ -162,8 +162,8 @@ async def planner_node(state: AgentState) -> dict:
     fallback_providers = get_fallback_providers(provider)
     logger.info(f"[Planner] fallback chain: {fallback_providers}")
 
-    decision = None
-    plan = []
+    decision: PlannerDecision | None = None
+    plan: list[str] = []
     requires_context = False
 
     for attempt_idx, attempt_provider in enumerate(fallback_providers):
@@ -174,10 +174,19 @@ async def planner_node(state: AgentState) -> dict:
             attempt_model = model_name if attempt_idx == 0 else ""
             llm = get_llm(provider=attempt_provider, model_name=attempt_model, temperature=0.1)
             structured_llm = llm.with_structured_output(PlannerDecision)
-            decision = await structured_llm.ainvoke(messages)
-            plan = decision.queries if decision.requires_context else []
-            requires_context = decision.requires_context
-            break
+            raw_decision = await structured_llm.ainvoke(messages)
+
+            if isinstance(raw_decision, PlannerDecision):
+                decision = raw_decision
+            elif isinstance(raw_decision, dict):
+                decision = PlannerDecision.model_validate(raw_decision)
+            else:
+                decision = None
+
+            if decision:
+                plan = decision.queries if decision.requires_context else []
+                requires_context = decision.requires_context
+                break
 
         except Exception as e:
             err_msg = str(e).lower()

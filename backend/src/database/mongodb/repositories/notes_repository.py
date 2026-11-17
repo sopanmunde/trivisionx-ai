@@ -117,3 +117,16 @@ async def delete_note_db(user_id: str, note_id: str) -> bool:
 
     result = await _db()[COLLECTION_NOTES].delete_one(query)
     return result.deleted_count > 0
+
+
+async def get_note_by_id_db(user_id: str, note_id: str) -> Optional[Dict]:
+    """Retrieves a single note by id."""
+    query = {"user_id": user_id}
+    try:
+        query["_id"] = ObjectId(note_id)
+    except Exception:
+        query["id"] = note_id
+
+    doc = await _db()[COLLECTION_NOTES].find_one(query)
+    return clean_doc(doc)
+

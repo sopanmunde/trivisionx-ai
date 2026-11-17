@@ -512,6 +512,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     setValue: (text) => { setValue(text); setTimeout(() => inputRef.current?.focus(), 0); },
     focus: () => inputRef.current?.focus(),
     getMode: () => mode,
+    setMode: (m) => { setMode(m); setActiveAction(m); },
   }), [mode]);
 
   const uploadFileToRag = useCallback(async (file) => {
@@ -780,12 +781,12 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
       </AnimatePresence>
 
       <div className={cn(
-        "mx-auto max-w-3xl rounded-2xl border bg-white dark:bg-[#0B0B0C] border-zinc-200 dark:border-zinc-800/80 shadow-sm transition-all duration-200",
-        isFocused && "border-zinc-300 dark:border-zinc-700"
+        "mx-auto max-w-4xl w-full rounded-2xl border bg-white dark:bg-[#0B0B0C] border-zinc-200 dark:border-zinc-800/80 shadow-xs transition-all duration-200",
+        isFocused && "border-zinc-300 dark:border-zinc-700 shadow-md"
       )}>
         {/* Selected Command Features Row */}
         {selectedFeatures.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 px-4 pt-2.5">
+          <div className="flex flex-wrap items-center gap-1.5 px-3 sm:px-4 pt-2.5">
             {selectedFeatures.map((feat) => {
               const Icon = feat.icon;
               return (
@@ -824,12 +825,12 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
         </AnimatePresence>
 
         {/* Textarea */}
-        <div className="px-4 pt-2.5 pb-1">
+        <div className="px-3 sm:px-4 pt-2.5 pb-1">
           <textarea
             ref={inputRef} value={value} onChange={(e) => setValue(e.target.value)}
             onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
             placeholder={`Message ${selectedBot || "TriVisionX"}... (Type '/' for setup, skills & tools)`} rows={1}
-            className="w-full resize-none bg-transparent text-[14.5px] leading-relaxed text-zinc-800 dark:text-zinc-100 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 scrollbar-thin"
+            className="w-full resize-none bg-transparent text-[14px] sm:text-[15px] leading-relaxed text-zinc-800 dark:text-zinc-100 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 scrollbar-thin"
             onKeyDown={(e) => {
               if (showCommandPopup) {
                 if (e.key === "ArrowDown") {
@@ -862,9 +863,9 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center justify-between px-2.5 pb-2 pt-1 gap-2">
+        <div className="flex items-center justify-between px-2.5 pb-2 pt-1 gap-1.5 sm:gap-2">
           {/* Left: + (actions) */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5">
             <Tooltip>
               <ComposerActionsPopover
                 onFileSelect={uploadFileToRag} mode={mode}
@@ -872,7 +873,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
                 activeAction={activeAction}
               >
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="group h-7 w-7 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shrink-0 cursor-pointer">
+                  <Button variant="ghost" size="icon" className="group h-8 w-8 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 shrink-0 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800/80">
                     <Plus className="h-4 w-4 transition-transform duration-300 ease-in-out group-data-[state=open]:rotate-90" />
                   </Button>
                 </TooltipTrigger>
@@ -882,22 +883,22 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
           </div>
 
           {/* Right: Agent/Chat segment + Mic + Send */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 p-0.5 bg-zinc-100 dark:bg-zinc-900 rounded-lg border border-zinc-200/50 dark:border-zinc-800/80">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center p-0.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200/50 dark:border-zinc-800/80">
               <button type="button"
                 onClick={() => { setActiveAction("agent"); setMode("agent"); }}
                 className={cn(
-                  "px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all cursor-pointer select-none leading-none",
+                  "px-2 sm:px-2.5 py-1 text-[10.5px] sm:text-[11px] font-semibold rounded-lg transition-all cursor-pointer select-none leading-none",
                   activeAction === "agent"
-                    ? "bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 shadow-sm border border-zinc-200 dark:border-zinc-800"
+                    ? "bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 shadow-xs border border-zinc-200 dark:border-zinc-800"
                     : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
                 )}>Agent</button>
               <button type="button"
                 onClick={() => { setActiveAction(null); setMode(defaultMode); }}
                 className={cn(
-                  "px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all cursor-pointer select-none leading-none",
+                  "px-2 sm:px-2.5 py-1 text-[10.5px] sm:text-[11px] font-semibold rounded-lg transition-all cursor-pointer select-none leading-none",
                   !activeAction || activeAction !== "agent"
-                    ? "bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 shadow-sm border border-zinc-200 dark:border-zinc-800"
+                    ? "bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 shadow-xs border border-zinc-200 dark:border-zinc-800"
                     : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
                 )}>Chat</button>
             </div>
@@ -907,17 +908,17 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
                 <div className="relative flex items-center justify-center">
                   {isListening && (
                     <>
-                      <span className="absolute inset-0 rounded-lg animate-ping bg-red-500/40" />
-                      <span className="absolute -inset-1 rounded-lg animate-pulse bg-red-500/20" />
+                      <span className="absolute inset-0 rounded-xl animate-ping bg-red-500/40" />
+                      <span className="absolute -inset-1 rounded-xl animate-pulse bg-red-500/20" />
                     </>
                   )}
                   <Button variant="ghost" size="icon"
                     onClick={() => isListening ? stopRecording() : startRecording()}
                     className={cn(
-                      "relative h-7 w-7 rounded-lg transition-all duration-300",
-                      isListening ? "bg-red-500 text-white hover:bg-red-600 shadow-md" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                      "relative h-8 w-8 rounded-xl transition-all duration-300",
+                      isListening ? "bg-red-500 text-white hover:bg-red-600 shadow-md" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/80"
                     )}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4", isListening && "animate-pulse")}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4", isListening && "animate-pulse")}>
                       <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                       <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                       <line x1="12" x2="12" y1="19" y2="22" />
@@ -932,10 +933,10 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
               <TooltipTrigger asChild>
                 <Button onClick={handleSend} disabled={(!hasContent && !busy) || uploading} size="icon"
                   className={cn(
-                    "h-7 w-7 rounded-lg transition-all duration-200",
+                    "h-8 w-8 rounded-xl transition-all duration-200",
                     hasContent || busy
-                      ? "bg-zinc-950 text-white hover:bg-zinc-900 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200 shadow-sm cursor-pointer"
-                      : "bg-muted text-muted-foreground cursor-not-allowed opacity-50",
+                      ? "bg-zinc-950 text-white hover:bg-zinc-900 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200 shadow-xs cursor-pointer"
+                      : "bg-muted text-muted-foreground cursor-not-allowed opacity-40",
                   )}>
                   {sending || busy ? (
                     <Spinner className="h-4 w-4" />

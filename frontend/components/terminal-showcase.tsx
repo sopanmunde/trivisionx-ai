@@ -116,22 +116,21 @@ export function TerminalShowcase() {
   };
 
   return (
-    <section className="py-24 px-4 bg-background relative border-t border-border overflow-hidden">
-      {/* Ambient background glows */}
-      <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
+    <section className="py-24 px-4 bg-background relative overflow-hidden">
+      {/* 3D Ambient Backdrop Spotlight */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-16">
+        {/* Unified 3D Section Header */}
+        <div className="text-center mb-14 max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-mono font-semibold text-primary mb-4 tracking-wider uppercase shadow-xs"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-muted/50 text-foreground text-xs font-medium tracking-wide shadow-xs mb-4"
           >
-            <TerminalIcon className="w-3.5 h-3.5 animate-pulse" />
-            Developer-First CLI & Terminal Matrix
+            <TerminalIcon className="w-3.5 h-3.5 text-primary animate-pulse" />
+            <span>DEVELOPER TERMINAL MATRIX</span>
           </motion.div>
 
           <motion.h2
@@ -139,9 +138,11 @@ export function TerminalShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground"
           >
-            Handcrafted Interactive Terminal Interface
+            Handcrafted Terminal Interface.
+            <br />
+            <span className="text-muted-foreground font-semibold">Live agent execution streaming.</span>
           </motion.h2>
 
           <motion.p
@@ -149,19 +150,19 @@ export function TerminalShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base leading-relaxed"
+            className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base mt-3 leading-relaxed"
           >
             Execute agent workflows directly from your command line. Inspect real-time execution outputs, sub-second vector queries, and system process telemetry.
           </motion.p>
         </div>
 
-        {/* Outer Terminal Container with ONE-SIDE BLUR GLASS EFFECT */}
+        {/* Outer Terminal Container with 3D Depth Glass Effect */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="rounded-3xl border border-border bg-card/90 shadow-2xl overflow-hidden"
+          className="rounded-3xl border border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-2xl [box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_20px_50px_rgba(0,0,0,.12),0_40px_80px_rgba(0,0,0,.08)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff10_inset,0_0_0_1px_rgba(255,255,255,.06),0_20px_60px_rgba(0,0,0,.8)] overflow-hidden"
         >
           {/* Top Mac/Linux Window Header Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 bg-muted/60 border-b border-border select-none">
@@ -184,7 +185,7 @@ export function TerminalShowcase() {
                 onClick={handleCopy}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-mono text-foreground hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-primary" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
                 <span>{copied ? "Copied to Clipboard!" : "Copy Command"}</span>
               </button>
             </div>
@@ -246,12 +247,12 @@ export function TerminalShowcase() {
               {/* Sidebar Footer Stats */}
               <div className="pt-4 border-t border-border flex items-center justify-between text-[11px] font-mono text-muted-foreground">
                 <span>Shell: ZSH / Bash</span>
-                <span className="text-primary font-bold">Node runtime: v2.4</span>
+                <span className="text-foreground font-semibold">Node runtime: v2.4</span>
               </div>
             </div>
 
-            {/* RIGHT SIDE: Handcrafted Interactive Terminal Display */}
-            <div className="lg:col-span-8 p-6 bg-card font-mono text-xs flex flex-col justify-between relative overflow-hidden">
+            {/* RIGHT SIDE: Dedicated Dark Terminal Console Display */}
+            <div className="lg:col-span-8 p-6 bg-zinc-950 dark:bg-black/90 text-zinc-100 font-mono text-xs flex flex-col justify-between relative overflow-hidden">
               {/* Subtle CRT matrix scanlines */}
               <div
                 className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -282,14 +283,14 @@ export function TerminalShowcase() {
                       }
                       if (line.type === "info") {
                         return (
-                          <div key={idx} className="text-blue-400">
+                          <div key={idx} className="text-sky-400">
                             {line.text}
                           </div>
                         );
                       }
                       if (line.type === "agent") {
                         return (
-                          <div key={idx} className="text-purple-300 font-semibold pl-2">
+                          <div key={idx} className="text-zinc-300 font-semibold pl-2">
                             {line.text}
                           </div>
                         );
@@ -310,7 +311,7 @@ export function TerminalShowcase() {
                       }
                       if (line.type === "metric") {
                         return (
-                          <div key={idx} className="text-amber-400 font-bold pt-2 border-t border-zinc-800/80">
+                          <div key={idx} className="text-primary-foreground bg-primary/20 p-2 rounded border border-primary/30 font-bold mt-2">
                             {line.text}
                           </div>
                         );
@@ -326,15 +327,15 @@ export function TerminalShowcase() {
               </div>
 
               {/* Terminal Bottom Status Ribbon */}
-              <div className="pt-4 border-t border-zinc-900 flex flex-wrap items-center justify-between text-[10px] text-zinc-500 font-mono relative z-10">
+              <div className="pt-4 border-t border-zinc-800 flex flex-wrap items-center justify-between text-[10px] text-zinc-400 font-mono relative z-10">
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1 text-emerald-400 font-bold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                     CLI READY
                   </span>
                   <span>Exit Code: 0 (OK)</span>
                 </div>
-                <span className="text-zinc-600">Type 'trivisionx --help' for options</span>
+                <span className="text-zinc-500">Type 'trivisionx --help' for options</span>
               </div>
             </div>
 

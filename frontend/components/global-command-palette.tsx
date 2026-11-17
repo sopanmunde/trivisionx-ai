@@ -16,7 +16,7 @@ import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import {
   Home, Activity, Play, RotateCcw,
   Sparkles, Sun, Moon, DollarSign, BookOpen,
-  LayoutDashboard
+  LayoutDashboard, Box
 } from "lucide-react";
 
 export function GlobalCommandPalette() {
@@ -97,9 +97,7 @@ export function GlobalCommandPalette() {
           </CommandItem>
 
           <CommandItem
-            onSelect={() =>
-              runCommand(() => navigate("/#automation-graph"))
-            }
+            onSelect={() => runCommand(() => navigate("/#automation-graph"))}
             className="flex items-center justify-between"
           >
             <div className="flex items-center gap-2">
@@ -109,6 +107,34 @@ export function GlobalCommandPalette() {
             <KbdGroup>
               <Kbd>⌘</Kbd>
               <Kbd>A</Kbd>
+            </KbdGroup>
+          </CommandItem>
+
+          <CommandItem
+            onSelect={() => runCommand(() => navigate("/#demo-explode"))}
+            className="flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <Play className="w-4 h-4 text-primary" />
+              <span>Scroll-Driven Demo Explode</span>
+            </div>
+            <KbdGroup>
+              <Kbd>⌘</Kbd>
+              <Kbd>V</Kbd>
+            </KbdGroup>
+          </CommandItem>
+
+          <CommandItem
+            onSelect={() => runCommand(() => navigate("/#product-explode"))}
+            className="flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <Box className="w-4 h-4 text-primary" />
+              <span>Product Exploded View</span>
+            </div>
+            <KbdGroup>
+              <Kbd>⌘</Kbd>
+              <Kbd>E</Kbd>
             </KbdGroup>
           </CommandItem>
 

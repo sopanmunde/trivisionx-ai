@@ -173,6 +173,17 @@
   display: none;
 }
 
+@media (min-width: 768px) {
+  html.landing-zigzag-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html.landing-zigzag-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 :root {
   --background: hsl(0 0% 100%);
   --foreground: hsl(0 0% 3.9%);
@@ -310,6 +321,12 @@
   background: linear-gradient(120deg, transparent 30%, hsl(var(--primary)/0.2) 50%, transparent 70%);
   background-size: 200% 100%;
   animation: shimmer-border 4s linear infinite;
+}
+
+/* ── Dot grid pattern ── */
+.dot-grid {
+  background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 ::view-transition-old(root), ::view-transition-new(root) {

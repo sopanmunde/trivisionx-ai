@@ -62,7 +62,7 @@ export default function PricingPage() {
 
         <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Starter Plan */}
-          <Card className="relative flex flex-col justify-between border-border shadow-sm hover:border-muted-foreground/30 transition-all duration-200 group">
+          <Card className="relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 backdrop-blur-xl transition-all duration-500 ease-out hover:-translate-y-1.5 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:border-primary/40 group">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-lg bg-muted border border-border"><Zap className="w-5 h-5 text-muted-foreground" /></div>
@@ -100,7 +100,7 @@ export default function PricingPage() {
           </Card>
 
           {/* Pro Plan */}
-          <Card className="relative flex flex-col justify-between border-primary shadow-md bg-card/60 transition-all duration-200 group">
+          <Card className="relative flex flex-col justify-between rounded-2xl border border-primary/80 bg-card/95 dark:bg-card/80 backdrop-blur-2xl transition-all duration-500 ease-out hover:-translate-y-2 [box-shadow:0_0_0_2px_rgba(59,130,246,0.35),0_12px_36px_rgba(0,0,0,.12),0_24px_50px_rgba(0,0,0,.1)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset,0_0_0_2px_rgba(59,130,246,0.4),0_24px_60px_rgba(0,0,0,.8)] hover:shadow-2xl group">
             <div className="absolute top-4 right-4"><MacBadge color="default">✦ Popular</MacBadge></div>
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3 mb-2">
@@ -142,7 +142,7 @@ export default function PricingPage() {
           </Card>
 
           {/* Enterprise Plan */}
-          <Card className="relative flex flex-col justify-between border-border shadow-sm hover:border-muted-foreground/30 transition-all duration-200 group">
+          <Card className="relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 backdrop-blur-xl transition-all duration-500 ease-out hover:-translate-y-1.5 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:border-primary/40 group">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-lg bg-muted border border-border"><Building2 className="w-5 h-5 text-muted-foreground" /></div>

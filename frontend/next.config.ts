@@ -8,8 +8,9 @@ const nextConfig: NextConfig = {
   images: {
 
   },
-  outputFileTracingRoot: path.resolve(__dirname),
   turbopack: {
+    // Explicitly point to the frontend/ directory so Turbopack never
+    // climbs up to the monorepo root and misses next/package.json
     root: path.resolve(__dirname),
   },
   async headers() {

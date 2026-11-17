@@ -83,7 +83,7 @@ function MenuItem({
   );
 }
 
-export default function SettingsPopover({ children, onUserUpdate = () => { }, onSelect }) {
+export default function SettingsPopover({ children, onUserUpdate = () => { }, onSelect = () => { } }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
