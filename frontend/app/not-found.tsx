@@ -26,27 +26,27 @@ export default function NotFound() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-          className="text-7xl sm:text-9xl font-black tracking-tighter text-foreground text-foreground mb-4 drop-shadow-sm"
+          className="text-7xl sm:text-9xl font-black tracking-tighter text-foreground mb-4 drop-shadow-sm"
         >
-          4<span className="bg-gradient-to-r from-violet-500 to-blue-500 bg-clip-text text-transparent">0</span>4
+          4<span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">0</span>4
         </motion.h1>
 
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-          className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-800 dark:text-zinc-200 mb-4"
+          className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-4"
         >
-          Lost in the knowledge base?
+          Page not found
         </motion.h2>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-          className="max-w-md text-[15px] text-muted-foreground text-muted-foreground mb-8 leading-relaxed"
+          className="max-w-md text-[15px] text-muted-foreground mb-8 leading-relaxed"
         >
-          The page or document you're looking for doesn't exist, has been moved, or you don't have access to it. Let's get you back on track.
+          The page you&apos;re looking for doesn&apos;t exist, has been moved, or is currently unavailable. Let&apos;s get you back on track.
         </motion.p>
 
         <motion.div
@@ -55,7 +55,7 @@ export default function NotFound() {
           transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
           className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
         >
-          <Button asChild size="lg" className="rounded-full bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-foreground shadow-lg shadow-violet-500/25 transition-all hover:scale-105 active:scale-95 w-full sm:w-auto">
+          <Button asChild size="lg" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 w-full sm:w-auto">
             <Link href="/">
               <Home className="mr-2 h-4 w-4" />
               Back to Home

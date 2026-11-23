@@ -17,11 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { TriVisionXLogo } from "@/components/TriVisionXLogo";
 import { Meteors } from "@/components/ui/meteors";
 import { Highlighter } from "@/components/ui/highlighter";
-import { LogoMarquee } from "@/components/logo-marquee";
 
 export function Hero() {
   return (
-    <section className="relative min-h-[92vh] flex flex-col items-center justify-between gap-12 px-4 sm:px-6 pt-32 pb-12 overflow-hidden bg-background text-foreground select-none">
+    <section className="relative min-h-[92vh] flex items-center justify-center px-4 sm:px-6 pt-32 pb-24 overflow-hidden bg-background text-foreground select-none">
       {/* ─── ANIMATED LIGHT EFFECTS LAYER ─── */}
 
       {/* 1. Top Horizon Luminous Light Beam */}
@@ -196,9 +195,6 @@ export function Hero() {
         </motion.div>
 
       </div>
-
-      {/* Bottom Ecosystem Brand Marquee Inside Hero */}
-      <LogoMarquee />
     </section>
   );
 }

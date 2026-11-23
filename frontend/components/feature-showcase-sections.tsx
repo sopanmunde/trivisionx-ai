@@ -31,11 +31,11 @@ const chartData = [
 const chartConfig = {
   tps: {
     label: "Requests / Sec",
-    color: "#3b82f6",
+    color: "#22c55e",
   },
   tokens: {
     label: "Tokens / Sec",
-    color: "#8b5cf6",
+    color: "#10b981",
   },
 } satisfies ChartConfig;
 
@@ -168,8 +168,8 @@ export function FeatureShowcaseSections() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-muted/50 text-foreground text-xs font-medium tracking-wide shadow-xs mb-2">
-                <Activity className="w-3.5 h-3.5 text-primary animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium tracking-wide shadow-xs mb-2">
+                <Activity className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
                 <span>REAL-TIME EXECUTION VELOCITY</span>
               </div>
             </motion.div>
@@ -203,7 +203,7 @@ export function FeatureShowcaseSections() {
               <div>
                 <span className="text-muted-foreground text-xs block mb-1">Requests / Sec</span>
                 <span className="text-3xl font-extrabold text-foreground">{currentTps}</span>
-                <Badge variant="outline" className="mt-1.5 text-[10px] border-primary/30 text-primary bg-primary/10 font-mono">
+                <Badge variant="outline" className="mt-1.5 text-[10px] border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-mono font-medium">
                   +14.2% peak
                 </Badge>
               </div>
@@ -212,14 +212,17 @@ export function FeatureShowcaseSections() {
                 <span className="text-3xl font-extrabold text-foreground">
                   4,820
                 </span>
-                <span className="text-[10px] text-muted-foreground block mt-1">streaming</span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1 font-mono font-medium">
+                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  streaming
+                </span>
               </div>
               <div>
                 <span className="text-muted-foreground text-xs block mb-1">Avg Latency</span>
                 <span className="text-3xl font-extrabold text-foreground">
                   {avgLatency}ms
                 </span>
-                <Badge variant="outline" className="mt-1.5 text-[10px] border-primary/30 text-primary bg-primary/10 font-mono">
+                <Badge variant="outline" className="mt-1.5 text-[10px] border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-mono font-medium">
                   optimal
                 </Badge>
               </div>
@@ -231,12 +234,12 @@ export function FeatureShowcaseSections() {
             <div className="w-full h-full flex flex-col justify-between font-mono text-xs">
               <div className="flex items-center justify-between pb-3 border-b border-border/70">
                 <span className="text-foreground font-bold flex items-center gap-2 text-sm">
-                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <TrendingUp className="w-4 h-4 text-emerald-500" />
                   <TextAnimate animation="fadeIn" by="character" startOnView once as="span">
                     Execution Telemetry Stream
                   </TextAnimate>
                 </span>
-                <Badge variant="secondary" className="font-mono text-primary border-primary/30 bg-primary/10">
+                <Badge variant="secondary" className="font-mono text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10">
                   142 REQ/S LIVE
                 </Badge>
               </div>
@@ -247,14 +250,14 @@ export function FeatureShowcaseSections() {
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="fillGreenTps" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
+                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0.0} />
                       </linearGradient>
                     </defs>
                     <XAxis dataKey="time" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} />
                     <YAxis stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} domain={["dataMin - 20", "dataMax + 20"]} />
                     <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
-                    <Area type="monotone" dataKey="tps" stroke="#3b82f6" strokeWidth={2} fill="url(#fillGreenTps)" />
+                    <Area type="monotone" dataKey="tps" stroke="#22c55e" strokeWidth={2} fill="url(#fillGreenTps)" />
                   </AreaChart>
                 </ChartContainer>
               </div>
