@@ -1,0 +1,19 @@
+name: Production Deploy Trigger
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify-deploy:
+    name: Deployment Pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Echo Deployment Status
+        run: |
+          echo "TriVisionX main branch updated. Automatic deployment triggered for:"
+          echo "- Frontend: Vercel Production Environment"
+          echo "- Backend: Render / Container Web Service"

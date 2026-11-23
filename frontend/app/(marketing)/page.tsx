@@ -2,6 +2,7 @@ import { Hero } from "@/components/hero";
 import { VideoExplodeScroll } from "@/components/video-explode-scroll";
 import { TerminalShowcase } from "@/components/terminal-showcase";
 import { FeatureShowcaseSections } from "@/components/feature-showcase-sections";
+import { ComparisonSection } from "@/components/comparison-section";
 import { BentoDemoSection } from "@/components/bento-demo";
 import { BentoGrid } from "@/components/bento-grid";
 import { AutomationCanvas } from "@/components/automation-canvas";
@@ -17,6 +18,7 @@ export default function Home() {
       <VideoExplodeScroll />
       <TerminalShowcase />
       <FeatureShowcaseSections />
+      <ComparisonSection />
       <BentoDemoSection />
       <BentoGrid />
       <AutomationCanvas />

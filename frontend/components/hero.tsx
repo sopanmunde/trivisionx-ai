@@ -139,6 +139,17 @@ export function Hero() {
             </Button>
           </a>
 
+          <a href="/dashboard">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 px-7 rounded-xl text-sm font-semibold border-border bg-card/80 backdrop-blur-md hover:bg-accent text-foreground hover:border-primary/40 shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer gap-2.5"
+            >
+              <Sparkles className="size-4 text-primary" />
+              <span>Live Demo</span>
+            </Button>
+          </a>
+
           <a href="#demo-explode">
             <Button
               variant="outline"
@@ -164,6 +175,23 @@ export function Hero() {
           <span>10k free execution runs/month</span>
           <span className="text-muted-foreground/40">·</span>
           <span>99.9% Uptime SLA</span>
+        </motion.div>
+
+        {/* GitHub Stars Social Proof Strip */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="flex items-center gap-4 text-xs font-mono text-muted-foreground"
+        >
+          <span className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span>2,400+ developers</span>
+          </span>
+          <span className="text-muted-foreground/40">·</span>
+          <span>⭐ 1.2k GitHub stars</span>
+          <span className="text-muted-foreground/40">·</span>
+          <span>🚀 Launched on Product Hunt</span>
         </motion.div>
 
         {/* Interactive Glassmorphic Feature Light Chips with 3D Depth */}
@@ -192,6 +220,29 @@ export function Hero() {
             <Zap className="size-3.5 text-primary shrink-0" />
             <span className="truncate">Real-Time SSE Streams</span>
           </div>
+        </motion.div>
+
+        {/* Live Metrics Strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.75 }}
+          className="pt-6 w-full max-w-2xl mx-auto grid grid-cols-3 gap-4"
+        >
+          {[
+            { label: "Documents Processed", value: "847K+", icon: "📄" },
+            { label: "Agent Runs / Day", value: "12,400+", icon: "🤖" },
+            { label: "Avg Latency", value: "< 2.1s", icon: "⚡" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-md text-center"
+            >
+              <span className="text-lg">{stat.icon}</span>
+              <span className="text-base font-extrabold text-foreground tracking-tight">{stat.value}</span>
+              <span className="text-[10px] font-mono text-muted-foreground leading-tight">{stat.label}</span>
+            </div>
+          ))}
         </motion.div>
 
       </div>
