@@ -348,10 +348,10 @@ const ChatPane = forwardRef(function ChatPane(
   if (!conversation) return null;
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden">
-      {/* Background patterns to contrast with the sidebar's translucent look */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808006_1px,transparent_1px),linear-gradient(to_bottom,#80808006_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-60" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_75%)] pointer-events-none" />
+    <div className="flex h-full min-h-0 flex-1 flex-col bg-background text-foreground relative overflow-hidden">
+      {/* Dynamic Ambient Lighting in both Light and Dark modes */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.06),transparent_65%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.12),transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 dot-grid [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)] opacity-35 dark:opacity-20 pointer-events-none" />
 
       {messages.length === 0 ? (
         <div className="flex flex-1 flex-col justify-between overflow-y-auto px-3 sm:px-6 py-5 sm:py-8 bg-transparent relative z-10 scrollbar-thin">
@@ -758,7 +758,7 @@ const ChatPane = forwardRef(function ChatPane(
           </div>
 
           {/* Liquid fade gradient above composer */}
-          <div className="pointer-events-none absolute bottom-[var(--composer-h,140px)] left-0 right-0 h-16 sm:h-20 z-10 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent" />
+          <div className="pointer-events-none absolute bottom-[var(--composer-h,140px)] left-0 right-0 h-16 sm:h-20 z-10 bg-gradient-to-t from-background via-background/80 to-transparent" />
 
           {/* Scroll-to-bottom button — sits just above the composer */}
           <AnimatePresence>

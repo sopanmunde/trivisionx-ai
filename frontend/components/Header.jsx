@@ -79,8 +79,33 @@ export default function Header({
   onToggleIntegrations = () => { },
   onOpenAuditLogs = () => { },
   onOpenWorkflows = () => { },
+  user = null,
 }) {
   const currentBot = CHATBOTS.find((b) => b.name === selectedBot || b.name.toLowerCase().startsWith((selectedBot || "").toLowerCase())) || CHATBOTS[0];
+
+  const userName =
+    user?.name ||
+    user?.full_name ||
+    (user?.first_name || user?.last_name
+      ? [user.first_name, user.last_name].filter(Boolean).join(" ")
+      : "") ||
+    user?.username ||
+    (user?.email ? user.email.split("@")[0] : "") ||
+    (typeof window !== "undefined" && localStorage.getItem("user_name")) ||
+    "";
+
+  const userInitials =
+    user?.initials ||
+    (userName && userName !== "User"
+      ? userName
+          .trim()
+          .split(/[\s._-]+/)
+          .filter(Boolean)
+          .map((part) => part[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase()
+      : "");
 
   return (
     <div className="sticky top-0 z-30 px-2 sm:px-3.5 pt-2 sm:pt-3 pb-1 w-full bg-transparent">
@@ -175,6 +200,26 @@ export default function Header({
             <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
             <span className="hidden sm:inline">Audit Logs</span>
           </Button>
+
+          {/* User Account Avatar & Name */}
+          {userName && (
+            <div className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-zinc-200 dark:border-zinc-800">
+              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[10px] font-extrabold text-primary-foreground select-none shadow-xs border border-primary-foreground/20 overflow-hidden shrink-0">
+                {user?.avatar_url || user?.picture ? (
+                  <img
+                    src={user.avatar_url || user.picture}
+                    alt={userName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  userInitials || "U"
+                )}
+              </div>
+              <span className="hidden md:inline text-xs font-bold text-foreground truncate max-w-[130px]" title={userName}>
+                {userName}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -7,6 +7,9 @@ const authRoutes = ["/login", "/signup"]
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const authToken = request.cookies.get("auth_token")?.value
+  const isDemoQuery = request.nextUrl.searchParams.get("demo") === "true"
+  const isDemoCookie = request.cookies.get("is_demo")?.value === "true"
+  const isDemo = isDemoQuery || isDemoCookie
 
   const isProtectedRoute = protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
@@ -15,7 +18,7 @@ export function middleware(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   )
 
-  if (isProtectedRoute && !authToken) {
+  if (isProtectedRoute && !authToken && !isDemo) {
     const loginUrl = new URL("/login", request.url)
     loginUrl.searchParams.set("from", pathname)
     return NextResponse.redirect(loginUrl)
@@ -25,7 +28,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
-  return NextResponse.next()
+  const response = NextResponse.next()
+
+  if (isDemoQuery && !isDemoCookie) {
+    response.cookies.set("is_demo", "true", {
+      path: "/",
+      maxAge: 60 * 60 * 24, // 1 day
+      sameSite: "lax",
+    })
+  }
+
+  return response
 }
 
 export const config = {

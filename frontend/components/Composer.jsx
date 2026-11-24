@@ -781,8 +781,10 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
       </AnimatePresence>
 
       <div className={cn(
-        "mx-auto max-w-4xl w-full rounded-2xl border bg-white dark:bg-[#0B0B0C] border-zinc-200 dark:border-zinc-800/80 shadow-xs transition-all duration-200",
-        isFocused && "border-zinc-300 dark:border-zinc-700 shadow-md"
+        "mx-auto max-w-4xl w-full rounded-2xl border bg-card/95 dark:bg-card/80 backdrop-blur-xl border-border/80 shadow-xs transition-all duration-300",
+        isFocused
+          ? "border-primary/50 ring-4 ring-primary/10 shadow-[0_8px_30px_rgba(0,0,0,0.06),0_0_25px_rgba(59,130,246,0.12)] dark:shadow-[0_0_30px_rgba(59,130,246,0.18),inset_0_1px_1px_rgba(255,255,255,0.08)]"
+          : "hover:border-border/90 hover:shadow-sm"
       )}>
         {/* Selected Command Features Row */}
         {selectedFeatures.length > 0 && (
@@ -830,7 +832,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
             ref={inputRef} value={value} onChange={(e) => setValue(e.target.value)}
             onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
             placeholder={`Message ${selectedBot || "TriVisionX"}... (Type '/' for setup, skills & tools)`} rows={1}
-            className="w-full resize-none bg-transparent text-[14px] sm:text-[15px] leading-relaxed text-zinc-800 dark:text-zinc-100 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 scrollbar-thin"
+            className="w-full resize-none bg-transparent text-[14px] sm:text-[15px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/60 scrollbar-thin"
             onKeyDown={(e) => {
               if (showCommandPopup) {
                 if (e.key === "ArrowDown") {

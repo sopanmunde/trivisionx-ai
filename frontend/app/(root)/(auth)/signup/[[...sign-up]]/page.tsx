@@ -201,6 +201,8 @@ function SignUpPageContent() {
         if (!res.ok) throw new Error(data.detail || `${provider} sign-up failed`)
 
         localStorage.setItem("token", data.access_token)
+        localStorage.removeItem("is_demo")
+        document.cookie = "is_demo=; path=/; max-age=0"
         localStorage.setItem("dashboard-selected-id", "new")
         document.cookie = `auth_token=${data.access_token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
         router.push("/dashboard")

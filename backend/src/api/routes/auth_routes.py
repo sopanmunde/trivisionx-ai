@@ -41,11 +41,16 @@ async def login(request: Request, user: UserLogin):
 @router.get("/me")
 async def get_me(current_user=Depends(get_current_user)):
     created_at = current_user.get("created_at")
+    first_name = current_user.get("first_name", "")
+    last_name = current_user.get("last_name", "")
+    full_name = f"{first_name} {last_name}".strip()
     return {
         "email": current_user.get("email"),
         "username": current_user.get("username"),
-        "first_name": current_user.get("first_name"),
-        "last_name": current_user.get("last_name"),
+        "first_name": first_name,
+        "last_name": last_name,
+        "name": full_name or current_user.get("username") or (current_user.get("email", "").split("@")[0] if current_user.get("email") else "User"),
+        "avatar_url": current_user.get("avatar_url"),
         "created_at": created_at.isoformat() if isinstance(created_at, datetime) else None,
     }
 

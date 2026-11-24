@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,25 @@ const navItems = [
 export function Navbar() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [displayName, setDisplayName] = useState("");
   const navRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+      const hasRealToken = token && token !== "demo_guest_token";
+      const hasAuthCookie = document.cookie
+        .split("; ")
+        .some((c) => c.startsWith("auth_token=") && c.split("=")[1] && c.split("=")[1] !== "demo_guest_token");
+
+      if (hasRealToken || hasAuthCookie) {
+        setIsLoggedIn(true);
+        const savedName = localStorage.getItem("user_name");
+        if (savedName) setDisplayName(savedName);
+      }
+    } catch {}
+  }, []);
 
 
 
@@ -89,24 +107,38 @@ export function Navbar() {
               <span>GitHub</span>
             </a>
           </RainbowButton>
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground hover:bg-accent"
-          >
-            <Link href="/login">Sign In</Link>
-          </Button>
-          <Button
-            asChild
-            size="sm"
-            className="relative overflow-hidden shimmer-btn bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 h-9 font-semibold transition-all shadow-xs"
-          >
-            <Link href="/signup">
-              <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent" />
-              <span className="relative">Sign Up</span>
-            </Link>
-          </Button>
+          {isLoggedIn ? (
+            <Button
+              asChild
+              size="sm"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 h-9 font-semibold transition-all shadow-xs"
+            >
+              <Link href="/dashboard">
+                {displayName ? `${displayName} · Dashboard` : "Dashboard"} →
+              </Link>
+            </Button>
+          ) : (
+            <>
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground hover:bg-accent"
+              >
+                <Link href="/login">Sign In</Link>
+              </Button>
+              <Button
+                asChild
+                size="sm"
+                className="relative overflow-hidden shimmer-btn bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 h-9 font-semibold transition-all shadow-xs"
+              >
+                <Link href="/signup">
+                  <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent" />
+                  <span className="relative">Sign Up</span>
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
 
 
@@ -147,19 +179,35 @@ export function Navbar() {
               </Link>
             ))}
             <hr className="border-border my-2" />
-            <Button
-              asChild
-              variant="ghost"
-              className="justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
-            >
-              <Link href="/login">Sign In</Link>
-            </Button>
-            <Button
-              asChild
-              className="shimmer-btn bg-primary text-primary-foreground hover:bg-primary/90 rounded-md font-semibold"
-            >
-              <Link href="/signup">Get Started</Link>
-            </Button>
+            {isLoggedIn ? (
+              <Button
+                asChild
+                className="shimmer-btn bg-primary text-primary-foreground hover:bg-primary/90 rounded-md font-semibold justify-start"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Link href="/dashboard">
+                  {displayName ? `${displayName} · Dashboard` : "Go to Dashboard"} →
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Link href="/login">Sign In</Link>
+                </Button>
+                <Button
+                  asChild
+                  className="shimmer-btn bg-primary text-primary-foreground hover:bg-primary/90 rounded-md font-semibold"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Link href="/signup">Get Started</Link>
+                </Button>
+              </>
+            )}
             <RainbowButton asChild variant="black" className="w-full justify-center">
               <a href="https://github.com/sopanmunde/trivisionx-ai" target="_blank" rel="noopener noreferrer">
                 <GithubIcon className="size-4" />

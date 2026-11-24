@@ -45,8 +45,8 @@ export function FinalCTA() {
               size="lg"
               className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-8 h-12 text-sm font-semibold flex items-center justify-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
             >
-              <Link href="/pricing">
-                Get Started Free
+              <Link href="/demo">
+                Try Live Demo
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </Button>
@@ -56,7 +56,7 @@ export function FinalCTA() {
               size="lg"
               className="w-full sm:w-auto rounded-xl px-8 h-12 text-sm font-semibold border-border/80 text-foreground hover:bg-accent hover:text-accent-foreground bg-card/60 backdrop-blur-md flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
             >
-              <Link href="/contact">Contact Us</Link>
+              <Link href="/signup">Sign Up Free</Link>
             </Button>
             <Button
               asChild

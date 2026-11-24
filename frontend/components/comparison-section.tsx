@@ -41,9 +41,25 @@ const tools: ToolItem[] = [
 ];
 
 function SupportIcon({ value }: { value: Support }) {
-  if (value === "yes") return <Check className="w-4 h-4 text-primary mx-auto" />;
-  if (value === "no") return <X className="w-4 h-4 text-muted-foreground/40 mx-auto" />;
-  return <Minus className="w-4 h-4 text-yellow-500/70 mx-auto" />;
+  if (value === "yes") {
+    return (
+      <div className="inline-flex items-center justify-center size-5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-xs mx-auto">
+        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+      </div>
+    );
+  }
+  if (value === "no") {
+    return (
+      <div className="inline-flex items-center justify-center size-5 rounded-full bg-muted/60 text-muted-foreground/40 mx-auto">
+        <X className="w-3.5 h-3.5" />
+      </div>
+    );
+  }
+  return (
+    <div className="inline-flex items-center justify-center size-5 rounded-full bg-amber-500/10 text-amber-500/80 mx-auto">
+      <Minus className="w-3.5 h-3.5" />
+    </div>
+  );
 }
 
 export function ComparisonSection() {
@@ -91,14 +107,14 @@ export function ComparisonSection() {
                 {tools.map((tool) => (
                   <th
                     key={tool.key}
-                    className={`text-center px-4 py-4 text-xs font-bold ${
+                    className={`text-center px-4 py-4 text-xs font-bold transition-colors ${
                       tool.highlight
-                        ? "text-primary"
+                        ? "text-primary bg-primary/[0.04] dark:bg-primary/[0.08] border-x border-primary/25"
                         : "text-muted-foreground font-medium"
                     }`}
                   >
                     {tool.highlight && (
-                      <span className="inline-block mb-1 text-[9px] font-mono bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 tracking-wide">
+                      <span className="inline-block mb-1 text-[9px] font-mono bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/30 tracking-wide font-bold">
                         ✦ OUR PICK
                       </span>
                     )}
@@ -112,17 +128,17 @@ export function ComparisonSection() {
                 <tr
                   key={feature.name}
                   className={`border-b border-border/40 last:border-0 ${
-                    i % 2 === 0 ? "bg-muted/20" : ""
+                    i % 2 === 0 ? "bg-muted/15" : ""
                   } hover:bg-muted/30 transition-colors duration-150`}
                 >
-                  <td className="px-5 py-3.5 text-xs text-foreground font-mono">
+                  <td className="px-5 py-3.5 text-xs text-foreground font-medium">
                     {feature.name}
                   </td>
                   {tools.map((tool) => (
                     <td
                       key={tool.key}
-                      className={`text-center px-4 py-3.5 ${
-                        tool.highlight ? "bg-primary/5" : ""
+                      className={`text-center px-4 py-3.5 transition-colors ${
+                        tool.highlight ? "bg-primary/[0.04] dark:bg-primary/[0.08] border-x border-primary/25" : ""
                       }`}
                     >
                       <SupportIcon value={feature[tool.key]} />

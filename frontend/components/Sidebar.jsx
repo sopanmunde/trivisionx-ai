@@ -128,6 +128,30 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
           <Mail className="h-4 w-4" />
         </button>
         <button
+          onClick={() => onSelect("competitive")}
+          title="Competitive Intelligence"
+          className={cls(
+            "inline-flex h-8 w-8 items-center justify-center rounded-xl border transition-all active:scale-95",
+            selectedId === "competitive"
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          )}
+        >
+          <Globe className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => onSelect("memory")}
+          title="Memory Timeline"
+          className={cls(
+            "inline-flex h-8 w-8 items-center justify-center rounded-xl border transition-all active:scale-95",
+            selectedId === "memory"
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          )}
+        >
+          <Brain className="h-4 w-4" />
+        </button>
+        <button
           onClick={() => onSelect("integrations")}
           title="Plugins & Integrations"
           className={cls(
@@ -146,8 +170,16 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
           className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-95 [&_svg]:size-4 cursor-pointer"
         />
         <SettingsPopover onUserUpdate={onUserUpdate} onSelect={onSelect}>
-          <button title="Settings" className="flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground hover:opacity-90 transition-all active:scale-95 cursor-pointer shadow-sm border border-primary-foreground/20">
-            {userInitials || "U"}
+          <button title={user?.name || user?.username || "Account Settings"} className="flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground hover:opacity-90 transition-all active:scale-95 cursor-pointer shadow-sm border border-primary-foreground/20 overflow-hidden">
+            {user?.avatar_url || user?.picture ? (
+              <img
+                src={user.avatar_url || user.picture}
+                alt={userInitials || "U"}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              userInitials || "U"
+            )}
           </button>
         </SettingsPopover>
       </div>
@@ -296,12 +328,29 @@ export default function Sidebar({
   const handleDeleteTemplate = id => setTemplates(templates.filter(t => t.id !== id));
   const handleUseTemplate = t => onUseTemplate(t);
 
-  const userInitials = user
-    ? ((user.first_name?.[0] || "") + (user.last_name?.[0] || "")).toUpperCase() || user.username?.[0]?.toUpperCase() || "U"
-    : "U";
-  const userName = user
-    ? (user.first_name || "" + " " + user.last_name || "").trim() || user.username
-    : "Loading";
+  const userName =
+    user?.name ||
+    user?.full_name ||
+    (user?.first_name || user?.last_name
+      ? [user.first_name, user.last_name].filter(Boolean).join(" ")
+      : "") ||
+    user?.username ||
+    (user?.email ? user.email.split("@")[0] : "") ||
+    (typeof window !== "undefined" && localStorage.getItem("user_name")) ||
+    "User";
+
+  const userInitials =
+    user?.initials ||
+    (userName && userName !== "User" && userName !== "Loading"
+      ? userName
+          .trim()
+          .split(/[\s._-]+/)
+          .filter(Boolean)
+          .map((part) => part[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase()
+      : "U");
 
   const folderCount = (Array.isArray(folders) ? folders : []).length;
   const templateCount = (Array.isArray(templates) ? templates : []).length;
@@ -423,6 +472,34 @@ export default function Sidebar({
                       )}
                     >
                       <Brain className="h-4 w-4 text-primary" /><span>Brain</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onSelect("competitive");
+                        onClose?.();
+                      }}
+                      className={cls(
+                        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                        selectedId === "competitive"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <Globe className="h-4 w-4 text-primary" /><span>Competitive Intel</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onSelect("memory");
+                        onClose?.();
+                      }}
+                      className={cls(
+                        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                        selectedId === "memory"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <Brain className="h-4 w-4 text-primary" /><span>Memory Timeline</span>
                     </button>
                     <button
                       onClick={() => {
@@ -605,14 +682,26 @@ export default function Sidebar({
               <div className="rounded-2xl border border-sidebar-border bg-sidebar-accent/30 p-2.5 shadow-xs flex items-center justify-between transition-all duration-200 hover:border-sidebar-border/80">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="relative shrink-0">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground select-none shadow-xs border border-primary-foreground/20">
-                      {userInitials || "U"}
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground select-none shadow-xs border border-primary-foreground/20 overflow-hidden">
+                      {user?.avatar_url || user?.picture ? (
+                        <img
+                          src={user.avatar_url || user.picture}
+                          alt={userName}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        userInitials || "U"
+                      )}
                     </div>
                     <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-500 border-2 border-sidebar shadow-xs" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="truncate text-[11.5px] font-bold text-sidebar-foreground leading-tight">{userName || "User"}</span>
-                    <span className="text-[9.5px] text-muted-foreground font-medium font-mono">Workspace</span>
+                    <span className="truncate text-[11.5px] font-bold text-sidebar-foreground leading-tight" title={userName}>
+                      {userName || "User"}
+                    </span>
+                    <span className="text-[9.5px] text-muted-foreground font-medium font-mono truncate">
+                      {user?.email || "Workspace"}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">

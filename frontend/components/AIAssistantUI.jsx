@@ -22,12 +22,38 @@ import { TaskDashboard } from "./TaskDashboard";
 import { NotesDashboard } from "./NotesDashboard";
 import { IntegrationsDashboard } from "./IntegrationsDashboard";
 import { SettingsDashboard } from "./SettingsDashboard";
+import { CompetitiveIntelligenceDashboard } from "./CompetitiveIntelligenceDashboard";
+import { MemoryTimeline } from "./MemoryTimeline";
+import { OnboardingWizard } from "./OnboardingWizard";
+import { FloatingVoiceAssistant } from "./FloatingVoiceAssistant";
 import IntegrationsPanel from "./IntegrationsPanel";
 import AuditLogsModal from "./AuditLogsModal";
 import WorkflowsModal from "./WorkflowsModal";
 
-export default function AIAssistantUI() {
+export default function AIAssistantUI({ isDemo = false }) {
   const router = useRouter();
+  const [isDemoMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      const hasRealToken = token && token !== "demo_guest_token";
+      const hasAuthCookie = document.cookie
+        .split("; ")
+        .some((c) => c.startsWith("auth_token=") && c.split("=")[1] && c.split("=")[1] !== "demo_guest_token");
+
+      if (hasRealToken || hasAuthCookie) {
+        localStorage.removeItem("is_demo");
+        document.cookie = "is_demo=; path=/; max-age=0";
+        return false;
+      }
+      return (
+        isDemo ||
+        window.location.pathname.startsWith("/demo") ||
+        window.location.search.includes("demo=true")
+      );
+    }
+    return isDemo;
+  });
+
   const [theme, setTheme] = useState(() => {
     const saved =
       typeof window !== "undefined" && localStorage.getItem("theme");
@@ -67,12 +93,20 @@ export default function AIAssistantUI() {
 
   useEffect(() => {
     try {
+      if (isDemoMode) {
+        localStorage.setItem("is_demo", "true");
+        document.cookie = "is_demo=true; path=/; max-age=86400";
+        if (!localStorage.getItem("token")) {
+          localStorage.setItem("token", "demo_guest_token");
+        }
+        return;
+      }
       const token = localStorage.getItem("token");
       if (!token) {
         router.push("/login");
       }
     } catch { }
-  }, []);
+  }, [isDemoMode, router]);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
@@ -119,6 +153,16 @@ export default function AIAssistantUI() {
   const [isConversationsLoaded, setIsConversationsLoaded] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const done = localStorage.getItem("trivisionx_onboarding_completed");
+      if (!done && !isDemoMode) {
+        setIsOnboardingOpen(true);
+      }
+    }
+  }, [isDemoMode]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -173,7 +217,68 @@ export default function AIAssistantUI() {
   const [isAuditLogsOpen, setIsAuditLogsOpen] = useState(false);
   const [isWorkflowsOpen, setIsWorkflowsOpen] = useState(false);
 
+  const DEMO_CONVERSATIONS = useMemo(() => [
+    {
+      id: "demo-c1",
+      title: "LangGraph Multi-Agent Research Spec",
+      folder: "Work Projects",
+      pinned: true,
+      updatedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+      messageCount: 2,
+      preview: "Analysis of cyclic LangGraph agent routing vs linear chains...",
+      messages: [
+        {
+          id: "demo-m1",
+          role: "user",
+          content: "How does TriVisionX utilize LangGraph multi-agent swarms for cited research?",
+          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        },
+        {
+          id: "demo-m2",
+          role: "assistant",
+          content: "### 🤖 TriVisionX LangGraph Orchestration\n\nTriVisionX routes complex queries into specialized **agent subgraphs**:\n\n1. **Planner Agent**: Evaluates user intent and dynamically determines whether retrieval, code evaluation, or competitive analysis is required.\n2. **Retriever Node**: Executes Maximal Marginal Relevance (MMR) vector queries across **Pinecone** indices.\n3. **Citation Auditor**: Back-references every generated claim to exact source chunks before synthesizing the final output.\n\n```python\nfrom langgraph.graph import StateGraph, END\n\nworkflow = StateGraph(AgentResearchState)\nworkflow.add_node(\"planner\", planner_node)\nworkflow.add_node(\"retriever\", pinecone_retriever_node)\nworkflow.add_node(\"auditor\", citation_audit_node)\n```\n\n*All outputs are streamed over Server-Sent Events (SSE) with live telemetry.*",
+          createdAt: new Date(Date.now() - 1000 * 60 * 29).toISOString(),
+          sources: [
+            { title: "TriVisionX Multi-Agent Spec v2.4", url: "/docs", score: 0.98 },
+            { title: "Pinecone Vector RAG Architecture", url: "/blog", score: 0.94 }
+          ],
+        },
+      ],
+    },
+    {
+      id: "demo-c2",
+      title: "Competitive Analysis: Multi-Model Routing",
+      folder: "Work Projects",
+      pinned: false,
+      updatedAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+      messageCount: 2,
+      preview: "Routing between Gemini 2.5 Flash, GPT-4o, and Claude 3.5 Sonnet...",
+      messages: [
+        {
+          id: "demo-m3",
+          role: "user",
+          content: "Compare latency and token cost when routing between Gemini 2.5 Flash and Claude 3.5 Sonnet.",
+          createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+        },
+        {
+          id: "demo-m4",
+          role: "assistant",
+          content: "| Model | Latency (p50) | Ingest Cost / 1M | Reasoning Tier |\n|---|---|---|---|\n| **Gemini 2.5 Flash** | ~350ms | $0.075 | High (Default Fast) |\n| **Claude 3.5 Sonnet** | ~920ms | $3.00 | Ultra-Deep Analysis |\n| **Local Ollama Llama 3** | Zero-Cloud | $0.00 | Sovereign On-Prem |\n\nTriVisionX automatically routes routine retrieval tasks to Gemini 2.5 Flash and escalates multi-step mathematical proofs or code debugging to Claude or local models.",
+          createdAt: new Date(Date.now() - 1000 * 60 * 119).toISOString(),
+        },
+      ],
+    },
+  ], []);
+
   const fetchUser = async () => {
+    if (isDemoMode) {
+      setUser({
+        name: "Demo Guest",
+        email: "demo@trivisionx.ai",
+        role: "Guest Preview",
+      });
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
@@ -184,9 +289,25 @@ export default function AIAssistantUI() {
       if (res.ok) {
         const data = await res.json();
         setUser(data);
+        const name =
+          data.name ||
+          [data.first_name, data.last_name].filter(Boolean).join(" ") ||
+          data.username ||
+          (data.email ? data.email.split("@")[0] : "");
+        if (name && typeof window !== "undefined") {
+          localStorage.setItem("user_name", name);
+        }
       }
     } catch (err) {
-      console.error("Failed to fetch user", err);
+      if (isDemoMode) {
+        setUser({
+          name: "Demo Guest",
+          email: "demo@trivisionx.ai",
+          role: "Guest Preview",
+        });
+      } else {
+        console.error("Failed to fetch user", err);
+      }
     }
   };
 
@@ -216,6 +337,11 @@ export default function AIAssistantUI() {
   useEffect(() => {
     const fetchConversations = async () => {
       const token = localStorage.getItem("token");
+      if (isDemoMode) {
+        setConversations(DEMO_CONVERSATIONS);
+        setIsConversationsLoaded(true);
+        return;
+      }
       if (!token) return;
       try {
         const apiUrl = API_BASE_URL;
@@ -235,17 +361,25 @@ export default function AIAssistantUI() {
             })),
           );
           setIsConversationsLoaded(true);
+        } else if (isDemoMode) {
+          setConversations(DEMO_CONVERSATIONS);
+          setIsConversationsLoaded(true);
         }
       } catch (err) {
-        console.error(err);
+        if (isDemoMode) {
+          setConversations(DEMO_CONVERSATIONS);
+          setIsConversationsLoaded(true);
+        } else {
+          console.error(err);
+        }
       }
     };
     fetchConversations();
-  }, []);
+  }, [isDemoMode, DEMO_CONVERSATIONS]);
 
   useEffect(() => {
     if (isConversationsLoaded) {
-      const specialIds = ["new", "email", "docs", "brain", "calendar", "tasks", "notes", "integrations", "plugins", "setting", "settings"];
+      const specialIds = ["new", "email", "docs", "brain", "calendar", "tasks", "notes", "integrations", "plugins", "setting", "settings", "competitive", "memory"];
       if (!selectedId) {
         setSelectedId("new");
       } else if (!specialIds.includes(selectedId)) {
@@ -422,6 +556,76 @@ export default function AIAssistantUI() {
       createdAt: now,
       ...(fileRef ? { attachedFile: fileRef } : {}),
     };
+
+    if (isDemoMode) {
+      if (convId === "new") {
+        targetConvId = "demo-" + Math.random().toString(36).slice(2, 9);
+        const initialConv = {
+          id: targetConvId,
+          title: content.trim().split(/\s+/).slice(0, 5).join(" ") || "New Research",
+          folder: "Work Projects",
+          pinned: false,
+          updatedAt: now,
+          messages: [userMsg],
+          messageCount: 1,
+          preview: content.slice(0, 80),
+        };
+        setConversations((prev) => [initialConv, ...prev]);
+        setSelectedId(targetConvId);
+      } else {
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === targetConvId
+              ? {
+                  ...c,
+                  messages: [...(c.messages || []), userMsg],
+                  messageCount: (c.messages || []).length + 1,
+                  preview: content.slice(0, 80),
+                  updatedAt: now,
+                }
+              : c,
+          ),
+        );
+      }
+
+      setIsResponding(true);
+      setIsThinking(true);
+      setThinkingConvId(targetConvId);
+      setAgentState("Supervisor Routing: Planner Subgraph -> Vector Retrieval Node");
+
+      setTimeout(() => {
+        setIsThinking(false);
+        const asstMsgId = "demo-asst-" + Date.now();
+        const demoResponseText = `### 🎯 Multi-Agent Research Synthesis (Live Demo)\n\nI processed your query: **"${content}"** through the TriVisionX LangGraph orchestration engine.\n\n#### 🔍 Multi-Agent Execution Steps\n1. **Planner Node**: Intent classified as \`${mode}\` — routing to Pinecone semantic vector store.\n2. **Retrieval Subgraph**: Retrieved relevant vector chunks with MMR cosine score > 0.84.\n3. **Citation Auditor**: Back-referenced claims to source documents.\n\n\`\`\`json\n{\n  "status": "success",\n  "engine": "LangGraph v0.2",\n  "active_model": "${selectedBot}",\n  "query_mode": "${mode}",\n  "demo_mode": true\n}\n\`\`\`\n\n> 💡 **Demo Mode**: You're experiencing the interactive live demo. [Create a free account](/signup) to upload your own files and connect custom LLM keys!`;
+
+        const assistantMsg = {
+          id: asstMsgId,
+          role: "assistant",
+          content: demoResponseText,
+          createdAt: new Date().toISOString(),
+          sources: [
+            { title: "TriVisionX Ingestion Spec", url: "/docs", score: 0.98 },
+            { title: "LangGraph Architecture Guide", url: "/blog", score: 0.93 },
+          ],
+        };
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === targetConvId
+              ? {
+                  ...c,
+                  messages: [...(c.messages || []), assistantMsg],
+                  messageCount: (c.messages || []).length + 1,
+                  preview: demoResponseText.slice(0, 80),
+                }
+              : c,
+          ),
+        );
+        setIsResponding(false);
+        setAgentState(null);
+      }, 1000);
+      return;
+    }
 
     if (convId === "new") {
       try {
@@ -764,28 +968,56 @@ export default function AIAssistantUI() {
   };
 
   return (
-    <div
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      className="relative flex h-screen w-full overflow-hidden bg-background text-foreground"
-    >
-      {/* Background radial glows to match landing page */}
-      <div
-        className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none opacity-0 dark:opacity-[0.06] transition-opacity duration-300 z-0"
-        style={{
-          background:
-            "radial-gradient(ellipse, rgba(139,92,246,1) 0%, rgba(59,130,246,0.5) 40%, transparent 70%)",
-        }}
-      />
-      <div
-        className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[120px] pointer-events-none opacity-0 dark:opacity-[0.04] transition-opacity duration-300 z-0"
-        style={{
-          background:
-            "radial-gradient(ellipse, rgba(59,130,246,1) 0%, rgba(139,92,246,0.5) 40%, transparent 70%)",
-        }}
-      />
+    <div className="relative flex flex-col h-screen w-full overflow-hidden bg-background text-foreground">
+      {/* Live Demo Banner — only shown on /demo route and only when NOT logged in */}
+      {isDemoMode && (!user?.email || user?.email === "demo@trivisionx.ai") && (typeof window !== "undefined" && window.location.pathname.startsWith("/demo")) && (
+        <div className="bg-primary/10 border-b border-primary/20 px-4 py-2 flex items-center justify-between text-xs text-foreground shrink-0 z-50">
+          <div className="flex items-center gap-2">
+            <span className="flex size-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="font-bold text-primary">Live Interactive Demo</span>
+            <span className="text-muted-foreground hidden sm:inline">
+              — Exploring TriVisionX guest workspace without login or signup.
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <a
+              href="/signup"
+              className="text-xs bg-primary text-primary-foreground px-3 py-1 rounded-md font-semibold hover:bg-primary/90 transition-all shadow-xs"
+            >
+              Sign Up Free
+            </a>
+            <a
+              href="/login"
+              className="text-xs text-muted-foreground hover:text-foreground hidden sm:inline"
+            >
+              Sign In
+            </a>
+          </div>
+        </div>
+      )}
 
-      <div className="relative z-10 flex h-full w-full overflow-hidden p-0 md:p-4 md:gap-4">
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="relative flex flex-1 min-h-0 w-full overflow-hidden"
+      >
+        {/* Background radial glows to match landing page */}
+        <div
+          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none opacity-0 dark:opacity-[0.06] transition-opacity duration-300 z-0"
+          style={{
+            background:
+              "radial-gradient(ellipse, rgba(139,92,246,1) 0%, rgba(59,130,246,0.5) 40%, transparent 70%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[120px] pointer-events-none opacity-0 dark:opacity-[0.04] transition-opacity duration-300 z-0"
+          style={{
+            background:
+              "radial-gradient(ellipse, rgba(59,130,246,1) 0%, rgba(139,92,246,0.5) 40%, transparent 70%)",
+          }}
+        />
+
+        <div className="relative z-10 flex h-full w-full overflow-hidden p-0 md:p-4 md:gap-4">
         <Sidebar
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
@@ -821,7 +1053,7 @@ export default function AIAssistantUI() {
         />
 
         <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background md:border md:border-border/80 md:rounded-2xl md:bg-card/20 md:backdrop-blur-md">
-          {!["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings"].includes(selectedId) && (
+          {!["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings", "competitive", "memory"].includes(selectedId) && (
             <Header
               createNewChat={createNewChat}
               sidebarCollapsed={sidebarCollapsed}
@@ -835,7 +1067,7 @@ export default function AIAssistantUI() {
               onOpenWorkflows={() => setIsWorkflowsOpen(true)}
             />
           )}
-          {["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings"].includes(selectedId) && (
+          {["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings", "competitive", "memory"].includes(selectedId) && (
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden absolute top-4 left-4 z-40 p-2 bg-background/80 hover:bg-muted border border-border/80 rounded-xl text-muted-foreground hover:text-foreground shadow-md transition-colors cursor-pointer"
@@ -881,6 +1113,10 @@ export default function AIAssistantUI() {
             <IntegrationsDashboard onNavigateToChat={() => setSelectedId(null)} />
           ) : selectedId === "setting" || selectedId === "settings" ? (
             <SettingsDashboard onNavigateToChat={() => setSelectedId(null)} />
+          ) : selectedId === "competitive" ? (
+            <CompetitiveIntelligenceDashboard />
+          ) : selectedId === "memory" ? (
+            <MemoryTimeline />
           ) : (
             <ChatPane
               ref={composerRef}
@@ -919,8 +1155,31 @@ export default function AIAssistantUI() {
             isOpen={isWorkflowsOpen}
             onClose={() => setIsWorkflowsOpen(false)}
           />
+          <OnboardingWizard
+            isOpen={isOnboardingOpen}
+            onClose={() => setIsOnboardingOpen(false)}
+            onSelectPrompt={(promptText) => {
+              setSelectedId("new");
+              setTimeout(() => {
+                composerRef.current?.setValue?.(promptText);
+                composerRef.current?.focus?.();
+              }, 150);
+            }}
+          />
+          <FloatingVoiceAssistant
+            onTranscribeText={(text) => {
+              composerRef.current?.setValue?.(text);
+              composerRef.current?.focus?.();
+            }}
+            onSendPrompt={(text) => {
+              if (selected) {
+                sendMessage(selected.id, text, "agentic", null, selectedBot, {}, true);
+              }
+            }}
+          />
         </main>
       </div>
     </div>
+  </div>
   );
 }

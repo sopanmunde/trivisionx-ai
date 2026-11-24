@@ -18,10 +18,22 @@ export function AuthGuard({ children }: AuthGuardProps) {
         .split("; ")
         .find((row) => row.startsWith("auth_token="))
 
-      if (!token && !cookieAuth) {
+      const isDemo =
+        localStorage.getItem("is_demo") === "true" ||
+        document.cookie.includes("is_demo=true") ||
+        (typeof window !== "undefined" &&
+          (window.location.search.includes("demo=true") ||
+           window.location.pathname.startsWith("/demo")))
+
+      if (!token && !cookieAuth && !isDemo) {
         setIsAuthenticated(false)
         router.replace("/login")
       } else {
+        if (isDemo && !token) {
+          localStorage.setItem("is_demo", "true")
+          localStorage.setItem("token", "demo_guest_token")
+          document.cookie = "is_demo=true; path=/; max-age=86400"
+        }
         setIsAuthenticated(true)
       }
     } catch {

@@ -1,19 +1,15 @@
 import { PageShell, Section } from "@/components/page-shell";
 import type { Metadata } from "next";
-import { Calendar, Clock, ArrowUpRight, Rss, Bookmark } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Separator } from "@/components/ui/separator";
+import { Rss } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { BlogReader, type BlogPost } from "@/components/BlogReader";
 
 export const metadata: Metadata = {
   title: "Blog — TriVisionX",
   description: "Engineering insights, AI research, and product updates from the TriVisionX team.",
 };
 
-const posts = [
+const posts: BlogPost[] = [
   {
     category: "Engineering",
     author: "Alice Chen",
@@ -95,8 +91,6 @@ const categoryVariant: Record<string, string> = {
 };
 
 export default function BlogPage() {
-  const featured = posts.find((p) => p.featured)!;
-  const rest = posts.filter((p) => !p.featured);
   const categories = ["Engineering", "Research", "Product"] as const;
 
   return (
@@ -105,68 +99,6 @@ export default function BlogPage() {
       title="Insights & Updates"
       subtitle="Engineering deep-dives, AI research, and product announcements from the TriVisionX team."
     >
-      {/* Featured Post */}
-      <HoverCard>
-        <HoverCardTrigger asChild>
-          <Card className="mb-10 group cursor-pointer hover:border-primary/50 transition-colors duration-200 overflow-hidden">
-            <CardHeader className="pb-4 space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className={`text-[11px] font-mono ${categoryVariant[featured.category]}`}>
-                  {featured.category}
-                </Badge>
-                <Badge variant="secondary" className="text-[10px] font-mono gap-1">
-                  <Bookmark className="w-3 h-3" />
-                  Featured
-                </Badge>
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
-                {featured.title}
-              </h2>
-              <p className="text-muted-foreground leading-relaxed max-w-3xl">
-                {featured.excerpt}
-              </p>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <Separator className="mb-4" />
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback className={`${featured.authorColor} text-white text-xs font-mono font-semibold`}>
-                      {featured.authorInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground leading-none mb-1">{featured.author}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{featured.date}</span>
-                      <span>·</span>
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{featured.readTime} read</span>
-                    </div>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
-                  Read article
-                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-72 p-4">
-          <div className="flex gap-3">
-            <Avatar className="w-9 h-9 shrink-0">
-              <AvatarFallback className={`${featured.authorColor} text-white text-xs font-mono font-semibold`}>
-                {featured.authorInitials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">{featured.author}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">{featured.authorBio}</p>
-            </div>
-          </div>
-        </HoverCardContent>
-      </HoverCard>
-
       {/* Category Stats */}
       <div className="grid grid-cols-3 gap-4 mb-10">
         {categories.map((cat) => (
@@ -179,75 +111,12 @@ export default function BlogPage() {
         ))}
       </div>
 
-      {/* All Posts Grid */}
-      <Section title="All Articles">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {rest.map((post) => (
-            <HoverCard key={post.title}>
-              <HoverCardTrigger asChild>
-                <Card className="group cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all duration-200 flex flex-col h-full">
-                  <CardHeader className="pb-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className={`text-[10px] font-mono ${categoryVariant[post.category]}`}>
-                        {post.category}
-                      </Badge>
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
-                        <Clock className="w-3 h-3" />
-                        {post.readTime}
-                      </span>
-                    </div>
-                    <h3 className="text-base font-bold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
-                      {post.title}
-                    </h3>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col justify-between gap-4 pt-0">
-                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                      {post.excerpt}
-                    </p>
-                    <div>
-                      <Separator className="mb-3" />
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="w-6 h-6">
-                            <AvatarFallback className={`${post.authorColor} text-white text-[9px] font-mono font-semibold`}>
-                              {post.authorInitials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs font-medium text-foreground">{post.author}</span>
-                          <span className="text-xs text-muted-foreground font-mono hidden sm:flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />{post.date}
-                          </span>
-                        </div>
-                        <ArrowUpRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-72 p-4">
-                <div className="flex gap-3">
-                  <Avatar className="w-9 h-9 shrink-0">
-                    <AvatarFallback className={`${post.authorColor} text-white text-xs font-mono font-semibold`}>
-                      {post.authorInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-foreground">{post.author}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{post.authorBio}</p>
-                    <Badge variant="outline" className={`text-[10px] font-mono mt-1 ${categoryVariant[post.category]}`}>
-                      {post.category}
-                    </Badge>
-                  </div>
-                </div>
-              </HoverCardContent>
-            </HoverCard>
-          ))}
-        </div>
-      </Section>
+      {/* Interactive Blog Reader with full modals */}
+      <BlogReader posts={posts} />
 
       {/* Newsletter */}
       <Section title="Stay Updated">
-        <Card className="p-8 bg-muted/30 border-dashed text-center">
+        <Card className="p-8 bg-muted/30 border-dashed text-center mt-12">
           <div className="flex flex-col items-center gap-4 max-w-sm mx-auto">
             <div className="w-10 h-10 rounded-full bg-secondary border border-border flex items-center justify-center">
               <Rss className="w-4 h-4 text-foreground" />
