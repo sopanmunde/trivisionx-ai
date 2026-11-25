@@ -169,35 +169,45 @@ export function MemoryTimeline() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="border-border/80 bg-card/60">
-          <CardContent className="p-4">
-            <span className="text-[11px] text-muted-foreground uppercase font-medium">Indexed Memory Chunks</span>
-            <p className="text-xl font-bold text-foreground mt-0.5">142 vectors</p>
-            <span className="text-[10px] text-emerald-500">100% active retention</span>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+        <Card className="dashboard-3d-card dashboard-3d-card-interactive">
+          <CardContent className="p-4 space-y-1">
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1.5">
+              <Database className="size-3 text-primary" /> Indexed Chunks
+            </span>
+            <p className="text-xl font-extrabold text-foreground tracking-tight">142 vectors</p>
+            <span className="text-[10px] font-mono text-emerald-500 flex items-center gap-1">
+              <CheckCircle2 className="size-2.5" /> 100% active retention
+            </span>
           </CardContent>
         </Card>
-        <Card className="border-border/80 bg-card/60">
-          <CardContent className="p-4">
-            <span className="text-[11px] text-muted-foreground uppercase font-medium">Embedding Backbone</span>
-            <p className="text-sm font-semibold text-foreground mt-1">text-embedding-3</p>
-            <span className="text-[10px] text-muted-foreground">1536-dimensional</span>
+        <Card className="dashboard-3d-card dashboard-3d-card-interactive">
+          <CardContent className="p-4 space-y-1">
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1.5">
+              <Sparkles className="size-3 text-purple-500" /> Vector Backbone
+            </span>
+            <p className="text-sm font-bold text-foreground truncate">text-embedding-3</p>
+            <span className="text-[10px] font-mono text-muted-foreground">1536-dim Pinecone</span>
           </CardContent>
         </Card>
-        <Card className="border-border/80 bg-card/60">
-          <CardContent className="p-4">
-            <span className="text-[11px] text-muted-foreground uppercase font-medium">Mean Retrieval Latency</span>
-            <p className="text-xl font-bold text-foreground mt-0.5">14.2 ms</p>
-            <span className="text-[10px] text-primary">Sub-20ms Pinecone Serverless</span>
+        <Card className="dashboard-3d-card dashboard-3d-card-interactive">
+          <CardContent className="p-4 space-y-1">
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1.5">
+              <Clock className="size-3 text-cyan-500" /> Mean Retrieval
+            </span>
+            <p className="text-xl font-extrabold text-foreground tracking-tight">14.2 ms</p>
+            <span className="text-[10px] font-mono text-primary">Sub-20ms P95 latency</span>
           </CardContent>
         </Card>
-        <Card className="border-border/80 bg-card/60">
-          <CardContent className="p-4">
-            <span className="text-[11px] text-muted-foreground uppercase font-medium">Zero-Trust Security</span>
-            <p className="text-sm font-semibold text-foreground mt-1 flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" /> Isolated Tenant
+        <Card className="dashboard-3d-card dashboard-3d-card-interactive">
+          <CardContent className="p-4 space-y-1">
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1.5">
+              <ShieldCheck className="size-3 text-emerald-500" /> Tenant Isolation
+            </span>
+            <p className="text-sm font-bold text-foreground flex items-center gap-1.5">
+              Zero-Trust Namespace
             </p>
-            <span className="text-[10px] text-muted-foreground">SOC2 AES-256</span>
+            <span className="text-[10px] font-mono text-muted-foreground">SOC2 AES-256 Vault</span>
           </CardContent>
         </Card>
       </div>
@@ -211,13 +221,13 @@ export function MemoryTimeline() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <Card className="border-primary/40 bg-primary/5">
-              <CardContent className="p-4 space-y-3">
+            <Card className="dashboard-3d-card border-primary/40 bg-primary/5">
+              <CardContent className="p-5 space-y-3.5">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-semibold text-foreground flex items-center gap-2">
+                  <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
                     <Sparkles className="h-3.5 w-3.5 text-primary" /> Manually Encode Permanent Fact / Rule
                   </h4>
-                  <button onClick={() => setIsAdding(false)} className="text-muted-foreground hover:text-foreground text-xs">
+                  <button onClick={() => setIsAdding(false)} className="text-muted-foreground hover:text-foreground text-xs font-medium cursor-pointer">
                     Cancel
                   </button>
                 </div>
@@ -226,10 +236,10 @@ export function MemoryTimeline() {
                   value={newMemoryText}
                   onChange={(e) => setNewMemoryText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddMemory()}
-                  className="text-xs h-9 bg-background"
+                  className="text-xs h-9 bg-background border-border/80 focus-visible:ring-primary"
                 />
                 <div className="flex justify-end gap-2">
-                  <Button size="sm" onClick={handleAddMemory} className="text-xs h-8">
+                  <Button size="sm" onClick={handleAddMemory} className="text-xs h-8 bg-primary text-primary-foreground font-semibold">
                     Commit to Memory
                   </Button>
                 </div>
@@ -241,15 +251,15 @@ export function MemoryTimeline() {
 
       {/* Filters and Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto p-1 rounded-xl bg-card border border-border/70 [box-shadow:0_0_0_1px_rgba(0,0,0,.02)]">
           {(["all", "fact", "document", "preference", "session"] as const).map((cat) => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer ${
                 filter === cat
-                  ? "bg-primary text-primary-foreground font-semibold"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
               }`}
             >
               {cat}
@@ -258,54 +268,54 @@ export function MemoryTimeline() {
         </div>
 
         <div className="relative w-full sm:w-64">
-          <Search className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
+          <Search className="h-3.5 w-3.5 absolute left-3 top-2.5 text-muted-foreground" />
           <Input
             placeholder="Search vectors & facts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 text-xs h-8 bg-background"
+            className="pl-8 text-xs h-9 bg-card border-border/80"
           />
         </div>
       </div>
 
       {/* Memory Timeline List */}
-      <div className="space-y-3 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-border/60">
+      <div className="space-y-3.5 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-gradient-to-b before:from-primary/40 before:via-border/60 before:to-transparent">
         {filteredMemories.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground text-xs">
+          <div className="text-center py-12 text-muted-foreground text-xs font-mono">
             No persistent memories match your search filter.
           </div>
         ) : (
           filteredMemories.map((mem) => (
             <div key={mem.id} className="relative flex items-start gap-4 pl-8 group">
               {/* Timeline marker */}
-              <div className={`absolute left-2 top-3 h-3 w-3 rounded-full border-2 bg-background ${
-                mem.pinned ? "border-primary ring-2 ring-primary/20" : "border-border"
+              <div className={`absolute left-2 top-4 h-3 w-3 rounded-full border-2 bg-background transition-transform group-hover:scale-125 ${
+                mem.pinned ? "border-primary ring-2 ring-primary/30" : "border-border"
               }`} />
 
-              <Card className="flex-1 border-border/80 bg-card/80 hover:border-primary/40 transition-all">
-                <CardContent className="p-4 space-y-2">
+              <Card className="dashboard-3d-card flex-1 hover:border-primary/40 transition-all">
+                <CardContent className="p-4 sm:p-5 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {getCategoryBadge(mem.category)}
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <span className="text-[11px] font-mono text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" /> {mem.timestamp}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                      <span className="text-[10px] font-mono text-muted-foreground">
+                      <span className="text-[10px] font-mono font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                         {(mem.confidence * 100).toFixed(0)}% match
                       </span>
                       <button
                         onClick={() => handleTogglePin(mem.id)}
-                        className={`p-1 rounded hover:bg-muted transition-colors ${mem.pinned ? "text-primary" : "text-muted-foreground"}`}
+                        className={`p-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer ${mem.pinned ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
                         title={mem.pinned ? "Unpin memory" : "Pin memory"}
                       >
                         <Pin className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleDelete(mem.id)}
-                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                         title="Delete memory"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -313,13 +323,13 @@ export function MemoryTimeline() {
                     </div>
                   </div>
 
-                  <p className="text-xs text-foreground font-medium leading-relaxed">
+                  <p className="text-xs sm:text-sm text-foreground font-medium leading-relaxed">
                     {mem.content}
                   </p>
 
-                  <div className="flex items-center justify-between pt-1 border-t border-border/40 text-[11px] text-muted-foreground">
-                    <span className="truncate">Source: {mem.source}</span>
-                    <span className="text-[10px] font-mono text-primary/80">vector_id: {mem.id}</span>
+                  <div className="flex items-center justify-between pt-2 border-t border-border/50 text-[11px] text-muted-foreground">
+                    <span className="truncate">Source: <span className="font-medium text-foreground">{mem.source}</span></span>
+                    <span className="text-[10px] font-mono text-primary/80 bg-primary/5 px-2 py-0.5 rounded-md border border-primary/20">vector_id: {mem.id}</span>
                   </div>
                 </CardContent>
               </Card>

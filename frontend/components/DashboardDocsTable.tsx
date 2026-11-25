@@ -1322,7 +1322,7 @@ function DocumentDataTable({
             </div>
           )
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs transition-all duration-300">
+          <div className="dashboard-3d-card overflow-hidden">
             <DndContext
               collisionDetection={closestCenter}
               modifiers={[restrictToVerticalAxis]}
@@ -1480,7 +1480,7 @@ function ConversationDataTable() {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border">
+    <div className="dashboard-3d-card overflow-hidden">
       <DndContext
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis]}

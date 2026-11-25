@@ -473,18 +473,18 @@ export function BrainDashboard() {
 
   return (
     <TooltipProvider>
-      <div className="flex h-full flex-col overflow-hidden bg-background">
-        {/* ── TOP HEADER BAR ────────────────────────────────────────────── */}
-        <div className="shrink-0 border-b border-border bg-card shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 gap-3">
+      <div className="flex h-full flex-col overflow-hidden bg-background p-3 sm:p-5 gap-3.5 sm:gap-4">
+        {/* ── TOP HEADER BAR (3D Card) ────────────────────────────────────────────── */}
+        <div className="dashboard-3d-card p-4 sm:p-5 shrink-0 relative">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex size-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 shadow-xs shrink-0">
+              <div className="flex size-10 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 shadow-xs shrink-0">
                 <Brain className="size-5 text-primary" />
               </div>
               <div>
                 <h1 className="text-base font-extrabold text-foreground leading-none flex items-center gap-2 flex-wrap">
                   Brain Dashboard
-                  <Badge variant="secondary" className="text-[10px] font-mono font-bold py-0.5 px-2 bg-primary/15 text-primary border border-primary/20">
+                  <Badge variant="secondary" className="text-[10px] font-mono font-bold py-0.5 px-2 bg-primary/15 text-primary border border-primary/25">
                     v2.6 Real-Time
                   </Badge>
                 </h1>
@@ -493,7 +493,7 @@ export function BrainDashboard() {
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               {activeProvider && (
-                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 shadow-2xs">
                   <span className="size-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
                   <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold hidden sm:inline">Active Engine:</span>
                   <span className="text-xs font-extrabold text-foreground">{activeProvider.name}</span>
@@ -516,156 +516,155 @@ export function BrainDashboard() {
           </div>
         </div>
 
-        {/* ── BODY ──────────────────────────────────────────────────────── */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
-          {/* MAIN CONFIGURATION / TELEMETRY / MATRIX AREA */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-            {/* UNIFIED TOP TAB NAVIGATION BAR */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-6 py-2 sm:py-3 border-b border-border bg-card shrink-0 gap-2">
-              <div className="flex items-center gap-2">
-                {mainTab === "overview" && <Sparkles className="size-4 text-primary animate-pulse" />}
-                {mainTab === "telemetry" && <Activity className="size-4 text-emerald-400 animate-pulse" />}
-                {mainTab === "configure" && <Sliders className="size-4 text-blue-400" />}
-                {mainTab === "matrix" && <Scale className="size-4 text-amber-400" />}
-                <h2 className="text-sm font-extrabold text-foreground capitalize truncate">
-                  {mainTab === "overview" ? "Command Center" :
-                    mainTab === "telemetry" ? "Real-Time Telemetry" :
-                      mainTab === "configure" ? `${provider.name} Settings` : "LLM Metrics Matrix"}
-                </h2>
-              </div>
-
-              <div className="flex items-center gap-1 bg-muted p-0.5 rounded-lg border border-border overflow-x-auto scrollbar-none max-w-full">
-                {workspaceModes.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = mainTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setMainTab(item.id)}
-                      className={cn(
-                        "px-3 py-1 text-[11px] font-semibold rounded-md transition-all flex items-center gap-1.5 cursor-pointer",
-                        isActive
-                          ? "bg-background text-foreground shadow-xs border border-border"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <Icon className={cn("size-3", item.color, isActive && "animate-pulse")} />
-                      {item.label}
-                      {item.id === "telemetry" && (
-                        <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-400 text-[8px] font-extrabold px-1 py-0 border border-emerald-500/30">LIVE</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+        {/* ── 3D WORKSPACE CONTAINER ──────────────────────────────────────── */}
+        <div className="dashboard-3d-container flex flex-1 flex-col min-h-0 overflow-hidden relative">
+          {/* UNIFIED TOP TAB NAVIGATION BAR */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 border-b border-black/15 dark:border-white/20 bg-muted/30 shrink-0 gap-2">
+            <div className="flex items-center gap-2">
+              {mainTab === "overview" && <Sparkles className="size-4 text-primary animate-pulse" />}
+              {mainTab === "telemetry" && <Activity className="size-4 text-emerald-400 animate-pulse" />}
+              {mainTab === "configure" && <Sliders className="size-4 text-blue-400" />}
+              {mainTab === "matrix" && <Scale className="size-4 text-amber-400" />}
+              <h2 className="text-sm font-extrabold text-foreground capitalize truncate">
+                {mainTab === "overview" ? "Command Center" :
+                  mainTab === "telemetry" ? "Real-Time Telemetry" :
+                    mainTab === "configure" ? `${provider.name} Settings` : "LLM Metrics Matrix"}
+              </h2>
             </div>
 
-            {/* TAB CONTENT VIEWS */}
-            <div className="flex-1 flex min-h-0 relative">
-              {mainTab === "overview" && (
-                <BrainOverviewTab
-                  liveTtft={liveTtft}
-                  liveTokensPerSec={liveTokensPerSec}
-                  liveReqPerMin={liveReqPerMin}
-                  liveVectorLatency={liveVectorLatency}
-                  fastestComparedModel={fastestComparedModel}
-                  cheapestComparedModel={cheapestComparedModel}
-                  highestQualityComparedModel={highestQualityComparedModel}
-                  setMainTab={setMainTab}
-                />
-              )}
-
-              {mainTab === "telemetry" && (
-                <BrainTelemetryTab
-                  telemetryLive={telemetryLive}
-                  setTelemetryLive={setTelemetryLive}
-                  telemetryInterval={telemetryInterval}
-                  setTelemetryInterval={setTelemetryInterval}
-                  telemetryWindow={telemetryWindow}
-                  setTelemetryWindow={setTelemetryWindow}
-                  liveTtft={liveTtft}
-                  liveP95={liveP95}
-                  liveTokensPerSec={liveTokensPerSec}
-                  setLiveTokensPerSec={setLiveTokensPerSec}
-                  liveReqPerMin={liveReqPerMin}
-                  setLiveReqPerMin={setLiveReqPerMin}
-                  liveVectorLatency={liveVectorLatency}
-                  throughputGraph={throughputGraph}
-                  telemetryStreamLogs={telemetryStreamLogs}
-                  setTelemetryStreamLogs={setTelemetryStreamLogs}
-                />
-              )}
-
-              {mainTab === "configure" && (
-                <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
-                  <BrainProviderSidebar
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    listProviders={listProviders}
-                    selectedProviderId={selectedProviderId}
-                    selectProvider={selectProvider}
-                  />
-                  <BrainConfigTab
-                    provider={provider}
-                    activateProvider={activateProvider}
-                    testConnection={testConnection}
-                    testingId={testingId}
-                    selectedModel={selectedModel}
-                    setSelectedModel={setSelectedModel}
-                    temperature={temperature}
-                    setTemperature={setTemperature}
-                    maxTokens={maxTokens}
-                    setMaxTokens={setMaxTokens}
-                    topP={topP}
-                    setTopP={setTopP}
-                    systemPrompt={systemPrompt}
-                    setSystemPrompt={setSystemPrompt}
-                    benchmarkStatus={benchmarkStatus}
-                    runSpeedBenchmark={runSpeedBenchmark}
-                    benchmarkProgress={benchmarkProgress}
-                    benchmarkSpeed={benchmarkSpeed}
-                    benchmarkLatency={benchmarkLatency}
-                    endpoint={endpoint}
-                    setLocalEndpoint={setLocalEndpoint}
-                    setEndpointEdited={setEndpointEdited}
-                    providerKeys={providerKeys}
-                    addKeyMode={addKeyMode}
-                    setAddKeyMode={setAddKeyMode}
-                    newLabel={newLabel}
-                    setNewLabel={setNewLabel}
-                    newKeyVal={newKeyVal}
-                    setNewKeyVal={setNewKeyVal}
-                    showKey={showKey}
-                    setShowKey={setShowKey}
-                    saveKey={saveKey}
-                    deleteKey={deleteKey}
-                    toggleKey={toggleKey}
-                  />
-                </div>
-              )}
-
-
-
-              {mainTab === "matrix" && (
-                <BrainMatrixTab
-                  sortedCompareMetrics={sortedCompareMetrics}
-                  selectedCompareIds={selectedCompareIds}
-                  toggleCompareId={toggleCompareId}
-                  handleSort={handleSort}
-                  selectedMetrics={selectedMetrics}
-                  fastestComparedModel={fastestComparedModel}
-                  cheapestComparedModel={cheapestComparedModel}
-                  highestQualityComparedModel={highestQualityComparedModel}
-                />
-              )}
+            <div className="dashboard-inner-card flex items-center gap-1 p-1 overflow-x-auto scrollbar-none max-w-full">
+              {workspaceModes.map((item) => {
+                const Icon = item.icon;
+                const isActive = mainTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setMainTab(item.id)}
+                    className={cn(
+                      "px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
+                      isActive
+                        ? "bg-background text-foreground shadow-xs border border-black/15 dark:border-white/20"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Icon className={cn("size-3", item.color, isActive && "animate-pulse")} />
+                    {item.label}
+                    {item.id === "telemetry" && (
+                      <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-400 text-[8px] font-extrabold px-1 py-0 border border-emerald-500/30">LIVE</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* RIGHT: Usage Stats Visualization Drawer */}
-          {mainTab !== "telemetry" && mainTab !== "overview" && (
-            <BrainUsageSidebar providers={allProviders} />
-          )}
+          {/* MAIN BODY: CONFIGURATION / TELEMETRY / MATRIX AREA */}
+          <div className="flex flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+              {/* TAB CONTENT VIEWS */}
+              <div className="flex-1 flex min-h-0 relative">
+                {mainTab === "overview" && (
+                  <BrainOverviewTab
+                    liveTtft={liveTtft}
+                    liveTokensPerSec={liveTokensPerSec}
+                    liveReqPerMin={liveReqPerMin}
+                    liveVectorLatency={liveVectorLatency}
+                    fastestComparedModel={fastestComparedModel}
+                    cheapestComparedModel={cheapestComparedModel}
+                    highestQualityComparedModel={highestQualityComparedModel}
+                    setMainTab={setMainTab}
+                  />
+                )}
 
+                {mainTab === "telemetry" && (
+                  <BrainTelemetryTab
+                    telemetryLive={telemetryLive}
+                    setTelemetryLive={setTelemetryLive}
+                    telemetryInterval={telemetryInterval}
+                    setTelemetryInterval={setTelemetryInterval}
+                    telemetryWindow={telemetryWindow}
+                    setTelemetryWindow={setTelemetryWindow}
+                    liveTtft={liveTtft}
+                    liveP95={liveP95}
+                    liveTokensPerSec={liveTokensPerSec}
+                    setLiveTokensPerSec={setLiveTokensPerSec}
+                    liveReqPerMin={liveReqPerMin}
+                    setLiveReqPerMin={setLiveReqPerMin}
+                    liveVectorLatency={liveVectorLatency}
+                    throughputGraph={throughputGraph}
+                    telemetryStreamLogs={telemetryStreamLogs}
+                    setTelemetryStreamLogs={setTelemetryStreamLogs}
+                  />
+                )}
+
+                {mainTab === "configure" && (
+                  <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+                    <BrainProviderSidebar
+                      activeTab={activeTab}
+                      setActiveTab={setActiveTab}
+                      listProviders={listProviders}
+                      selectedProviderId={selectedProviderId}
+                      selectProvider={selectProvider}
+                    />
+                    <BrainConfigTab
+                      provider={provider}
+                      activateProvider={activateProvider}
+                      testConnection={testConnection}
+                      testingId={testingId}
+                      selectedModel={selectedModel}
+                      setSelectedModel={setSelectedModel}
+                      temperature={temperature}
+                      setTemperature={setTemperature}
+                      maxTokens={maxTokens}
+                      setMaxTokens={setMaxTokens}
+                      topP={topP}
+                      setTopP={setTopP}
+                      systemPrompt={systemPrompt}
+                      setSystemPrompt={setSystemPrompt}
+                      benchmarkStatus={benchmarkStatus}
+                      runSpeedBenchmark={runSpeedBenchmark}
+                      benchmarkProgress={benchmarkProgress}
+                      benchmarkSpeed={benchmarkSpeed}
+                      benchmarkLatency={benchmarkLatency}
+                      endpoint={endpoint}
+                      setLocalEndpoint={setLocalEndpoint}
+                      setEndpointEdited={setEndpointEdited}
+                      providerKeys={providerKeys}
+                      addKeyMode={addKeyMode}
+                      setAddKeyMode={setAddKeyMode}
+                      newLabel={newLabel}
+                      setNewLabel={setNewLabel}
+                      newKeyVal={newKeyVal}
+                      setNewKeyVal={setNewKeyVal}
+                      showKey={showKey}
+                      setShowKey={setShowKey}
+                      saveKey={saveKey}
+                      deleteKey={deleteKey}
+                      toggleKey={toggleKey}
+                    />
+                  </div>
+                )}
+
+                {mainTab === "matrix" && (
+                  <BrainMatrixTab
+                    sortedCompareMetrics={sortedCompareMetrics}
+                    selectedCompareIds={selectedCompareIds}
+                    toggleCompareId={toggleCompareId}
+                    handleSort={handleSort}
+                    selectedMetrics={selectedMetrics}
+                    fastestComparedModel={fastestComparedModel}
+                    cheapestComparedModel={cheapestComparedModel}
+                    highestQualityComparedModel={highestQualityComparedModel}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* RIGHT: Usage Stats Visualization Drawer */}
+            {mainTab !== "telemetry" && mainTab !== "overview" && (
+              <BrainUsageSidebar providers={allProviders} />
+            )}
+          </div>
         </div>
 
         <ExportModal

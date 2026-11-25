@@ -1052,7 +1052,7 @@ export default function AIAssistantUI({ isDemo = false }) {
           onUserUpdate={fetchUser}
         />
 
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background md:border md:border-border/80 md:rounded-2xl md:bg-card/20 md:backdrop-blur-md">
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background md:border md:border-black/15 dark:md:border-white/20 md:rounded-3xl md:bg-card/85 dark:md:bg-card/65 md:backdrop-blur-2xl transition-all duration-300 md:[box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_8px_32px_rgba(0,0,0,.06),0_20px_60px_rgba(0,0,0,.04)] dark:md:[box-shadow:0_0_0_1px_rgba(255,255,255,.1),0_16px_45px_rgba(0,0,0,.6)]">
           {!["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings", "competitive", "memory"].includes(selectedId) && (
             <Header
               createNewChat={createNewChat}

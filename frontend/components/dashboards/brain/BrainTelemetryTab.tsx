@@ -171,17 +171,17 @@ export function BrainTelemetryTab({
   };
 
   return (
-    <div className="flex-1 p-6 overflow-y-auto scrollbar-thin space-y-6 bg-background/50">
+    <div className="flex-1 p-4 sm:p-6 overflow-y-auto scrollbar-thin space-y-6 bg-background/50">
       {/* Telemetry Control Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl border border-border bg-card shadow-xs">
+      <div className="dashboard-3d-card flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+          <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
             <Activity className="size-5 text-emerald-500 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-xs font-bold text-foreground">Real-Time Brain Telemetry Engine</h3>
-              <span className="inline-flex items-center rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9.5px] font-bold px-2 py-0.5">
+              <span className="inline-flex items-center rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 text-[9.5px] font-bold px-2 py-0.5">
                 {telemetryLive ? "LIVE STREAMING" : "PAUSED"}
               </span>
             </div>
@@ -191,7 +191,7 @@ export function BrainTelemetryTab({
 
         <div className="flex items-center gap-2.5">
           {/* Time Window Buttons */}
-          <div className="flex items-center rounded-lg bg-muted p-0.5 border border-border text-[11px]">
+          <div className="dashboard-inner-card flex items-center p-0.5 text-[11px]">
             {(["1m", "5m", "1h", "24h"] as const).map((tw) => (
               <button
                 key={tw}
@@ -199,7 +199,7 @@ export function BrainTelemetryTab({
                 className={cn(
                   "px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer",
                   telemetryWindow === tw
-                    ? "bg-background text-foreground shadow-xs border border-border"
+                    ? "bg-background text-foreground shadow-xs border border-black/15 dark:border-white/20"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -213,7 +213,7 @@ export function BrainTelemetryTab({
             value={String(telemetryInterval)}
             onValueChange={(val) => setTelemetryInterval(Number(val))}
           >
-            <SelectTrigger className="h-8 text-xs font-semibold w-28 bg-background">
+            <SelectTrigger className="h-8 text-xs font-semibold w-28 bg-background border-black/15 dark:border-white/20">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -228,7 +228,7 @@ export function BrainTelemetryTab({
             size="sm"
             variant={telemetryLive ? "outline" : "default"}
             onClick={() => setTelemetryLive(!telemetryLive)}
-            className="h-8 text-xs font-semibold gap-1.5 cursor-pointer"
+            className="h-8 text-xs font-semibold gap-1.5 cursor-pointer border-black/15 dark:border-white/20"
           >
             {telemetryLive ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
             {telemetryLive ? "Pause Feed" : "Resume Feed"}
@@ -243,7 +243,7 @@ export function BrainTelemetryTab({
               setLiveReqPerMin(92);
               toast.info("Simulated telemetry load spike triggered!");
             }}
-            className="h-8 text-xs font-semibold gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 cursor-pointer"
+            className="h-8 text-xs font-semibold gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 cursor-pointer"
           >
             <Zap className="size-3.5 text-primary" />
             Test Pulse Spike
@@ -254,7 +254,7 @@ export function BrainTelemetryTab({
       {/* Key Telemetry Stat Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4.5">
         {/* 1. Active Latency Card */}
-        <div className="p-5 rounded-xl border border-border/80 bg-card relative overflow-hidden shadow-xs hover:border-emerald-500/50 transition-all">
+        <div className="dashboard-3d-card dashboard-3d-card-interactive p-5 relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-foreground flex items-center gap-2">
               <Clock className="size-4 text-emerald-400" /> Active Latency (TTFT)
@@ -268,7 +268,7 @@ export function BrainTelemetryTab({
         </div>
 
         {/* 2. Model Tokens Generation Rate */}
-        <div className="p-5 rounded-xl border border-border/80 bg-card relative overflow-hidden shadow-xs hover:border-blue-500/50 transition-all">
+        <div className="dashboard-3d-card dashboard-3d-card-interactive p-5 relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-foreground flex items-center gap-2">
               <Zap className="size-4 text-blue-400" /> Token Stream Speed
@@ -284,7 +284,7 @@ export function BrainTelemetryTab({
         </div>
 
         {/* 3. Request Throughput & Success Rate */}
-        <div className="p-5 rounded-xl border border-border/80 bg-card relative overflow-hidden shadow-xs hover:border-indigo-500/50 transition-all">
+        <div className="dashboard-3d-card dashboard-3d-card-interactive p-5 relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-foreground flex items-center gap-2">
               <Gauge className="size-4 text-indigo-400" /> Active Throughput
@@ -298,7 +298,7 @@ export function BrainTelemetryTab({
         </div>
 
         {/* 4. Vector Search & RAG Speed */}
-        <div className="p-5 rounded-xl border border-border/80 bg-card relative overflow-hidden shadow-xs hover:border-purple-500/50 transition-all">
+        <div className="dashboard-3d-card dashboard-3d-card-interactive p-5 relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-foreground flex items-center gap-2">
               <Layers className="size-4 text-purple-400" /> Vector RAG Search
@@ -315,10 +315,10 @@ export function BrainTelemetryTab({
       {/* Section 2: Visual Data Telemetry Bars & Latency Spectrum */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Visual Telemetry Bars: Model Token Allocation */}
-        <div className="p-5.5 rounded-xl border border-border bg-card space-y-4.5 shadow-xs">
-          <div className="flex items-center justify-between border-b border-border/60 pb-3">
+        <div className="dashboard-3d-card p-5.5 space-y-4.5">
+          <div className="flex items-center justify-between border-b border-black/15 dark:border-white/20 pb-3">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-muted border border-border">
+              <div className="p-2 rounded-xl bg-muted border border-black/10 dark:border-white/10">
                 <TrendingUp className="size-4.5 text-emerald-400" />
               </div>
               <div>
@@ -326,7 +326,7 @@ export function BrainTelemetryTab({
                 <p className="text-xs text-muted-foreground">Token allocation ratio by active provider engine</p>
               </div>
             </div>
-            <span className="text-xs font-mono text-foreground font-bold bg-muted px-2.5 py-1 rounded-md border border-border">5.37M Total Tokens</span>
+            <span className="text-xs font-mono text-foreground font-bold bg-muted px-2.5 py-1 rounded-md border border-black/15 dark:border-white/20">5.37M Total Tokens</span>
           </div>
 
           <div className="space-y-4 pt-1">
@@ -360,10 +360,10 @@ export function BrainTelemetryTab({
         </div>
 
         {/* Latency Spectrum & Provider Response Speed Bars */}
-        <div className="p-5.5 rounded-xl border border-border bg-card space-y-4.5 shadow-xs">
-          <div className="flex items-center justify-between border-b border-border/60 pb-3">
+        <div className="dashboard-3d-card p-5.5 space-y-4.5">
+          <div className="flex items-center justify-between border-b border-black/15 dark:border-white/20 pb-3">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-muted border border-border">
+              <div className="p-2 rounded-xl bg-muted border border-black/10 dark:border-white/10">
                 <Activity className="size-4.5 text-blue-400" />
               </div>
               <div>
@@ -409,10 +409,10 @@ export function BrainTelemetryTab({
       <div className={cn("grid gap-6 transition-all duration-300", isExpandedLogView ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3")}>
         {/* Live Throughput Bar Spectrum (Hidden if Log view is expanded to full width) */}
         {!isExpandedLogView && (
-          <div className="lg:col-span-2 p-4.5 rounded-xl border border-border bg-card shadow-xs flex flex-col justify-between h-[380px]">
-            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+          <div className="lg:col-span-2 p-5 dashboard-3d-card flex flex-col justify-between h-[380px]">
+            <div className="flex items-center justify-between border-b border-black/15 dark:border-white/20 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-muted border border-border">
+                <div className="p-2 rounded-xl bg-muted border border-black/10 dark:border-white/10">
                   <LineChart className="size-4.5 text-indigo-400" />
                 </div>
                 <div>
@@ -455,7 +455,7 @@ export function BrainTelemetryTab({
 
         {/* Live Stream Telemetry Log Component */}
         <div className={cn(
-          "p-4.5 rounded-xl border border-border bg-card shadow-xs flex flex-col gap-3 transition-all duration-300 overflow-hidden",
+          "p-5 dashboard-3d-card flex flex-col gap-3 transition-all duration-300 overflow-hidden",
           isExpandedLogView ? "col-span-1 h-[520px]" : "lg:col-span-1 h-[380px]"
         )}>
           {/* Header Bar */}

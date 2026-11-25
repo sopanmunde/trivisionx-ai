@@ -4,7 +4,7 @@ import React from "react";
 import { Scale, Gauge, Award, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ModelMetric, COMPARE_METRICS, ShimmerBorder, ProviderLogo } from "./types";
+import { ModelMetric, COMPARE_METRICS, ProviderLogo } from "./types";
 
 interface BrainMatrixTabProps {
   sortedCompareMetrics: ModelMetric[];
@@ -28,10 +28,10 @@ export function BrainMatrixTab({
   highestQualityComparedModel,
 }: BrainMatrixTabProps) {
   return (
-    <div className="flex-1 p-6 overflow-y-auto scrollbar-thin space-y-6 bg-background/50">
+    <div className="flex-1 p-4 sm:p-6 overflow-y-auto scrollbar-thin space-y-6 bg-background/50">
       {/* Metrics Matrix Table */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
-        <div className="p-4 border-b border-border flex items-center justify-between">
+      <div className="dashboard-3d-card overflow-hidden">
+        <div className="p-4 border-b border-black/15 dark:border-white/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Scale className="size-4 text-amber-400" />
             <h3 className="text-xs font-bold text-foreground">Model Performance Matrix</h3>
@@ -41,7 +41,7 @@ export function BrainMatrixTab({
 
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-muted/50 border-b border-border font-mono text-muted-foreground uppercase text-[10px]">
+            <thead className="bg-muted/50 border-b border-black/15 dark:border-white/20 font-mono text-muted-foreground uppercase text-[10px]">
               <tr>
                 <th className="p-3 w-10 text-center">Compare</th>
                 <th className="p-3 cursor-pointer hover:text-foreground" onClick={() => handleSort("name")}>Model Name</th>
@@ -53,7 +53,7 @@ export function BrainMatrixTab({
                 <th className="p-3 text-center cursor-pointer hover:text-foreground" onClick={() => handleSort("context")}>Context Window</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/60">
+            <tbody className="divide-y divide-black/10 dark:divide-white/10">
               {sortedCompareMetrics.map((m) => {
                 const isChecked = selectedCompareIds.includes(m.id);
                 return (
@@ -87,9 +87,9 @@ export function BrainMatrixTab({
 
         {/* Side by Side Comparative Bar Charts */}
         {selectedCompareIds.length >= 2 ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 border-t border-black/15 dark:border-white/20 bg-muted/10">
             {/* Left: Speed Comparison */}
-            <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-xs">
+            <div className="dashboard-3d-card p-5 space-y-4">
               <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Gauge className="size-4 text-primary" />
                 Throughput Comparison
@@ -117,7 +117,7 @@ export function BrainMatrixTab({
             </div>
 
             {/* Right: Accuracy/Quality Compare */}
-            <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-xs">
+            <div className="dashboard-3d-card p-5 space-y-4">
               <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Award className="size-4 text-primary" />
                 MMLU Accuracy Comparison
@@ -143,7 +143,7 @@ export function BrainMatrixTab({
             </div>
 
             {/* Cost Comparison (colspan-2) */}
-            <div className="col-span-2 rounded-xl border border-border bg-card p-5 space-y-4 shadow-xs">
+            <div className="md:col-span-2 dashboard-3d-card p-5 space-y-4">
               <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Activity className="size-4 text-primary" />
                 Cost Comparison (per 1M input tokens)
@@ -171,18 +171,18 @@ export function BrainMatrixTab({
             </div>
 
             {/* Head-to-Head Winner Badges */}
-            <div className="col-span-2 grid grid-cols-3 gap-3">
-              <div className="border border-border rounded-lg p-3 bg-muted/20 text-center">
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="dashboard-inner-card p-3 text-center">
                 <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">Fastest Option</p>
                 <p className="text-xs font-bold text-foreground font-mono truncate">{fastestComparedModel?.name}</p>
                 <Badge variant="secondary" className="mt-1 text-[9px] bg-primary/10 text-primary border-none">{fastestComparedModel?.throughput} t/s</Badge>
               </div>
-              <div className="border border-border rounded-lg p-3 bg-muted/20 text-center">
+              <div className="dashboard-inner-card p-3 text-center">
                 <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">Most Cost-Effective</p>
                 <p className="text-xs font-bold text-foreground font-mono truncate">{cheapestComparedModel?.name}</p>
                 <Badge variant="secondary" className="mt-1 text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none">${cheapestComparedModel?.costIn.toFixed(2)}/1M</Badge>
               </div>
-              <div className="border border-border rounded-lg p-3 bg-muted/20 text-center">
+              <div className="dashboard-inner-card p-3 text-center">
                 <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">Highest Accuracy</p>
                 <p className="text-xs font-bold text-foreground font-mono truncate">{highestQualityComparedModel?.name}</p>
                 <Badge variant="secondary" className="mt-1 text-[9px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border-none">{highestQualityComparedModel?.mmlu}% MMLU</Badge>
@@ -190,7 +190,7 @@ export function BrainMatrixTab({
             </div>
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center">
+          <div className="p-8 text-center border-t border-black/15 dark:border-white/20 bg-muted/10">
             <Scale className="size-8 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-xs font-semibold text-foreground">Head-to-Head Comparison</p>
             <p className="text-[11px] text-muted-foreground mt-1">Select at least 2 models using the checkboxes in the matrix table above to plot relative stats.</p>

@@ -509,10 +509,10 @@ export function EmailDashboard() {
 
   // Common Sidebar Content
   const renderSidebar = () => (
-    <div className="flex flex-col h-full bg-card/30 backdrop-blur-lg p-3 rounded-2xl border border-border/80 shadow-lg justify-between select-none">
+    <div className="dashboard-3d-card flex flex-col h-full p-3 justify-between select-none">
       <div className="flex flex-col gap-4 overflow-y-auto scrollbar-none">
         {/* Profile Card Header */}
-        <div className="p-3 bg-muted/30 rounded-xl border border-border/50 flex items-center gap-3">
+        <div className="p-3 dashboard-inner-card flex items-center gap-3">
           <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
             <Mail className="size-4.5 text-primary" />
           </div>
@@ -525,7 +525,7 @@ export function EmailDashboard() {
         {/* Compose Button */}
         <button
           onClick={triggerNew}
-          className="relative w-full overflow-hidden rounded-xl border border-border bg-card/80 hover:bg-muted text-foreground py-2.5 text-xs font-semibold transition-all duration-200 shadow-sm active:scale-98 flex items-center justify-center gap-2 group cursor-pointer"
+          className="relative w-full overflow-hidden rounded-xl border border-black/15 dark:border-white/20 bg-card hover:bg-muted text-foreground py-2.5 text-xs font-semibold transition-all duration-200 shadow-sm active:scale-98 flex items-center justify-center gap-2 group cursor-pointer"
         >
           <Plus className="size-4 group-hover:rotate-90 transition-all duration-200 text-foreground" />
           <span className="tracking-tight">Compose Message</span>
@@ -737,8 +737,8 @@ export function EmailDashboard() {
                   className={cn(
                     "group flex items-center justify-between gap-3 px-3 py-2 rounded-xl transition-all duration-150 border text-xs w-full text-left cursor-pointer min-h-10 select-none",
                     isSelected
-                      ? "bg-muted/90 border-foreground/40 font-semibold shadow-xs ring-1 ring-foreground/20"
-                      : "bg-card border-border/60 hover:bg-muted/40 hover:border-border"
+                      ? "bg-muted/90 border-primary font-semibold shadow-xs ring-1 ring-primary/40"
+                      : "dashboard-inner-card hover:border-primary/50 hover:bg-muted/40"
                   )}
                 >
                   {/* Left: Google Account Profile Avatar + Sender Name */}
@@ -783,10 +783,10 @@ export function EmailDashboard() {
                   setMobileView("detail");
                 }}
                 className={cn(
-                  "group flex flex-col items-start p-3 rounded-xl transition-all duration-150 border text-xs w-full text-left relative cursor-pointer",
+                  "group flex flex-col items-start p-3.5 rounded-xl transition-all duration-150 border text-xs w-full text-left relative cursor-pointer",
                   isSelected
-                    ? "bg-muted/80 border-foreground/40 shadow-sm ring-1 ring-foreground/20"
-                    : "bg-card border-border/60 hover:bg-muted/40 hover:border-border"
+                    ? "bg-muted/90 border-primary shadow-sm ring-1 ring-primary/40"
+                    : "dashboard-inner-card hover:border-primary/50 hover:bg-muted/40"
                 )}
               >
                 {/* Header row: Profile avatar, Sender name & Date */}
@@ -841,35 +841,38 @@ export function EmailDashboard() {
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-screen w-full bg-background text-foreground overflow-hidden font-sans gap-4 p-4 md:p-6">
+      <div className="flex flex-col h-full min-h-0 w-full bg-background text-foreground overflow-hidden font-sans gap-3.5 sm:gap-4 p-3 sm:p-5">
 
         {/* Upgraded Dashboard Header & Visual Telemetry Widget (Brain Dashboard style) */}
-        <div className="flex flex-col gap-3 p-4 rounded-2xl border border-border/80 bg-card/40 backdrop-blur-md shrink-0 shadow-sm relative">
+        <div className="dashboard-3d-card flex flex-col gap-3 p-4 sm:p-5 shrink-0 relative">
 
           {/* Header Row */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-                className="lg:hidden p-1.5 border border-border hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+                className="lg:hidden p-1.5 border border-black/15 dark:border-white/20 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground shrink-0 transition-colors"
               >
                 <Menu className="size-4.5" />
               </button>
               <button
                 onClick={() => setDesktopSidebarOpen(!desktopSidebarOpen)}
                 title={desktopSidebarOpen ? "Collapse email sidebar" : "Expand email sidebar"}
-                className="hidden lg:inline-flex p-1.5 border border-border hover:bg-muted rounded-lg text-foreground shrink-0 transition-colors cursor-pointer"
+                className="hidden lg:inline-flex p-1.5 border border-black/15 dark:border-white/20 hover:bg-muted rounded-lg text-foreground shrink-0 transition-colors cursor-pointer"
               >
                 {desktopSidebarOpen ? <PanelLeftClose className="size-4.5" /> : <PanelLeftOpen className="size-4.5" />}
               </button>
-              <div className="size-9.5 rounded-xl bg-foreground/10 border border-border flex items-center justify-center shadow-inner">
-                <Mail className="size-5 text-foreground" />
+              <div className="size-10 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center shadow-xs">
+                <Mail className="size-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-md font-extrabold tracking-tight text-foreground select-none flex items-center gap-2">
-                  Mailroom Dashboard & AI Engine
+                <h1 className="text-base font-extrabold tracking-tight text-foreground select-none flex items-center gap-2">
+                  Mailroom Dashboard &amp; AI Engine
+                  <Badge variant="secondary" className="text-[10px] font-mono font-bold py-0.5 px-2 bg-primary/15 text-primary border border-primary/25">
+                    Live SMTP
+                  </Badge>
                 </h1>
-                <p className="text-[10px] text-muted-foreground select-none">
+                <p className="text-[11px] text-muted-foreground select-none">
                   Smart inbox telemetry, AI Copilot triggers, and secure SMTP engine
                 </p>
               </div>
@@ -880,7 +883,7 @@ export function EmailDashboard() {
               <button
                 onClick={() => setShowVisuals(!showVisuals)}
                 title={showVisuals ? "Hide Analytics Visuals" : "Show Analytics Visuals"}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-[10px] font-semibold text-foreground transition-colors cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-black/15 dark:border-white/20 bg-card hover:bg-muted text-xs font-semibold text-foreground transition-colors cursor-pointer shadow-xs"
               >
                 <Activity className="size-3.5 text-foreground" />
                 <span>{showVisuals ? "Hide Visuals" : "Show Visuals"}</span>
@@ -889,9 +892,9 @@ export function EmailDashboard() {
               {/* SMTP Status */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-muted/40 text-[10px] font-semibold text-foreground select-none cursor-help hover:bg-muted/80 transition-colors">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-xs font-bold text-foreground select-none cursor-help hover:bg-emerald-500/20 transition-colors shadow-2xs">
                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Google SMTP Secure</span>
+                    <span className="text-emerald-600 dark:text-emerald-400">Google SMTP Secure</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -903,13 +906,13 @@ export function EmailDashboard() {
 
           {/* Brain Dashboard Style Visual Analytics Bar */}
           {showVisuals && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-border/40 select-none">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-black/15 dark:border-white/20 select-none">
 
               {/* Metric 1: Total Emails & Read Ratio */}
-              <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="size-7 rounded-lg bg-muted border border-border flex items-center justify-center">
-                    <Inbox className="size-3.5 text-foreground" />
+              <div className="p-3 dashboard-inner-card flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-8 rounded-lg bg-muted border border-black/10 dark:border-white/10 flex items-center justify-center">
+                    <Inbox className="size-4 text-foreground" />
                   </div>
                   <div>
                     <span className="text-[10px] text-muted-foreground block font-medium">Total Inbox</span>
@@ -923,26 +926,26 @@ export function EmailDashboard() {
               </div>
 
               {/* Metric 2: AI Copilot Assistant Engine Status */}
-              <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="size-7 rounded-lg bg-muted border border-border flex items-center justify-center">
-                    <Sparkles className="size-3.5 text-foreground" />
+              <div className="p-3 dashboard-inner-card flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-8 rounded-lg bg-muted border border-black/10 dark:border-white/10 flex items-center justify-center">
+                    <Sparkles className="size-4 text-primary" />
                   </div>
                   <div>
                     <span className="text-[10px] text-muted-foreground block font-medium">AI Copilot</span>
                     <span className="text-xs font-bold text-foreground">LangGraph Ready</span>
                   </div>
                 </div>
-                <Badge variant="outline" className="text-[9px] border-border text-foreground font-mono bg-muted">
+                <Badge variant="outline" className="text-[9px] border-black/15 dark:border-white/20 text-foreground font-mono bg-muted">
                   ~120ms
                 </Badge>
               </div>
 
               {/* Metric 3: SMTP Connection Telemetry */}
-              <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="size-7 rounded-lg bg-muted border border-border flex items-center justify-center">
-                    <Gauge className="size-3.5 text-foreground" />
+              <div className="p-3 dashboard-inner-card flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-8 rounded-lg bg-muted border border-black/10 dark:border-white/10 flex items-center justify-center">
+                    <Gauge className="size-4 text-emerald-400" />
                   </div>
                   <div>
                     <span className="text-[10px] text-muted-foreground block font-medium">SMTP Gateway</span>
@@ -953,8 +956,8 @@ export function EmailDashboard() {
               </div>
 
               {/* Metric 4: Category Visual Breakdown Bar */}
-              <div className="p-2.5 rounded-xl bg-card border border-border/60 flex flex-col justify-between">
-                <div className="flex items-center justify-between text-[10px] mb-1">
+              <div className="p-3 dashboard-inner-card flex flex-col justify-between">
+                <div className="flex items-center justify-between text-[10px] mb-1.5">
                   <span className="text-muted-foreground font-medium">Inbox Distribution</span>
                   <span className="text-foreground font-bold">{emails.length} items</span>
                 </div>
@@ -1004,19 +1007,19 @@ export function EmailDashboard() {
           <div className="flex-1 min-w-0 h-full relative">
             {!isDetailPaneOpen ? (
               /* When detail pane is closed, render Email List in 100% full-width container without ResizablePanelGroup */
-              <div className="h-full w-full bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col">
+              <div className="dashboard-3d-container h-full w-full overflow-hidden flex flex-col">
                 {renderEmailList()}
               </div>
             ) : (
               /* When detail pane is open, render 2-panel ResizablePanelGroup */
-              <ResizablePanelGroup direction="horizontal">
+              <ResizablePanelGroup direction="horizontal" className="dashboard-3d-container h-full w-full overflow-hidden">
                 {/* ─── COLUMN 2: EMAIL LIST ─── */}
                 <ResizablePanel
                   defaultSize={34}
                   minSize={25}
                   maxSize={45}
                   className={cn(
-                    "h-full flex-col min-w-0 bg-card border border-border rounded-2xl shadow-sm overflow-hidden",
+                    "h-full flex-col min-w-0 overflow-hidden border-r border-black/15 dark:border-white/20 bg-card/40",
                     mobileView !== "list" && "hidden md:flex",
                     mobileView === "list" && "flex"
                   )}
@@ -1024,14 +1027,14 @@ export function EmailDashboard() {
                   {renderEmailList()}
                 </ResizablePanel>
 
-                <ResizableHandle withHandle className="hidden md:flex bg-border/40 hover:bg-foreground/20 transition-colors mx-1 rounded-full" />
+                <ResizableHandle withHandle className="hidden md:flex bg-black/10 dark:bg-white/10 hover:bg-primary/40 transition-colors mx-0 rounded-none w-1" />
 
                 {/* ─── COLUMN 3: DETAIL PREVIEW OR EDITOR COMPONENT ─── */}
                 <ResizablePanel
                   defaultSize={66}
                   minSize={55}
                   className={cn(
-                    "h-full min-w-0 bg-card border border-border rounded-2xl shadow-sm overflow-hidden",
+                    "h-full min-w-0 overflow-hidden bg-background/20",
                     mobileView !== "detail" && mobileView !== "compose" && "hidden md:block",
                     (mobileView === "detail" || mobileView === "compose") && "block"
                   )}
@@ -1041,9 +1044,9 @@ export function EmailDashboard() {
                     {composeMode ? (
                       /* ─── WRITE MODE: EMAIL COMPOSER ─── */
                       <div className="flex flex-1 flex-col h-full bg-background/5 p-4 overflow-y-auto">
-                        <div className="flex flex-col flex-1 rounded-2xl border border-border/80 bg-card shadow-xl overflow-hidden relative">
+                        <div className="flex flex-col flex-1 dashboard-3d-card shadow-xl overflow-hidden relative">
                           {/* Composer Header */}
-                          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30 shrink-0">
+                          <div className="flex items-center justify-between px-4 py-3 border-b border-black/15 dark:border-white/20 bg-muted/40 shrink-0">
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="text-[9px] px-2 py-0.5 font-bold uppercase tracking-wider bg-muted border-border text-foreground">
                                 {composeMode === "reply" ? "Reply" : composeMode === "edit" ? "Edit" : "Compose"}
@@ -1265,7 +1268,7 @@ export function EmailDashboard() {
                       <div className="flex flex-1 flex-col h-full bg-background/20 relative">
 
                         {/* Top Action Ribbon */}
-                        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/20 min-h-13 shrink-0 select-none flex-wrap gap-2">
+                        <div className="flex items-center justify-between px-4 py-2 border-b border-black/15 dark:border-white/20 bg-muted/30 min-h-13 shrink-0 select-none flex-wrap gap-2">
                           <div className="flex items-center gap-1.5 flex-wrap">
 
                             {/* Back Button for mobile view */}

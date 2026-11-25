@@ -31,12 +31,12 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, change, isPositive, icon, subtitle }: MetricCardProps) {
   return (
-    <Card className="rounded-2xl border border-border/80 bg-card/85 dark:bg-card/60 backdrop-blur-xl transition-all duration-300 hover:shadow-lg hover:border-primary/40 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04)] dark:[box-shadow:0_-15px_50px_-15px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_8px_24px_rgba(0,0,0,.4)]">
+    <Card className="dashboard-3d-card dashboard-3d-card-interactive">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xs font-mono text-muted-foreground font-medium uppercase tracking-wider">
+        <CardTitle className="text-xs font-mono text-muted-foreground font-semibold uppercase tracking-wider">
           {title}
         </CardTitle>
-        <div className="size-8 rounded-xl bg-muted/80 border border-border/60 flex items-center justify-center text-primary">
+        <div className="size-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
           {icon}
         </div>
       </CardHeader>
@@ -147,13 +147,13 @@ export function AnalyticsDashboard() {
       {/* Main Breakdown Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Agent Distribution */}
-        <Card className="lg:col-span-1 rounded-2xl border border-border/80 bg-card/85 dark:bg-card/60 backdrop-blur-xl [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04)] dark:[box-shadow:0_-15px_50px_-15px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_8px_24px_rgba(0,0,0,.4)]">
-          <CardHeader>
+        <Card className="dashboard-3d-card lg:col-span-1">
+          <CardHeader className="pb-3 border-b border-border/60 bg-muted/20">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold text-foreground">
                 Agent Workload Distribution
               </CardTitle>
-              <Badge variant="outline" className="text-[10px] font-mono">
+              <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary">
                 5 Graphs
               </Badge>
             </div>
@@ -161,7 +161,7 @@ export function AnalyticsDashboard() {
               Invocation share by specialized subgraph.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-4">
             {agentStats.map((agent) => (
               <div key={agent.name} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
@@ -180,14 +180,14 @@ export function AnalyticsDashboard() {
         </Card>
 
         {/* Vector Memory & Pinecone Status */}
-        <Card className="lg:col-span-2 rounded-2xl border border-border/80 bg-card/85 dark:bg-card/60 backdrop-blur-xl [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04)] dark:[box-shadow:0_-15px_50px_-15px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_8px_24px_rgba(0,0,0,.4)]">
-          <CardHeader>
+        <Card className="dashboard-3d-card lg:col-span-2">
+          <CardHeader className="pb-3 border-b border-border/60 bg-muted/20">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold text-foreground">
                 Recent Agent Pipeline Executions
               </CardTitle>
-              <span className="flex items-center gap-1.5 text-xs text-green-500 font-mono">
-                <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span className="flex items-center gap-1.5 text-xs text-emerald-500 font-mono">
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 Live streaming
               </span>
             </div>
@@ -195,7 +195,7 @@ export function AnalyticsDashboard() {
               Audit log of real-time multi-agent graph executions.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>

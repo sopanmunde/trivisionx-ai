@@ -740,7 +740,7 @@ export function TaskDashboard() {
       <div className="flex h-full flex-col overflow-y-auto bg-background p-4 md:p-6 space-y-5">
 
         {/* ─── Brain Dashboard Style Top Visual Telemetry Banner ─── */}
-        <div className="flex flex-col gap-3 p-4.5 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md shrink-0 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)] relative transition-all duration-300">
+        <div className="dashboard-3d-card flex flex-col gap-3 p-4.5 shrink-0 relative transition-all duration-300">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-2xl bg-foreground/5 border border-border flex items-center justify-center text-foreground shadow-xs shrink-0">
@@ -1215,7 +1215,7 @@ export function TaskDashboard() {
             </div>
 
             {/* CONTAINER 3: Primary Workspace Canvas Container */}
-            <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_35px_rgba(0,0,0,0.5)] transition-all duration-300 flex-1 overflow-hidden min-h-[520px]">
+            <div className="dashboard-3d-container p-4 flex-1 overflow-hidden min-h-[520px]">
 
                 {viewMode === "list" ? (
 
@@ -1607,7 +1607,7 @@ export function TaskDashboard() {
 
           {/* ─── TASK SPECIFICATION PANEL (Inline Page Panel, 4/12 col) ─────────── */}
           {selectedTask && (
-            <div className="lg:col-span-4 bg-card/95 backdrop-blur-xl border border-border/80 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_50px_rgba(0,0,0,0.6)] transition-all duration-300 flex flex-col min-h-[520px] overflow-hidden animate-in slide-in-from-right-4">
+            <div className="dashboard-3d-card lg:col-span-4 flex flex-col min-h-[520px] overflow-hidden animate-in slide-in-from-right-4">
 
               {/* ── Panel Header ── */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-border/60 shrink-0 bg-gradient-to-b from-muted/50 via-card/80 to-card">

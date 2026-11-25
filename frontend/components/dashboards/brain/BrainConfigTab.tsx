@@ -48,7 +48,6 @@ import {
   LLMProvider,
   ApiKey,
   SETUP_INSTRUCTIONS,
-  ShimmerBorder,
   StatusChip,
   ProviderLogo,
 } from "./types";
@@ -138,7 +137,7 @@ export function BrainConfigTab({
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
           
           {/* Provider Spotlight Header */}
-          <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-card to-background p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="dashboard-3d-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <ProviderLogo logo={provider.logo} active={provider.isActive} size="md" />
               <div>
@@ -161,7 +160,7 @@ export function BrainConfigTab({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8.5 text-xs font-semibold gap-1.5 border-border cursor-pointer"
+                className="h-8.5 text-xs font-semibold gap-1.5 border-black/15 dark:border-white/20 cursor-pointer"
                 disabled={testingId === provider.id}
                 onClick={() => testConnection(provider.id)}
               >
@@ -192,9 +191,8 @@ export function BrainConfigTab({
           </div>
 
           {/* Model & Hyperparameter Settings Card */}
-          <Card className="relative overflow-hidden border-border/80 shadow-xs">
-            <ShimmerBorder />
-            <CardHeader className="pb-3 border-b border-border/60">
+          <Card className="dashboard-3d-card">
+            <CardHeader className="pb-3 border-b border-black/15 dark:border-white/20">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-xs font-extrabold uppercase tracking-wider text-foreground flex items-center gap-1.5">
@@ -310,9 +308,8 @@ export function BrainConfigTab({
           </Card>
 
           {/* Benchmark Performance Card */}
-          <Card className="relative overflow-hidden border-border/80 shadow-xs">
-            <ShimmerBorder />
-            <CardHeader className="pb-3 border-b border-border/60">
+          <Card className="dashboard-3d-card">
+            <CardHeader className="pb-3 border-b border-black/15 dark:border-white/20">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-xs font-extrabold uppercase tracking-wider text-foreground flex items-center gap-1.5">
@@ -342,7 +339,7 @@ export function BrainConfigTab({
 
             <CardContent className="pt-4">
               {benchmarkStatus !== "idle" ? (
-                <div className="space-y-3.5 border border-border bg-muted/20 rounded-xl p-4">
+                <div className="space-y-3.5 dashboard-inner-card p-4">
                   <div className="flex items-center justify-between text-xs font-semibold">
                     <span className="text-muted-foreground">Benchmark Progress</span>
                     <span className="font-mono text-emerald-400">{benchmarkProgress}%</span>
@@ -350,18 +347,18 @@ export function BrainConfigTab({
                   <Progress value={benchmarkProgress} className="h-2 bg-muted" />
 
                   <div className="grid grid-cols-2 gap-4 pt-1">
-                    <div className="bg-card rounded-lg border border-border/80 p-3.5 text-center">
+                    <div className="dashboard-inner-card p-3.5 text-center">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase">Token Throughput Speed</p>
                       <p className="text-xl font-black font-mono text-emerald-400 mt-1">{benchmarkSpeed} <span className="text-xs font-semibold text-muted-foreground">tok/s</span></p>
                     </div>
-                    <div className="bg-card rounded-lg border border-border/80 p-3.5 text-center">
+                    <div className="dashboard-inner-card p-3.5 text-center">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase">Response TTFT Latency</p>
                       <p className="text-xl font-black font-mono text-blue-400 mt-1">{benchmarkLatency} <span className="text-xs font-semibold text-muted-foreground">ms</span></p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between p-3.5 rounded-xl border border-dashed border-border bg-muted/10">
+                <div className="flex items-center justify-between p-3.5 rounded-xl border border-dashed border-black/20 dark:border-white/20 bg-muted/10">
                   <div className="flex items-center gap-3">
                     <Sparkles className="size-5 text-emerald-400 shrink-0" />
                     <div>
@@ -376,8 +373,8 @@ export function BrainConfigTab({
 
           {/* Credentials / Local Server Settings Card */}
           {provider.type === "local" ? (
-            <Card className="border-border/80 shadow-xs">
-              <CardHeader className="pb-3 border-b border-border/60">
+            <Card className="dashboard-3d-card">
+              <CardHeader className="pb-3 border-b border-black/15 dark:border-white/20">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-xs font-extrabold uppercase tracking-wider text-foreground flex items-center gap-1.5">
@@ -431,8 +428,8 @@ export function BrainConfigTab({
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-border/80 shadow-xs">
-              <CardHeader className="pb-3 border-b border-border/60">
+            <Card className="dashboard-3d-card">
+              <CardHeader className="pb-3 border-b border-black/15 dark:border-white/20">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-xs font-extrabold uppercase tracking-wider text-foreground flex items-center gap-1.5">

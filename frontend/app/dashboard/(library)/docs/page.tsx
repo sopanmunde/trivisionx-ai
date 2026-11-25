@@ -7,40 +7,37 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 export default function DashboardDocsPage() {
   return (
     <div className="relative min-h-full bg-background pb-16">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_60%)] pointer-events-none" />
+      {/* 3D Ambient Backdrop Spotlight */}
+      <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[360px] rounded-full blur-[140px] bg-gradient-to-tr from-blue-500/15 via-indigo-500/15 to-purple-500/10 dark:from-blue-600/25 dark:via-purple-600/25 dark:to-cyan-400/20 -z-10" />
 
-      <div className="relative px-6 py-8 lg:px-8 max-w-7xl mx-auto">
+      <div className="relative px-6 py-8 lg:px-8 max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex flex-col space-y-4 mb-8">
+        <div className="flex flex-col space-y-3 border-b border-border/80 pb-6">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl" />
-              <span className="relative inline-flex items-center rounded-full border border-border/60 bg-card/50 px-3 py-1 text-xs font-medium text-muted-foreground">
-                Data Overview
-              </span>
-            </div>
+            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-mono font-bold text-primary">
+              Pinecone Knowledge Vault
+            </span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Document Library
+          <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+            Document Library &amp; Vector Store
           </h1>
-          <p className="max-w-2xl text-base text-muted-foreground">
-            Browse and manage your uploaded documents and conversations. Use the
-            tables below to search, sort, and organize your research data.
+          <p className="max-w-2xl text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            Browse and manage your uploaded research documents, semantic vectors, and conversation contexts with sub-20ms MMR retrieval.
           </p>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="library" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="library">Library Table</TabsTrigger>
-            <TabsTrigger value="viewer">Document Viewer</TabsTrigger>
+        {/* Tabs & 3D Container */}
+        <Tabs defaultValue="library" className="w-full space-y-6">
+          <TabsList className="p-1 rounded-xl bg-card border border-border/80 shadow-xs">
+            <TabsTrigger value="library" className="rounded-lg text-xs font-semibold">Library Table</TabsTrigger>
+            <TabsTrigger value="viewer" className="rounded-lg text-xs font-semibold">Document Viewer</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="library">
+          <TabsContent value="library" className="dashboard-3d-container p-4 sm:p-6">
             <DashboardDocsTable />
           </TabsContent>
 
-          <TabsContent value="viewer">
+          <TabsContent value="viewer" className="dashboard-3d-container p-4 sm:p-6">
             <DocumentViewerDemo />
           </TabsContent>
         </Tabs>

@@ -781,10 +781,10 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
       </AnimatePresence>
 
       <div className={cn(
-        "mx-auto max-w-4xl w-full rounded-2xl border bg-card/95 dark:bg-card/80 backdrop-blur-xl border-border/80 shadow-xs transition-all duration-300",
+        "dashboard-3d-container mx-auto max-w-4xl w-full transition-all duration-300",
         isFocused
-          ? "border-primary/50 ring-4 ring-primary/10 shadow-[0_8px_30px_rgba(0,0,0,0.06),0_0_25px_rgba(59,130,246,0.12)] dark:shadow-[0_0_30px_rgba(59,130,246,0.18),inset_0_1px_1px_rgba(255,255,255,0.08)]"
-          : "hover:border-border/90 hover:shadow-sm"
+          ? "border-primary/50 ring-4 ring-primary/10 shadow-[0_12px_40px_rgba(0,0,0,0.08),0_0_30px_rgba(59,130,246,0.15)] dark:shadow-[0_0_40px_rgba(59,130,246,0.22),inset_0_1px_2px_rgba(255,255,255,0.15)]"
+          : "hover:border-primary/40"
       )}>
         {/* Selected Command Features Row */}
         {selectedFeatures.length > 0 && (

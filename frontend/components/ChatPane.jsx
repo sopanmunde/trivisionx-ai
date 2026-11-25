@@ -429,7 +429,7 @@ const ChatPane = forwardRef(function ChatPane(
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.96 }}
                     onClick={() => handleFeatureLaunch(s)}
-                    className="group flex items-center gap-1.5 shrink-0 rounded-full border border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/70 px-3 py-1.5 shadow-2xs hover:shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-900 transition-all duration-200 cursor-pointer backdrop-blur-md"
+                    className="group flex items-center gap-1.5 shrink-0 rounded-full border border-border/80 bg-card/80 dark:bg-card/60 px-3.5 py-1.5 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_8px_rgba(0,0,0,.04)] dark:[box-shadow:0_-10px_25px_-10px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_4px_12px_rgba(0,0,0,.4)] hover:border-primary/40 hover:bg-card transition-all duration-200 cursor-pointer backdrop-blur-md hover:-translate-y-0.5"
                   >
                     <Icon className="h-3.5 w-3.5 text-primary shrink-0 transition-transform group-hover:scale-110" />
                     <span className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-950 dark:group-hover:text-white transition-colors whitespace-nowrap">

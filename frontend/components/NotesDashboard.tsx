@@ -305,7 +305,7 @@ export function NotesDashboard() {
       <div className="flex h-full flex-col overflow-y-auto bg-background p-4 md:p-6 space-y-5 lg:space-y-6">
 
         {/* ─── Brain Dashboard Style Top Visual Telemetry Banner ─── */}
-        <div className="flex flex-col gap-3 p-4.5 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md shrink-0 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)] relative transition-all duration-300">
+        <div className="dashboard-3d-card flex flex-col gap-3 p-4.5 shrink-0 relative transition-all duration-300">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-2xl bg-foreground/5 border border-border flex items-center justify-center text-foreground shadow-xs shrink-0">
@@ -430,7 +430,7 @@ export function NotesDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 flex-1 min-h-0">
 
           {/* CONTAINER 1: LEFT NOTES LIBRARY SIDEBAR (Width 4/12) */}
-          <div className="lg:col-span-4 bg-card border border-border/80 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.1)] transition-all duration-300 flex flex-col min-h-[500px] overflow-hidden">
+          <div className="dashboard-3d-card lg:col-span-4 flex flex-col min-h-[500px] overflow-hidden">
             {/* Header search & create buttons */}
             <div className="p-4 border-b border-border/60 space-y-3 shrink-0">
               <div className="flex items-center justify-between">
@@ -547,7 +547,7 @@ export function NotesDashboard() {
           </div>
 
           {/* CONTAINER 2: RIGHT WORKSPACE CONTAINER CARD (Width 8/12) */}
-          <div className="lg:col-span-8 bg-card border border-border/80 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_35px_rgba(0,0,0,0.5)] transition-all duration-300 flex flex-col min-h-[500px] overflow-hidden p-6">
+          <div className="dashboard-3d-container lg:col-span-8 flex flex-col min-h-[500px] overflow-hidden p-6">
 
             {/* Main workspace view */}
             {isNewNoteOpen ? (

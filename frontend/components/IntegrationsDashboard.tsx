@@ -229,31 +229,31 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
 
         {/* Metric Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-border bg-card shadow-2xs">
+          <Card className="dashboard-3d-card dashboard-3d-card-interactive">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Connected Providers</p>
                 <h3 className="text-2xl font-extrabold mt-1 text-foreground">{connectedProvidersCount} Active</h3>
               </div>
-              <div className="size-10 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground">
+              <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                 <Key className="size-5" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card shadow-2xs">
+          <Card className="dashboard-3d-card dashboard-3d-card-interactive">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Agent Swarm Skills</p>
                 <h3 className="text-2xl font-extrabold mt-1 text-foreground">{activeSkillsCount} Enabled</h3>
               </div>
-              <div className="size-10 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground">
+              <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                 <Bot className="size-5" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card shadow-2xs">
+          <Card className="dashboard-3d-card dashboard-3d-card-interactive">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Vector Store RAG</p>
@@ -261,19 +261,19 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
                   {config?.vector_db?.pinecone_api_key ? "Pinecone Active" : "Local FAISS"}
                 </h3>
               </div>
-              <div className="size-10 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground">
+              <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                 <Database className="size-5" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card shadow-2xs">
+          <Card className="dashboard-3d-card dashboard-3d-card-interactive">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">MCP Protocol Servers</p>
                 <h3 className="text-2xl font-extrabold mt-1 text-foreground">{mcpCount} Registered</h3>
               </div>
-              <div className="size-10 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground">
+              <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                 <Server className="size-5" />
               </div>
             </CardContent>

@@ -139,17 +139,7 @@ export const COMPARE_METRICS: ModelMetric[] = [
 ];
 
 export function ShimmerBorder() {
-  return (
-    <div className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden z-10">
-      <div
-        className="absolute inset-0 animate-shimmer-border"
-        style={{
-          background: "linear-gradient(120deg, transparent 35%, hsl(var(--primary)/0.12) 50%, transparent 65%)",
-          backgroundSize: "200% 100%"
-        }}
-      />
-    </div>
-  );
+  return null;
 }
 
 export function statusDot(status: ProviderStatus) {

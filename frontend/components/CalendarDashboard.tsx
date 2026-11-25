@@ -58,10 +58,10 @@ interface LogItem {
   type: 'system' | 'blue' | 'yellow' | 'purple' | 'pink' | 'green' | 'orange' | 'ai-auto'
 }
 
-// ─── Custom Card Container (Strictly Shadcn Colors & No Shine) ────────────────
+// ─── Custom 3D Card Container ────────────────
 export function DashboardCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`relative rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-950/40 dark:backdrop-blur-md flex flex-col ${className}`}>
+    <div className={`dashboard-3d-card p-6 flex flex-col ${className}`}>
       {children}
     </div>
   )
@@ -828,7 +828,7 @@ export function CalendarDashboard() {
       </Dialog>
 
       {/* ─── Brain Dashboard Style Top Visual Telemetry Banner ─── */}
-      <div className="flex flex-col gap-3 p-4.5 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md shrink-0 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)] relative transition-all duration-300">
+      <div className="dashboard-3d-card flex flex-col gap-3 p-4.5 shrink-0 relative transition-all duration-300">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-2xl bg-foreground/5 border border-border flex items-center justify-center text-foreground shadow-xs shrink-0">
@@ -1066,7 +1066,7 @@ export function CalendarDashboard() {
           </div>
 
           {/* CONTAINER 2: Quick Navigation & Date Selector */}
-          <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.1)] transition-all duration-300 space-y-3">
+          <div className="dashboard-3d-card p-4 space-y-3">
             <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
               <div className="flex items-center gap-2">
                 <CalendarIcon className="size-4 text-foreground" />
@@ -1135,7 +1135,7 @@ export function CalendarDashboard() {
         <div className="lg:col-span-8 space-y-5 flex flex-col">
           
           {/* CONTAINER 5: Toolbar & Control Ribbon */}
-          <div className="bg-card border border-border/80 rounded-2xl p-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.1)] transition-all duration-300 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-wrap">
+          <div className="dashboard-3d-card p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-wrap">
             
             <div className="flex items-center gap-2 flex-wrap">
               {/* Year Navigation Controls */}
@@ -1234,7 +1234,7 @@ export function CalendarDashboard() {
           </div>
 
           {/* CONTAINER 6: Main Calendar Display Canvas */}
-          <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_35px_rgba(0,0,0,0.5)] transition-all duration-300 flex-1 overflow-hidden min-h-[520px]">
+          <div className="dashboard-3d-container p-4 flex-1 overflow-hidden min-h-[520px]">
             
             {/* Day View */}
             {currentView === 'day' && (

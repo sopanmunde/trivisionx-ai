@@ -225,33 +225,35 @@ ${currentData.swot.threats.map(t => `- ${t}`).join("\n")}
   };
 
   return (
-    <div className="relative flex-1 overflow-y-auto bg-background p-6 lg:p-8 space-y-6">
+    <div className="relative flex-1 overflow-y-auto bg-background p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Background glow */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.04),transparent_65%)] pointer-events-none" />
 
-      {/* Header bar */}
-      <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/80 pb-5">
+      {/* Header bar wrapped in 3D Card */}
+      <div className="dashboard-3d-card p-5 sm:p-6 relative flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
-              <Globe className="h-4 w-4" />
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="p-2 rounded-xl bg-primary/15 text-primary border border-primary/30 shadow-xs">
+              <Globe className="h-4.5 w-4.5" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground">Competitive Intelligence Hub</h1>
-            <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">
-              Powered by competitive_graph
-            </Badge>
+            <h1 className="text-xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
+              Competitive Intelligence Hub
+              <Badge variant="outline" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/30">
+                v2.6 Real-Time
+              </Badge>
+            </h1>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground font-medium">
             Autonomous multi-agent market sweep, real-time SWOT decomposition, and feature-gap matrices.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={handleExportReport}
-            className="text-xs gap-1.5 border-border"
+            className="text-xs font-semibold gap-1.5 border-black/15 dark:border-white/20 hover:bg-muted cursor-pointer shadow-xs"
           >
             <Download className="h-3.5 w-3.5" /> Export Report
           </Button>
@@ -259,7 +261,7 @@ ${currentData.swot.threats.map(t => `- ${t}`).join("\n")}
             size="sm"
             onClick={handleRunDeepSweep}
             disabled={isAnalyzing}
-            className="text-xs gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
+            className="text-xs font-bold gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs cursor-pointer"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isAnalyzing ? "animate-spin" : ""}`} />
             {isAnalyzing ? "Running Sweep..." : "Run Autonomous Sweep"}
@@ -268,16 +270,18 @@ ${currentData.swot.threats.map(t => `- ${t}`).join("\n")}
       </div>
 
       {/* Competitor Selector Pills */}
-      <div className="relative flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium text-muted-foreground mr-1">Target Entity:</span>
+      <div className="dashboard-3d-card p-4 flex flex-wrap items-center gap-3">
+        <span className="text-xs font-bold text-foreground mr-1 flex items-center gap-1.5">
+          <Cpu className="size-3.5 text-primary" /> Target Entity:
+        </span>
         {Object.entries(PRESET_COMPETITORS).map(([key, comp]) => (
           <button
             key={key}
             onClick={() => setSelectedKey(key)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               selectedKey === key
-                ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                : "bg-card border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                ? "bg-primary text-primary-foreground border-primary shadow-sm ring-1 ring-primary/40"
+                : "dashboard-inner-card text-muted-foreground hover:text-foreground hover:border-primary/40"
             }`}
           >
             {comp.name.split(" ")[0]}
@@ -295,18 +299,18 @@ ${currentData.swot.threats.map(t => `- ${t}`).join("\n")}
                 setCustomQuery("");
               }
             }}
-            className="text-xs h-8 w-64 bg-background"
+            className="text-xs h-8.5 w-64 bg-background border-black/15 dark:border-white/20 rounded-xl"
           />
           <Button
             size="sm"
-            variant="ghost"
+            variant="outline"
             onClick={() => {
               if (customQuery.trim()) {
                 toast.info(`Running pipeline on ${customQuery}...`);
                 setCustomQuery("");
               }
             }}
-            className="h-8 px-2"
+            className="h-8.5 px-3 border-black/15 dark:border-white/20 rounded-xl"
           >
             <Search className="h-3.5 w-3.5" />
           </Button>
@@ -314,58 +318,66 @@ ${currentData.swot.threats.map(t => `- ${t}`).join("\n")}
       </div>
 
       {/* Target Competitor Snapshot Card */}
-      <Card className="relative border-border/80 bg-card/60 backdrop-blur-sm">
-        <CardContent className="p-5">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-1">
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Target Profile</span>
-              <p className="text-base font-bold text-foreground">{currentData.name}</p>
-              <p className="text-xs text-muted-foreground">{currentData.category}</p>
+      <Card className="dashboard-3d-card">
+        <CardContent className="p-5 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-1.5 p-4 dashboard-inner-card">
+              <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Globe className="size-3 text-primary" /> Target Profile
+              </span>
+              <p className="text-base font-extrabold text-foreground tracking-tight">{currentData.name}</p>
+              <p className="text-xs text-muted-foreground font-medium">{currentData.category}</p>
             </div>
-            <div className="space-y-1">
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Primary Moat</span>
-              <p className="text-xs font-semibold text-foreground">{currentData.moat}</p>
+            <div className="space-y-1.5 p-4 dashboard-inner-card">
+              <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Award className="size-3 text-amber-500" /> Primary Moat
+              </span>
+              <p className="text-xs font-semibold text-foreground leading-relaxed">{currentData.moat}</p>
             </div>
-            <div className="space-y-1">
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Market Presence</span>
-              <p className="text-xs font-semibold text-primary">{currentData.marketShare}</p>
+            <div className="space-y-1.5 p-4 dashboard-inner-card">
+              <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <TrendingUp className="size-3 text-primary" /> Market Presence
+              </span>
+              <p className="text-sm font-black text-primary font-mono">{currentData.marketShare}</p>
             </div>
-            <div className="space-y-1">
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Enterprise Pricing</span>
-              <p className="text-xs font-mono text-foreground">{currentData.pricing}</p>
+            <div className="space-y-1.5 p-4 dashboard-inner-card">
+              <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Zap className="size-3 text-emerald-500" /> Enterprise Pricing
+              </span>
+              <p className="text-xs font-mono font-bold text-foreground">{currentData.pricing}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Tab Navigators */}
-      <div className="flex items-center gap-2 border-b border-border/80 pb-3">
+      <div className="dashboard-inner-card p-1.5 flex items-center gap-2 overflow-x-auto scrollbar-none w-fit">
         <button
           onClick={() => setActiveTab("swot")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "swot"
-              ? "bg-primary/10 text-primary border border-primary/20"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-primary text-primary-foreground border border-primary shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent"
           }`}
         >
           <Layers className="h-3.5 w-3.5" /> SWOT Decomposition
         </button>
         <button
           onClick={() => setActiveTab("matrix")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "matrix"
-              ? "bg-primary/10 text-primary border border-primary/20"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-primary text-primary-foreground border border-primary shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent"
           }`}
         >
           <BarChart3 className="h-3.5 w-3.5" /> Feature Parity Matrix
         </button>
         <button
           onClick={() => setActiveTab("signals")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "signals"
-              ? "bg-primary/10 text-primary border border-primary/20"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-primary text-primary-foreground border border-primary shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent"
           }`}
         >
           <Flame className="h-3.5 w-3.5" /> Real-Time Market Signals
@@ -374,70 +386,70 @@ ${currentData.swot.threats.map(t => `- ${t}`).join("\n")}
 
       {/* Active Tab Content */}
       {activeTab === "swot" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Strengths */}
-          <Card className="border-emerald-500/30 bg-emerald-500/5">
-            <CardHeader className="pb-3">
+          <Card className="dashboard-3d-card-emerald">
+            <CardHeader className="pb-3 border-b border-emerald-500/25 bg-emerald-500/10">
               <CardTitle className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4" /> Strengths (Target Advantages)
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2.5 p-5">
               {currentData.swot.strengths.map((s, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-xs text-foreground bg-background/60 p-2.5 rounded-lg border border-emerald-500/20">
-                  <span className="font-mono text-emerald-500 font-bold">0{idx + 1}</span>
-                  <span>{s}</span>
+                <div key={idx} className="dashboard-inner-card flex items-start gap-3 text-xs text-foreground p-3 hover:border-emerald-500/50 transition-colors">
+                  <span className="font-mono text-emerald-500 font-bold shrink-0">0{idx + 1}</span>
+                  <span className="leading-relaxed">{s}</span>
                 </div>
               ))}
             </CardContent>
           </Card>
 
           {/* Weaknesses */}
-          <Card className="border-rose-500/30 bg-rose-500/5">
-            <CardHeader className="pb-3">
+          <Card className="dashboard-3d-card-rose">
+            <CardHeader className="pb-3 border-b border-rose-500/25 bg-rose-500/10">
               <CardTitle className="text-sm font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4" /> Vulnerabilities (TriVisionX Attack Vector)
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2.5 p-5">
               {currentData.swot.weaknesses.map((w, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-xs text-foreground bg-background/60 p-2.5 rounded-lg border border-rose-500/20">
-                  <span className="font-mono text-rose-500 font-bold">0{idx + 1}</span>
-                  <span>{w}</span>
+                <div key={idx} className="dashboard-inner-card flex items-start gap-3 text-xs text-foreground p-3 hover:border-rose-500/50 transition-colors">
+                  <span className="font-mono text-rose-500 font-bold shrink-0">0{idx + 1}</span>
+                  <span className="leading-relaxed">{w}</span>
                 </div>
               ))}
             </CardContent>
           </Card>
 
           {/* Opportunities */}
-          <Card className="border-blue-500/30 bg-blue-500/5">
-            <CardHeader className="pb-3">
+          <Card className="dashboard-3d-card-blue">
+            <CardHeader className="pb-3 border-b border-blue-500/25 bg-blue-500/10">
               <CardTitle className="text-sm font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" /> Market Opportunities
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2.5 p-5">
               {currentData.swot.opportunities.map((o, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-xs text-foreground bg-background/60 p-2.5 rounded-lg border border-blue-500/20">
-                  <span className="font-mono text-blue-500 font-bold">0{idx + 1}</span>
-                  <span>{o}</span>
+                <div key={idx} className="dashboard-inner-card flex items-start gap-3 text-xs text-foreground p-3 hover:border-blue-500/50 transition-colors">
+                  <span className="font-mono text-blue-500 font-bold shrink-0">0{idx + 1}</span>
+                  <span className="leading-relaxed">{o}</span>
                 </div>
               ))}
             </CardContent>
           </Card>
 
           {/* Threats */}
-          <Card className="border-amber-500/30 bg-amber-500/5">
-            <CardHeader className="pb-3">
+          <Card className="dashboard-3d-card-amber">
+            <CardHeader className="pb-3 border-b border-amber-500/25 bg-amber-500/10">
               <CardTitle className="text-sm font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" /> Industry Threats & Headwinds
+                <AlertTriangle className="h-4 w-4" /> Industry Threats &amp; Headwinds
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2.5 p-5">
               {currentData.swot.threats.map((t, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-xs text-foreground bg-background/60 p-2.5 rounded-lg border border-amber-500/20">
-                  <span className="font-mono text-amber-500 font-bold">0{idx + 1}</span>
-                  <span>{t}</span>
+                <div key={idx} className="dashboard-inner-card flex items-start gap-3 text-xs text-foreground p-3 hover:border-amber-500/50 transition-colors">
+                  <span className="font-mono text-amber-500 font-bold shrink-0">0{idx + 1}</span>
+                  <span className="leading-relaxed">{t}</span>
                 </div>
               ))}
             </CardContent>
@@ -446,15 +458,20 @@ ${currentData.swot.threats.map(t => `- ${t}`).join("\n")}
       )}
 
       {activeTab === "matrix" && (
-        <Card className="border-border/80">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-bold text-foreground">TriVisionX vs {currentData.name}</CardTitle>
-            <CardDescription className="text-xs">Direct technical capability benchmark</CardDescription>
+        <Card className="dashboard-3d-container">
+          <CardHeader className="pb-3 border-b border-black/15 dark:border-white/20 bg-muted/40 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-bold text-foreground">TriVisionX vs {currentData.name}</CardTitle>
+              <CardDescription className="text-xs">Direct technical capability benchmark</CardDescription>
+            </div>
+            <Badge variant="outline" className="text-[10px] font-mono text-emerald-500 border-emerald-500/40 bg-emerald-500/10">
+              Grounded Matrix
+            </Badge>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
-                <thead className="bg-muted/40 border-y border-border/80 text-muted-foreground font-semibold">
+                <thead className="bg-muted/50 border-b border-black/15 dark:border-white/20 text-muted-foreground font-semibold">
                   <tr>
                     <th className="px-5 py-3">Feature Capability</th>
                     <th className="px-5 py-3 bg-primary/5 text-primary">TriVisionX Platform</th>
@@ -462,9 +479,9 @@ ${currentData.swot.threats.map(t => `- ${t}`).join("\n")}
                     <th className="px-5 py-3">Advantage</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/60">
+                <tbody className="divide-y divide-black/10 dark:divide-white/10">
                   {currentData.matrix.map((row, i) => (
-                    <tr key={i} className="hover:bg-muted/20 transition-colors">
+                    <tr key={i} className="hover:bg-muted/40 transition-colors">
                       <td className="px-5 py-3.5 font-medium text-foreground">{row.feature}</td>
                       <td className="px-5 py-3.5 bg-primary/5 font-semibold text-foreground">
                         {typeof row.triVisionX === "boolean" ? (
@@ -483,7 +500,11 @@ ${currentData.swot.threats.map(t => `- ${t}`).join("\n")}
                       <td className="px-5 py-3.5">
                         <Badge
                           variant={row.status === "win" ? "default" : row.status === "tie" ? "secondary" : "outline"}
-                          className="text-[10px]"
+                          className={`text-[10px] font-mono ${
+                            row.status === "win"
+                              ? "bg-emerald-500 text-white dark:bg-emerald-600"
+                              : ""
+                          }`}
                         >
                           {row.status === "win" ? "TriVisionX Lead" : row.status === "tie" ? "Parity" : "Competitor"}
                         </Badge>
@@ -498,26 +519,32 @@ ${currentData.swot.threats.map(t => `- ${t}`).join("\n")}
       )}
 
       {activeTab === "signals" && (
-        <Card className="border-border/80">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-bold text-foreground">Intelligence Radar & Event Log</CardTitle>
-            <CardDescription className="text-xs">Live web research citations and telemetry updates</CardDescription>
+        <Card className="dashboard-3d-card">
+          <CardHeader className="pb-3 border-b border-black/15 dark:border-white/20 bg-muted/40 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-bold text-foreground">Intelligence Radar &amp; Event Log</CardTitle>
+              <CardDescription className="text-xs">Live web research citations and telemetry updates</CardDescription>
+            </div>
+            <span className="flex items-center gap-1.5 text-xs text-emerald-500 font-mono">
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+              Live Sweep
+            </span>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 p-5">
             {currentData.signals.map((sig, i) => (
-              <div key={i} className="flex items-center justify-between p-3.5 rounded-xl border border-border/80 bg-muted/20 hover:bg-muted/40 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-background border border-border/80">
-                    <Zap className="h-4 w-4 text-amber-500" />
+              <div key={i} className="dashboard-inner-card dashboard-3d-card-interactive flex items-center justify-between p-4 hover:border-primary/50 transition-all">
+                <div className="flex items-center gap-3.5">
+                  <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/25 text-primary">
+                    <Zap className="h-4 w-4" />
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold text-foreground">{sig.title}</h5>
-                    <p className="text-[11px] text-muted-foreground">{sig.date} • Category: {sig.type}</p>
+                    <h5 className="text-xs font-bold text-foreground">{sig.title}</h5>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{sig.date} • Category: {sig.type}</p>
                   </div>
                 </div>
                 <Badge
                   variant={sig.impact === "High" ? "destructive" : "secondary"}
-                  className="text-[10px]"
+                  className="text-[10px] font-mono shrink-0"
                 >
                   {sig.impact} Impact
                 </Badge>

@@ -22,7 +22,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   ModelMetric,
   WEEKLY_TOKEN_DATA,
-  ShimmerBorder,
   MainTabType,
 } from "./types";
 
@@ -50,10 +49,9 @@ export function BrainOverviewTab({
   return (
     <div className="flex-1 p-6 overflow-y-auto scrollbar-thin space-y-6 bg-background/50">
       {/* Banner: Command Center Welcome & Quick Actions */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/10 via-card to-background p-6 shadow-xs">
-        <ShimmerBorder />
-        <div className="relative z-20 flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-1.5 max-w-xl">
+      <div className="dashboard-3d-container p-6 sm:p-7">
+        <div className="relative z-20 flex flex-wrap items-center justify-between gap-5">
+          <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2">
               <Badge className="bg-primary/20 text-primary border-primary/30 text-xs font-bold px-2.5 py-0.5">
                 UNIFIED COMMAND CENTER
@@ -61,10 +59,10 @@ export function BrainOverviewTab({
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.9)]" />
               <span className="text-xs font-bold text-emerald-400">All Engines Operational</span>
             </div>
-            <h2 className="text-xl font-extrabold text-foreground tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
               TriVisionX Brain Intelligence Command Center
             </h2>
-            <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed">
               Orchestrate active AI models, monitor live token streaming, and evaluate benchmarks from a single unified workspace.
             </p>
           </div>
@@ -74,7 +72,7 @@ export function BrainOverviewTab({
               size="sm"
               variant="outline"
               onClick={() => setMainTab("telemetry")}
-              className="h-9 text-xs font-bold gap-2 border-emerald-500/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 shadow-xs cursor-pointer"
+              className="h-10 text-xs font-bold gap-2 border-emerald-500/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 shadow-xs cursor-pointer hover:scale-[1.02] transition-all"
             >
               <Activity className="size-4" /> Open Live Telemetry
             </Button>
@@ -82,7 +80,7 @@ export function BrainOverviewTab({
               size="sm"
               variant="outline"
               onClick={() => setMainTab("configure")}
-              className="h-9 text-xs font-bold gap-2 border-blue-500/40 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 shadow-xs cursor-pointer"
+              className="h-10 text-xs font-bold gap-2 border-blue-500/40 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 shadow-xs cursor-pointer hover:scale-[1.02] transition-all"
             >
               <Sliders className="size-4" /> Configs
             </Button>
@@ -91,52 +89,52 @@ export function BrainOverviewTab({
       </div>
 
       {/* Section 1.5: Real-Time Telemetry Live Snapshot */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-border/80 bg-card flex items-center justify-between shadow-xs hover:border-emerald-500/40 transition-all cursor-pointer" onClick={() => setMainTab("telemetry")}>
-          <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="dashboard-3d-card dashboard-3d-card-interactive p-4 flex items-center justify-between hover:border-emerald-500/40" onClick={() => setMainTab("telemetry")}>
+          <div className="space-y-1">
             <p className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
               <Clock className="size-3.5 text-emerald-400" /> Active Latency (TTFT)
             </p>
-            <p className="text-2xl font-black font-mono text-foreground mt-1">{liveTtft} <span className="text-xs font-semibold text-muted-foreground">ms</span></p>
+            <p className="text-2xl font-black font-mono text-foreground">{liveTtft} <span className="text-xs font-semibold text-muted-foreground">ms</span></p>
           </div>
-          <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] font-bold">Fast</Badge>
+          <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] font-bold font-mono">Fast</Badge>
         </div>
 
-        <div className="p-4 rounded-xl border border-border/80 bg-card flex items-center justify-between shadow-xs hover:border-blue-500/40 transition-all cursor-pointer" onClick={() => setMainTab("telemetry")}>
-          <div>
+        <div className="dashboard-3d-card dashboard-3d-card-interactive p-4 flex items-center justify-between hover:border-blue-500/40" onClick={() => setMainTab("telemetry")}>
+          <div className="space-y-1">
             <p className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
               <Zap className="size-3.5 text-blue-400" /> Token Stream Speed
             </p>
-            <p className="text-2xl font-black font-mono text-foreground mt-1">{liveTokensPerSec} <span className="text-xs font-semibold text-muted-foreground">tok/s</span></p>
+            <p className="text-2xl font-black font-mono text-foreground">{liveTokensPerSec} <span className="text-xs font-semibold text-muted-foreground">tok/s</span></p>
           </div>
-          <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30 text-[10px] font-bold">Realtime</Badge>
+          <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30 text-[10px] font-bold font-mono">Realtime</Badge>
         </div>
 
-        <div className="p-4 rounded-xl border border-border/80 bg-card flex items-center justify-between shadow-xs hover:border-indigo-500/40 transition-all cursor-pointer" onClick={() => setMainTab("telemetry")}>
-          <div>
+        <div className="dashboard-3d-card dashboard-3d-card-interactive p-4 flex items-center justify-between hover:border-indigo-500/40" onClick={() => setMainTab("telemetry")}>
+          <div className="space-y-1">
             <p className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
               <Gauge className="size-3.5 text-indigo-400" /> Active Throughput
             </p>
-            <p className="text-2xl font-black font-mono text-foreground mt-1">{liveReqPerMin} <span className="text-xs font-semibold text-muted-foreground">req/min</span></p>
+            <p className="text-2xl font-black font-mono text-foreground">{liveReqPerMin} <span className="text-xs font-semibold text-muted-foreground">req/min</span></p>
           </div>
-          <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] font-bold">99.85%</Badge>
+          <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] font-bold font-mono">99.85%</Badge>
         </div>
 
-        <div className="p-4 rounded-xl border border-border/80 bg-card flex items-center justify-between shadow-xs hover:border-purple-500/40 transition-all cursor-pointer" onClick={() => setMainTab("telemetry")}>
-          <div>
+        <div className="dashboard-3d-card dashboard-3d-card-interactive p-4 flex items-center justify-between hover:border-purple-500/40" onClick={() => setMainTab("telemetry")}>
+          <div className="space-y-1">
             <p className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
               <Layers className="size-3.5 text-purple-400" /> Vector RAG Search
             </p>
-            <p className="text-2xl font-black font-mono text-foreground mt-1">{liveVectorLatency} <span className="text-xs font-semibold text-muted-foreground">ms</span></p>
+            <p className="text-2xl font-black font-mono text-foreground">{liveVectorLatency} <span className="text-xs font-semibold text-muted-foreground">ms</span></p>
           </div>
-          <Badge className="bg-purple-500/15 text-purple-400 border-purple-500/30 text-[10px] font-bold">94.2% Cache</Badge>
+          <Badge className="bg-purple-500/15 text-purple-400 border-purple-500/30 text-[10px] font-bold font-mono">94.2% Cache</Badge>
         </div>
       </div>
 
       {/* Section 2: Performance Matrix Winners & Allocation Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Head-to-Head Winner Badges */}
-        <div className="p-5 rounded-xl border border-border/80 bg-card space-y-4 shadow-xs">
+        <div className="dashboard-3d-card p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-border/60 pb-3">
             <div className="flex items-center gap-2">
               <Award className="size-4 text-amber-400" />
@@ -148,7 +146,7 @@ export function BrainOverviewTab({
           </div>
 
           <div className="space-y-3">
-            <div className="p-3 rounded-lg border border-border bg-muted/20 flex items-center justify-between">
+            <div className="p-3.5 dashboard-inner-card flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Fastest Engine</p>
                 <p className="text-xs font-extrabold font-mono text-foreground mt-0.5">{fastestComparedModel?.name}</p>
@@ -158,7 +156,7 @@ export function BrainOverviewTab({
               </Badge>
             </div>
 
-            <div className="p-3 rounded-lg border border-border bg-muted/20 flex items-center justify-between">
+            <div className="p-3.5 dashboard-inner-card flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Most Cost Effective</p>
                 <p className="text-xs font-extrabold font-mono text-foreground mt-0.5">{cheapestComparedModel?.name}</p>
@@ -168,7 +166,7 @@ export function BrainOverviewTab({
               </Badge>
             </div>
 
-            <div className="p-3 rounded-lg border border-border bg-muted/20 flex items-center justify-between">
+            <div className="p-3.5 dashboard-inner-card flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Highest Accuracy</p>
                 <p className="text-xs font-extrabold font-mono text-foreground mt-0.5">{highestQualityComparedModel?.name}</p>
@@ -181,7 +179,7 @@ export function BrainOverviewTab({
         </div>
 
         {/* Provider Allocation & Token Load Overview (2 Cols) */}
-        <div className="lg:col-span-2 p-5 rounded-xl border border-border/80 bg-card space-y-4 shadow-xs">
+        <div className="dashboard-3d-card lg:col-span-2 p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-border/60 pb-3">
             <div className="flex items-center gap-2">
               <LineChart className="size-4 text-indigo-400" />

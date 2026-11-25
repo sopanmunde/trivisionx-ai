@@ -33,8 +33,8 @@ export function BrainUsageSidebar({ providers = [] }: BrainUsageSidebarProps) {
   const barColors = ["bg-primary", "bg-primary/60", "bg-primary/30", "bg-primary/10"];
 
   return (
-    <div className="hidden xl:flex w-[260px] shrink-0 flex-col border-l border-border bg-card">
-      <div className="px-4 py-4 border-b border-border">
+    <div className="hidden xl:flex w-[260px] shrink-0 flex-col border-l border-black/15 dark:border-white/20 bg-card/50 backdrop-blur-xl">
+      <div className="px-4 py-4 border-b border-black/15 dark:border-white/20">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-muted-foreground" />
           <h3 className="text-xs font-bold text-foreground">Usage Visualization</h3>
