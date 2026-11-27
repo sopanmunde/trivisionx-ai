@@ -104,11 +104,10 @@ export function ComparisonSection() {
                 {tools.map((tool) => (
                   <th
                     key={tool.key}
-                    className={`text-center px-4 py-4 text-xs font-bold transition-colors ${
-                      tool.highlight
-                        ? "text-primary bg-primary/[0.04] dark:bg-primary/[0.08] border-x border-primary/25"
-                        : "text-muted-foreground font-medium"
-                    }`}
+                    className={`text-center px-4 py-4 text-xs font-bold transition-colors ${tool.highlight
+                      ? "text-primary bg-primary/[0.04] dark:bg-primary/[0.08] border-x border-primary/25"
+                      : "text-muted-foreground font-medium"
+                      }`}
                   >
                     {tool.highlight && (
                       <span className="inline-block mb-1 text-[9px] font-mono bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/30 tracking-wide font-bold">
@@ -124,9 +123,8 @@ export function ComparisonSection() {
               {features.map((feature, i) => (
                 <tr
                   key={feature.name}
-                  className={`border-b border-border/40 last:border-0 ${
-                    i % 2 === 0 ? "bg-muted/15" : ""
-                  } hover:bg-muted/30 transition-colors duration-150`}
+                  className={`border-b border-border/40 last:border-0 ${i % 2 === 0 ? "bg-muted/15" : ""
+                    } hover:bg-muted/30 transition-colors duration-150`}
                 >
                   <td className="px-5 py-3.5 text-xs text-foreground font-medium">
                     {feature.name}
@@ -134,9 +132,8 @@ export function ComparisonSection() {
                   {tools.map((tool) => (
                     <td
                       key={tool.key}
-                      className={`text-center px-4 py-3.5 transition-colors ${
-                        tool.highlight ? "bg-primary/[0.04] dark:bg-primary/[0.08] border-x border-primary/25" : ""
-                      }`}
+                      className={`text-center px-4 py-3.5 transition-colors ${tool.highlight ? "bg-primary/[0.04] dark:bg-primary/[0.08] border-x border-primary/25" : ""
+                        }`}
                     >
                       <SupportIcon value={feature[tool.key]} />
                     </td>
