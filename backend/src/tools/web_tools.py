@@ -5,14 +5,50 @@ Provides LangChain @tool functions for:
   1. web_search        — queries live web via Tavily/SerpAPI/Brave (user-key aware)
   2. fetch_webpage_content — fetches full markdown content from a URL via Jina Reader or Firecrawl
 """
+import asyncio
+import ipaddress
+import socket
+import urllib.parse
 import httpx
-from datetime import datetime
 from typing import Optional
 from langchain_core.tools import tool
 from core.config import settings
 from core.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+async def validate_public_url(url: str) -> tuple[bool, str]:
+    """Validate scheme and ensure resolved IPs are public (SSRF protection)."""
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except Exception:
+        return False, "Malformed URL"
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        return False, "URL must use http:// or https:// with a valid hostname"
+
+    host = parsed.hostname.lower().strip(".")
+    if host in {"localhost", "metadata.google.internal"} or host.endswith((".local", ".internal")):
+        return False, f"Blocked local/internal host '{host}'"
+
+    def _resolve() -> list[str]:
+        infos = socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80), proto=socket.IPPROTO_TCP)
+        return [info[4][0] for info in infos]
+
+    try:
+        ips = await asyncio.to_thread(_resolve)
+    except socket.gaierror:
+        return False, f"Could not resolve hostname '{host}'"
+
+    for ip_str in ips:
+        try:
+            ip = ipaddress.ip_address(ip_str)
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved or ip.is_unspecified:
+                return False, f"Blocked non-public IP address ({ip_str})"
+        except ValueError:
+            return False, f"Invalid resolved IP '{ip_str}'"
+
+    return True, ""
 
 
 # ---------------------------------------------------------------------------
@@ -142,6 +178,11 @@ async def fetch_webpage_content(url: str) -> str:
     """
     if not url.startswith(("http://", "https://")):
         return f"Error: Invalid URL '{url}'. Must start with http:// or https://"
+
+    ok, reason = await validate_public_url(url)
+    if not ok:
+        logger.warning(f"[fetch_webpage_content] SSRF blocked: {url} ({reason})")
+        return f"Blocked: {reason}"
 
     logger.info(f"[fetch_webpage_content] Fetching: {url}")
 

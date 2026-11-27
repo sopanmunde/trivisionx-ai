@@ -11,12 +11,12 @@ export const metadata: Metadata = {
 };
 
 const securityFeatures = [
-  { icon: Shield, title: "Encryption", description: "AES-256 at rest, TLS 1.3 in transit. API tokens are never stored in plaintext." },
-  { icon: Key, title: "Authentication", description: "JWT tokens with short expiry, bcrypt + SHA-256 password hashing, and multi-factor authentication." },
-  { icon: Clock, title: "Rate Limiting", description: "Per-IP and per-account rate limiting on all endpoints. Brute-force lockout after 5 failed attempts." },
-  { icon: Activity, title: "Penetration Testing", description: "Quarterly external pen tests and continuous automated vulnerability scanning." },
-  { icon: FileCheck, title: "SOC 2 Type II", description: "Our infrastructure partners are SOC 2 Type II certified. Full compliance report available on request." },
-  { icon: AlertCircle, title: "Incident Response", description: "24-hour SLA for critical security incidents. Dedicated security channel at security@trivisionx.ai." },
+  { icon: Shield, title: "Encrypted Credential Storage", description: "User BYOK API keys and third-party tokens are encrypted at rest with Fernet (derived from server secrets) and masked in UI responses." },
+  { icon: Key, title: "JWT & OAuth Authentication", description: "FastAPI JWT authentication backed by MongoDB user records alongside Google and GitHub OAuth 2.0 integration." },
+  { icon: Clock, title: "Rate Limiting & SSRF Guardrails", description: "SlowAPI per-route rate limiting plus outbound IP/domain validation on Slack, Teams, Atlassian, and web-scraper requests." },
+  { icon: Activity, title: "Explainable Audit Logs", description: "Agent execution steps, citations, and telemetry requests are stored per user in MongoDB for transparent inspection." },
+  { icon: FileCheck, title: "Per-User Namespace Isolation", description: "Document embeddings are partitioned by user-specific Pinecone namespaces and verified with MongoDB ownership checks." },
+  { icon: AlertCircle, title: "Safe Export & Upload Limits", description: "Bounded streaming uploads, XML/XHTML escaping on generated documents, and CSV/XLSX formula-injection sanitization." },
 ];
 
 function PolicySection({ title, children }: { title: string; children: React.ReactNode }) {

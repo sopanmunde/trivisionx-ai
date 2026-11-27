@@ -99,11 +99,13 @@ async def update_workflow_db(workflow_id: str, user_id: str, updates: Dict[str, 
 
 async def delete_workflow_db(workflow_id: str, user_id: str) -> bool:
     """
-    Deletes a workflow definition.
+    Deletes a workflow definition and cascades deletion to its execution logs.
     """
     try:
         obj_id = ObjectId(workflow_id)
         res = await _db()[COLLECTION_WORKFLOWS].delete_one({"_id": obj_id, "user_id": user_id})
+        if res.deleted_count > 0:
+            await _db()[COLLECTION_WORKFLOW_LOGS].delete_many({"workflow_id": workflow_id, "user_id": user_id})
         return res.deleted_count > 0
     except Exception as e:
         logger.error(f"Failed to delete workflow {workflow_id}: {e}")

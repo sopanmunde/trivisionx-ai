@@ -1,5 +1,4 @@
 """LLM Service — backward-compatible wrapper around the multi-LLM factory."""
-from functools import lru_cache
 from langchain_core.language_models.chat_models import BaseChatModel
 from core.llm_factory import get_llm
 from core.config import settings
@@ -8,7 +7,6 @@ from core.logger import get_logger
 logger = get_logger(__name__)
 
 
-@lru_cache(maxsize=8)
 def get_chat_llm(
     provider: str = "",
     model_name: str = "",

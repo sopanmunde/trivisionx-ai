@@ -2,12 +2,53 @@
 third_party_integrations.py — Slack/Teams Webhooks, Notion, Confluence, and Jira API integrations.
 """
 import base64
+import html
 import json
+import re
+import urllib.parse
 import httpx
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from core.logger import get_logger
+from tools.web_tools import validate_public_url
 
 logger = get_logger(__name__)
+
+_HOSTNAME_RE = re.compile(r"^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$")
+
+
+def _escape_and_bold(text: str) -> str:
+    """Escape XHTML special characters and render markdown **bold** safely."""
+    escaped = html.escape(text or "", quote=True)
+    return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped)
+
+
+async def _validate_webhook_url(url: str, allowed_hosts_check) -> Optional[str]:
+    parsed = urllib.parse.urlparse(url.strip())
+    if parsed.scheme != "https" or not parsed.hostname:
+        return "Webhook URL must use https://"
+    host = parsed.hostname.lower().strip(".")
+    if not allowed_hosts_check(host):
+        return f"Webhook host '{host}' is not an allowed endpoint"
+    ok, reason = await validate_public_url(url.strip())
+    if not ok:
+        return reason
+    return None
+
+
+async def _validate_atlassian_domain(domain: str) -> tuple[Optional[str], Optional[str]]:
+    raw = (domain or "").strip()
+    if raw.startswith("https://"):
+        raw = raw[len("https://"):]
+    elif raw.startswith("http://"):
+        return None, "Atlassian domain must use HTTPS"
+    raw = raw.rstrip("/")
+    if not raw or "/" in raw or "@" in raw or ":" in raw or not _HOSTNAME_RE.match(raw):
+        return None, "Invalid Atlassian domain hostname"
+    ok, reason = await validate_public_url(f"https://{raw}")
+    if not ok:
+        return None, reason
+    return raw.lower(), None
 
 
 async def send_slack_webhook(
@@ -20,6 +61,13 @@ async def send_slack_webhook(
     """Push formatted research summary to a Slack channel via Incoming Webhook."""
     if not webhook_url:
         return {"success": False, "error": "Slack Webhook URL is not configured"}
+
+    err = await _validate_webhook_url(
+        webhook_url,
+        lambda h: h == "hooks.slack.com" or h.endswith(".hooks.slack.com"),
+    )
+    if err:
+        return {"success": False, "error": f"Invalid Slack webhook URL: {err}"}
 
     clean_summary = summary[:500] + "..." if len(summary) > 500 else summary
 
@@ -77,6 +125,17 @@ async def send_teams_webhook(
     """Push formatted Adaptive Card to Microsoft Teams via Incoming Webhook."""
     if not webhook_url:
         return {"success": False, "error": "Teams Webhook URL is not configured"}
+
+    err = await _validate_webhook_url(
+        webhook_url,
+        lambda h: (
+            h.endswith(".webhook.office.com")
+            or h.endswith(".logic.azure.com")
+            or h.endswith(".api.powerplatform.com")
+        ),
+    )
+    if err:
+        return {"success": False, "error": f"Invalid MS Teams webhook URL: {err}"}
 
     clean_summary = summary[:500] + "..." if len(summary) > 500 else summary
 
@@ -209,35 +268,54 @@ async def publish_to_confluence(
     if not domain or not email or not api_token or not space_key:
         return {"success": False, "error": "Confluence credentials (domain, email, apiToken, spaceKey) are required"}
 
+    domain_clean, domain_err = await _validate_atlassian_domain(domain)
+    if domain_err or not domain_clean:
+        return {"success": False, "error": f"Invalid Confluence domain: {domain_err}"}
+
     citations = citations or []
-    domain_clean = domain.replace("https://", "").replace("http://", "").rstrip("/")
     auth_str = base64.b64encode(f"{email}:{api_token}".encode("utf-8")).decode("utf-8")
     headers = {
         "Authorization": f"Basic {auth_str}",
         "Content-Type": "application/json",
     }
 
-    # Build Confluence XHTML Storage Format
-    html_body = f"<h2>Research Query: {query}</h2>"
+    # Build Confluence XHTML Storage Format (all user/LLM text strictly escaped)
+    html_parts: List[str] = [f"<h2>Research Query: {html.escape(query, quote=True)}</h2>"]
     lines = [l.strip() for l in report_text.split("\n") if l.strip()]
+    in_list = False
     for line in lines:
-        if line.startswith("## "):
-            html_body += f"<h3>{line.replace('## ', '')}</h3>"
-        elif line.startswith("- ") or line.startswith("* "):
-            html_body += f"<li>{line[2:]}</li>"
+        if line.startswith("- ") or line.startswith("* "):
+            if not in_list:
+                html_parts.append("<ul>")
+                in_list = True
+            html_parts.append(f"<li>{_escape_and_bold(line[2:])}</li>")
         else:
-            html_body += f"<p>{line.replace('**', '<strong>').replace('**', 'Setting')} </p>"
+            if in_list:
+                html_parts.append("</ul>")
+                in_list = False
+            if line.startswith("### "):
+                html_parts.append(f"<h4>{_escape_and_bold(line[4:])}</h4>")
+            elif line.startswith("## "):
+                html_parts.append(f"<h3>{_escape_and_bold(line[3:])}</h3>")
+            elif line.startswith("# "):
+                html_parts.append(f"<h2>{_escape_and_bold(line[2:])}</h2>")
+            else:
+                html_parts.append(f"<p>{_escape_and_bold(line)}</p>")
+    if in_list:
+        html_parts.append("</ul>")
 
     if citations:
-        html_body += "<h3>References &amp; Citations</h3><ul>"
+        html_parts.append("<h3>References &amp; Citations</h3><ul>")
         for cit in citations:
             src = cit.get("filename") or cit.get("source") or "Document"
-            html_body += f"<li>{src}</li>"
-        html_body += "</ul>"
+            html_parts.append(f"<li>{html.escape(str(src), quote=True)}</li>")
+        html_parts.append("</ul>")
+
+    html_body = "".join(html_parts)
 
     payload = {
         "type": "page",
-        "title": f"AI Report: {query[:60]} ({datetime.utcnow().strftime('%Y-%m-%d')})",
+        "title": f"AI Report: {query[:60]} ({datetime.now(timezone.utc).strftime('%Y-%m-%d')})",
         "space": {"key": space_key},
         "body": {
             "storage": {
@@ -271,7 +349,9 @@ async def create_jira_issue(
     if not domain or not email or not api_token or not project_key:
         return {"success": False, "error": "Jira settings (domain, email, apiToken, projectKey) are required"}
 
-    domain_clean = domain.replace("https://", "").replace("http://", "").rstrip("/")
+    domain_clean, domain_err = await _validate_atlassian_domain(domain)
+    if domain_err or not domain_clean:
+        return {"success": False, "error": f"Invalid Jira domain: {domain_err}"}
     auth_str = base64.b64encode(f"{email}:{api_token}".encode("utf-8")).decode("utf-8")
     headers = {
         "Authorization": f"Basic {auth_str}",

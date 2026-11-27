@@ -8,13 +8,25 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
-import { WEEKLY_TOKEN_DATA, LLMProvider } from "./types";
+import { LLMProvider } from "./types";
+
+interface WeeklyTokenPoint {
+  date?: string;
+  day: string;
+  tokens: number;
+}
 
 interface BrainUsageSidebarProps {
   providers?: LLMProvider[];
+  weeklyTokens?: WeeklyTokenPoint[];
 }
 
-export function BrainUsageSidebar({ providers = [] }: BrainUsageSidebarProps) {
+export function BrainUsageSidebar({ providers = [], weeklyTokens = [] }: BrainUsageSidebarProps) {
+  const daysData: WeeklyTokenPoint[] = weeklyTokens.length > 0
+    ? weeklyTokens
+    : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => ({ day, tokens: 0 }));
+  const maxVal = Math.max(1, ...daysData.map((x) => x.tokens || 0));
+
   const totalTokens = providers.reduce((acc, p) => acc + (p.usageTokens || 0), 0);
   const activeProvidersWithUsage = providers.filter((p) => (p.usageTokens || 0) > 0);
 
@@ -47,11 +59,10 @@ export function BrainUsageSidebar({ providers = [] }: BrainUsageSidebarProps) {
           <div>
             <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Weekly token load</h4>
             <div className="h-32 flex items-end justify-between gap-1 pt-2 px-1">
-              {WEEKLY_TOKEN_DATA.map((d) => {
-                const maxVal = Math.max(...WEEKLY_TOKEN_DATA.map(x => x.tokens));
-                const percent = (d.tokens / maxVal) * 100;
+              {daysData.map((d) => {
+                const percent = d.tokens > 0 ? Math.max(8, (d.tokens / maxVal) * 100) : 4;
                 return (
-                  <div key={d.day} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                  <div key={d.date || d.day} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div
@@ -104,7 +115,7 @@ export function BrainUsageSidebar({ providers = [] }: BrainUsageSidebarProps) {
               {[
                 { icon: Flame, title: "Low Temperature (0.1 - 0.4)", text: "Ideal for syntax check, database querying, structured JSON results." },
                 { icon: Cpu, title: "Model Token Costs", text: "GPT-4o-mini reduces costs by 90% compared to standard GPT-4-turbo." },
-                { icon: Shield, title: "Security Protocols", text: "Keys stored strictly in client memory. Never transmitted outside CORS endpoints." },
+                { icon: Shield, title: "Encrypted Key Storage", text: "API keys are encrypted at rest on the backend and returned masked to the browser." },
               ].map(({ icon: Icon, title, text }) => (
                 <div key={title} className="flex gap-2 text-[10px] text-muted-foreground">
                   <Icon className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />

@@ -27,9 +27,15 @@ async def report_node(state: AgentState) -> dict:
     if workflow_type == "coding" and generated_code:
         code_review = state.get("code_review", "")
         test_results = state.get("test_results", "")
+        execution_output = state.get("execution_output", "")
         final_output = summary
         if generated_code:
-            final_output += f"\n\n```\n{generated_code}\n```\n"
+            if "```" in generated_code:
+                final_output += f"\n\n{generated_code}\n"
+            else:
+                final_output += f"\n\n```\n{generated_code}\n```\n"
+        if execution_output:
+            final_output += f"\n\n**Execution Output:**\n```\n{execution_output}\n```\n"
         if code_review:
             final_output += f"\n\n**Code Review:**\n{code_review}\n"
         if test_results:
@@ -52,8 +58,12 @@ async def report_node(state: AgentState) -> dict:
             snippet = cit.get("snippet", "")
             uploaded_at = cit.get("uploaded_at", "")
 
-            page_str = f" — Page {page}" if page and page not in ("N/A", "") else ""
-            conf_str = f" _(confidence: {confidence})_" if confidence else ""
+            page_str = f" — Page {page}" if page not in ("N/A", "", None) else ""
+            conf_str = (
+                f" _(confidence: {confidence})_"
+                if isinstance(confidence, (int, float)) or (isinstance(confidence, str) and confidence != "")
+                else ""
+            )
             date_str = f" · _{uploaded_at[:10]}_" if uploaded_at else ""
 
             final_output += f"{rank}. **{source}**{page_str}{conf_str}{date_str}\n"

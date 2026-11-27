@@ -19,6 +19,7 @@ async def semantic_search(
     query: str,
     top_k: int = 6,
     filter: Optional[Dict] = None,
+    namespace: Optional[str] = None,
 ) -> List[Document]:
     """
     Run an MMR-based semantic search against Pinecone.
@@ -28,17 +29,22 @@ async def semantic_search(
     - Re-rank selecting the most relevant yet diverse chunks
 
     Args:
-        query:  The search query string.
-        top_k:  Number of final chunks to return after MMR reranking.
-        filter: Optional Pinecone metadata filter dict (e.g. {"user_id": "..."}).
+        query:     The search query string.
+        top_k:     Number of final chunks to return after MMR reranking.
+        filter:    Optional Pinecone metadata filter dict (e.g. {"user_id": "..."}).
+        namespace: Optional Pinecone namespace for tenant isolation.
 
     Returns:
         List of LangChain Documents ranked by MMR score.
     """
-    retriever = get_mmr_retriever(top_k=top_k, filter=filter)
+    retriever = get_mmr_retriever(top_k=top_k, filter=filter, namespace=namespace)
     docs = await retriever.ainvoke(query)
+    if not docs and namespace and filter and filter.get("user_id"):
+        # Legacy fallback for user-tagged documents indexed prior to namespace isolation
+        legacy_retriever = get_mmr_retriever(top_k=top_k, filter=filter, namespace=None)
+        docs = await legacy_retriever.ainvoke(query)
     logger.info(
         f"MMR semantic search '{query[:60]}' → {len(docs)} results "
-        f"(top_k={top_k}, filter={'set' if filter else 'none'})"
+        f"(top_k={top_k}, namespace={namespace or 'default'}, filter={'set' if filter else 'none'})"
     )
     return docs

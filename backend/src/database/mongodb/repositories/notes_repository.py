@@ -55,16 +55,7 @@ def get_seed_notes() -> List[Dict]:
 
 
 async def get_user_notes(user_id: str) -> List[Dict]:
-    """Retrieves all notes for the active user. Seeds default notes if empty."""
-    count = await _db()[COLLECTION_NOTES].count_documents({"user_id": user_id})
-    if count == 0:
-        logger.info(f"Seeding default mock notes for user {user_id}")
-        seeds = get_seed_notes()
-        for s in seeds:
-            s["user_id"] = user_id
-            s["created_at"] = datetime.now(timezone.utc)
-        await _db()[COLLECTION_NOTES].insert_many(seeds)
-
+    """Retrieves all notes for the active user from MongoDB."""
     docs = await _db()[COLLECTION_NOTES].find({"user_id": user_id}).sort("updatedAt", -1).to_list(200)
     return [clean_doc(d) for d in docs]
 
@@ -73,14 +64,14 @@ async def create_note_db(user_id: str, note_data: Dict) -> Dict:
     """Creates a new note for the user."""
     payload = {
         "user_id": user_id,
-        "title": note_data.get("title", "Untitled Note").strip(),
-        "content": note_data.get("content", "").strip(),
-        "category": note_data.get("category", "general").strip(),
-        "favorite": note_data.get("favorite", False),
+        "title": str(note_data.get("title") or "Untitled Note").strip() or "Untitled Note",
+        "content": str(note_data.get("content") or "").strip(),
+        "category": str(note_data.get("category") or "general").strip() or "general",
+        "favorite": bool(note_data.get("favorite", False)),
         "updatedAt": datetime.now(timezone.utc).isoformat(),
         "created_at": datetime.now(timezone.utc)
     }
-    result = await _db()[COLLECTION_NOTES].insert_one(payload)
+    await _db()[COLLECTION_NOTES].insert_one(payload)
     return clean_doc(payload)
 
 

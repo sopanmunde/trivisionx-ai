@@ -1,20 +1,33 @@
-"""Request/response logger middleware."""
+"""Request/response logger pure-ASGI middleware."""
 import time
-from fastapi import Request
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from core.logger import get_logger
 
 logger = get_logger("http")
 
 
-class RequestLoggerMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        start = time.perf_counter()
-        response = await call_next(request)
-        duration_ms = round((time.perf_counter() - start) * 1000, 1)
+class RequestLoggerMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
 
-        logger.info(
-            f"{request.method} {request.url.path} "
-            f"-> {response.status_code} ({duration_ms}ms)"
-        )
-        return response
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        start = time.perf_counter()
+        status_code = 500
+        method = scope.get("method", "?")
+        path = scope.get("path", "")
+
+        async def send_wrapper(message: Message) -> None:
+            nonlocal status_code
+            if message["type"] == "http.response.start":
+                status_code = message.get("status", 500)
+            await send(message)
+
+        try:
+            await self.app(scope, receive, send_wrapper)
+        finally:
+            duration_ms = round((time.perf_counter() - start) * 1000, 1)
+            logger.info(f"{method} {path} -> {status_code} ({duration_ms}ms)")

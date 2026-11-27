@@ -1,35 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
-  Activity,
-  BarChart3,
   Cpu,
-  Database,
   FileText,
   Zap,
-  TrendingUp,
   Clock,
-  ArrowUpRight,
-  ShieldCheck,
   CheckCircle2,
-  Calendar,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { API_BASE_URL } from "@/lib/api";
 
 interface MetricCardProps {
   title: string;
   value: string;
-  change: string;
+  badgeText: string;
   isPositive: boolean;
   icon: React.ReactNode;
   subtitle: string;
 }
 
-function MetricCard({ title, value, change, isPositive, icon, subtitle }: MetricCardProps) {
+function MetricCard({ title, value, badgeText, isPositive, icon, subtitle }: MetricCardProps) {
   return (
     <Card className="dashboard-3d-card dashboard-3d-card-interactive">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -50,8 +45,7 @@ function MetricCard({ title, value, change, isPositive, icon, subtitle }: Metric
                 : "bg-red-500/10 text-red-500"
             }`}
           >
-            {change}
-            <ArrowUpRight className="w-3 h-3" />
+            {badgeText}
           </span>
           <span className="text-muted-foreground font-mono text-[11px] truncate">{subtitle}</span>
         </div>
@@ -60,24 +54,137 @@ function MetricCard({ title, value, change, isPositive, icon, subtitle }: Metric
   );
 }
 
-const agentStats = [
-  { name: "Research Agent", count: "4,821", share: 38, color: "bg-blue-500" },
-  { name: "Coding Agent", count: "3,119", share: 25, color: "bg-emerald-500" },
-  { name: "Data Analysis Agent", count: "2,284", share: 18, color: "bg-amber-500" },
-  { name: "Competitive Agent", count: "1,270", share: 10, color: "bg-violet-500" },
-  { name: "Summary & Technical", count: "1,142", share: 9, color: "bg-rose-500" },
-];
+function formatCompactNumber(val: number): string {
+  if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(2)}M`;
+  if (val >= 1_000) return `${(val / 1_000).toFixed(1)}K`;
+  return String(val);
+}
 
-const recentLogs = [
-  { id: "LOG-9142", query: "Autonomous multi-agent swarms with LangGraph", agent: "Research", time: "2 min ago", status: "Success", latency: "1.8s" },
-  { id: "LOG-9141", query: "Evaluate and correct AST sandbox code execution", agent: "Coding", time: "8 min ago", status: "Success", latency: "2.4s" },
-  { id: "LOG-9140", query: "Pinecone vector retrieval MMR similarity search", agent: "Retrieval", time: "14 min ago", status: "Success", latency: "0.9s" },
-  { id: "LOG-9139", query: "PDF invoice tabular extraction with Vision OCR", agent: "Data", time: "26 min ago", status: "Success", latency: "3.1s" },
-  { id: "LOG-9138", query: "Weekly competitive intelligence market breakdown", agent: "Competitive", time: "42 min ago", status: "Success", latency: "4.2s" },
+const BAR_COLORS = [
+  "bg-blue-500",
+  "bg-emerald-500",
+  "bg-amber-500",
+  "bg-violet-500",
+  "bg-rose-500",
 ];
 
 export function AnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d">("7d");
+  const [stats, setStats] = useState<any>(null);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [telemetryLogs, setTelemetryLogs] = useState<any[]>([]);
+  const [documentsCount, setDocumentsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchAnalytics = async () => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem("token");
+      const isDemo = localStorage.getItem("is_demo") === "true";
+      if (!token || token === "demo_guest_token" || isDemo) {
+        setStats(null);
+        setAuditLogs([]);
+        setTelemetryLogs([]);
+        setDocumentsCount(0);
+        return;
+      }
+
+      const [statsRes, logsRes, docsRes, telRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/brain/telemetry/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API_BASE_URL}/audit-logs?limit=100`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => null),
+        fetch(`${API_BASE_URL}/documents`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => null),
+        fetch(`${API_BASE_URL}/brain/telemetry?limit=100`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => null),
+      ]);
+
+      if (statsRes.ok) {
+        setStats(await statsRes.json());
+      }
+      if (logsRes && logsRes.ok) {
+        const logJson = await logsRes.json();
+        setAuditLogs(logJson.audit_logs || []);
+      }
+      if (docsRes && docsRes.ok) {
+        const docs = await docsRes.json();
+        setDocumentsCount(Array.isArray(docs) ? docs.length : 0);
+      }
+      if (telRes && telRes.ok) {
+        const tel = await telRes.json();
+        setTelemetryLogs(Array.isArray(tel) ? tel : []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch analytics:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  const windowCutoffMs = useMemo(() => {
+    const now = Date.now();
+    if (timeRange === "24h") return now - 24 * 60 * 60 * 1000;
+    if (timeRange === "7d") return now - 7 * 24 * 60 * 60 * 1000;
+    return now - 30 * 24 * 60 * 60 * 1000;
+  }, [timeRange]);
+
+  const filteredAuditLogs = useMemo(
+    () =>
+      auditLogs.filter((l) => {
+        if (!l.timestamp) return true;
+        const ts = Date.parse(l.timestamp);
+        return Number.isNaN(ts) || ts >= windowCutoffMs;
+      }),
+    [auditLogs, windowCutoffMs]
+  );
+
+  const filteredTelemetry = useMemo(
+    () =>
+      telemetryLogs.filter((t) => {
+        const raw = t.timestamp || t.created_at;
+        if (!raw) return true;
+        const ts = Date.parse(raw);
+        return Number.isNaN(ts) || ts >= windowCutoffMs;
+      }),
+    [telemetryLogs, windowCutoffMs]
+  );
+
+  const agentStats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const log of filteredAuditLogs) {
+      const key = `${log.workflow_type || log.mode || "research"}`;
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const total = entries.reduce((acc, [, v]) => acc + v, 0);
+    return entries.slice(0, 5).map(([name, count], idx) => ({
+      name: `${name.charAt(0).toUpperCase()}${name.slice(1)} Workflow`,
+      count: String(count),
+      share: total > 0 ? Math.round((count / total) * 100) : 0,
+      color: BAR_COLORS[idx % BAR_COLORS.length],
+    }));
+  }, [filteredAuditLogs]);
+
+  const totalTokensWindow = filteredTelemetry.reduce(
+    (sum, t) => sum + Number(t.tokensIn || 0) + Number(t.tokensOut || 0),
+    0
+  );
+  const avgLatencyWindow =
+    filteredTelemetry.length > 0
+      ? filteredTelemetry.reduce((sum, t) => sum + Number(t.latency || 0), 0) / filteredTelemetry.length
+      : Number(stats?.avgLatency || 0);
+  const totalInvocations = filteredAuditLogs.length || filteredTelemetry.length;
+  const successRateDisplay =
+    typeof stats?.successRate === "number" ? `${stats.successRate}%` : "N/A";
 
   return (
     <div className="space-y-6">
@@ -88,59 +195,71 @@ export function AnalyticsDashboard() {
             Platform Analytics
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Real-time telemetry, agent orchestration metrics, and Pinecone vector usage.
+            Live telemetry, audit execution history, and indexed document counts from MongoDB.
           </p>
         </div>
 
-        {/* Time Filter Pills */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl border border-border/80 bg-card/80 backdrop-blur-md">
-          {(["24h", "7d", "30d"] as const).map((range) => (
-            <Button
-              key={range}
-              size="sm"
-              variant={timeRange === range ? "default" : "ghost"}
-              className="h-7 text-xs px-3 rounded-lg"
-              onClick={() => setTimeRange(range)}
-            >
-              {range.toUpperCase()}
-            </Button>
-          ))}
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={fetchAnalytics}
+            disabled={isLoading}
+            className="h-8 text-xs gap-1.5"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          {/* Time Filter Pills */}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl border border-border/80 bg-card/80 backdrop-blur-md">
+            {(["24h", "7d", "30d"] as const).map((range) => (
+              <Button
+                key={range}
+                size="sm"
+                variant={timeRange === range ? "default" : "ghost"}
+                className="h-7 text-xs px-3 rounded-lg"
+                onClick={() => setTimeRange(range)}
+              >
+                {range.toUpperCase()}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
-          title="Total Invocations"
-          value="12,636"
-          change="+18.4%"
+          title="Executions (Window)"
+          value={String(totalInvocations)}
+          badgeText={successRateDisplay}
           isPositive={true}
           icon={<Zap className="w-4 h-4" />}
-          subtitle="vs. prior period"
+          subtitle={`overall success (${timeRange})`}
         />
         <MetricCard
-          title="Documents Ingested"
-          value="1,492"
-          change="+12.1%"
+          title="Documents Indexed"
+          value={String(documentsCount)}
+          badgeText="MongoDB + Pinecone"
           isPositive={true}
           icon={<FileText className="w-4 h-4" />}
-          subtitle="Pinecone synced"
+          subtitle="user namespace files"
         />
         <MetricCard
           title="Tokens Processed"
-          value="48.2M"
-          change="+24.6%"
+          value={formatCompactNumber(totalTokensWindow || Number(stats?.totalTokens || 0))}
+          badgeText={`$${Number(stats?.totalCost || 0).toFixed(4)}`}
           isPositive={true}
           icon={<Cpu className="w-4 h-4" />}
-          subtitle="Across all LLMs"
+          subtitle={`est. cost (${timeRange})`}
         />
         <MetricCard
-          title="Avg Pipeline Latency"
-          value="1.92s"
-          change="-8.3%"
+          title="Avg Model Latency"
+          value={avgLatencyWindow > 0 ? `${(avgLatencyWindow / 1000).toFixed(2)}s` : "0.00s"}
+          badgeText={`${Number(stats?.cacheHitRate ?? 0)}% cache`}
           isPositive={true}
           icon={<Clock className="w-4 h-4" />}
-          subtitle="Optimal response rate"
+          subtitle="measured TTFT / run"
         />
       </div>
 
@@ -151,48 +270,53 @@ export function AnalyticsDashboard() {
           <CardHeader className="pb-3 border-b border-border/60 bg-muted/20">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold text-foreground">
-                Agent Workload Distribution
+                Workflow Distribution
               </CardTitle>
               <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary">
-                5 Graphs
+                {agentStats.length} Active
               </Badge>
             </div>
             <CardDescription className="text-xs">
-              Invocation share by specialized subgraph.
+              Share across recorded audit executions ({timeRange}).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            {agentStats.map((agent) => (
-              <div key={agent.name} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-foreground">{agent.name}</span>
-                  <span className="font-mono text-muted-foreground">{agent.count} ({agent.share}%)</span>
+            {agentStats.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-6 text-center font-mono">
+                No workflow runs recorded in the selected window yet.
+              </p>
+            ) : (
+              agentStats.map((agent) => (
+                <div key={agent.name} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-foreground">{agent.name}</span>
+                    <span className="font-mono text-muted-foreground">{agent.count} ({agent.share}%)</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${agent.color}`}
+                      style={{ width: `${agent.share}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${agent.color}`}
-                    style={{ width: `${agent.share}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
 
-        {/* Vector Memory & Pinecone Status */}
+        {/* Recent Audit Executions */}
         <Card className="dashboard-3d-card lg:col-span-2">
           <CardHeader className="pb-3 border-b border-border/60 bg-muted/20">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold text-foreground">
                 Recent Agent Pipeline Executions
               </CardTitle>
-              <span className="flex items-center gap-1.5 text-xs text-emerald-500 font-mono">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                Live streaming
+              <span className="text-xs text-muted-foreground font-mono">
+                MongoDB audit_logs
               </span>
             </div>
             <CardDescription className="text-xs">
-              Audit log of real-time multi-agent graph executions.
+              Audited multi-agent and quick-mode queries for your account.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-2">
@@ -200,30 +324,43 @@ export function AnalyticsDashboard() {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-border/60 text-muted-foreground font-mono">
-                    <th className="pb-2.5 font-medium">Trace ID</th>
+                    <th className="pb-2.5 font-medium">Audit ID</th>
                     <th className="pb-2.5 font-medium">Query</th>
-                    <th className="pb-2.5 font-medium">Agent</th>
-                    <th className="pb-2.5 font-medium">Latency</th>
+                    <th className="pb-2.5 font-medium">Workflow</th>
+                    <th className="pb-2.5 font-medium">Provider / Model</th>
                     <th className="pb-2.5 font-medium text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40 font-mono">
-                  {recentLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="py-2.5 text-primary">{log.id}</td>
-                      <td className="py-2.5 text-foreground truncate max-w-[200px] font-sans">
-                        {log.query}
-                      </td>
-                      <td className="py-2.5 text-muted-foreground">{log.agent}</td>
-                      <td className="py-2.5 text-muted-foreground">{log.latency}</td>
-                      <td className="py-2.5 text-right">
-                        <span className="inline-flex items-center gap-1 text-[11px] text-green-500">
-                          <CheckCircle2 className="w-3 h-3" />
-                          {log.status}
-                        </span>
+                  {filteredAuditLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                        No audited queries recorded in this time window.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredAuditLogs.slice(0, 8).map((log) => {
+                      const ok = log.status === "success";
+                      return (
+                        <tr key={log.id} className="hover:bg-muted/20 transition-colors">
+                          <td className="py-2.5 text-primary truncate max-w-[90px]">{log.id}</td>
+                          <td className="py-2.5 text-foreground truncate max-w-[200px] font-sans">
+                            {log.query}
+                          </td>
+                          <td className="py-2.5 text-muted-foreground">{log.workflow_type || log.mode || "research"}</td>
+                          <td className="py-2.5 text-muted-foreground truncate max-w-[140px]">
+                            {log.provider || "default"}/{log.model || "default"}
+                          </td>
+                          <td className="py-2.5 text-right">
+                            <span className={`inline-flex items-center gap-1 text-[11px] ${ok ? "text-green-500" : "text-rose-500"}`}>
+                              {ok ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                              {log.status || "unknown"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>

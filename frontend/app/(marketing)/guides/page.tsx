@@ -15,7 +15,7 @@ const guides = [
   { icon: "🔌", category: "advanced", title: "Connecting to External APIs", description: "Use the TriVisionX webhook system to trigger agent pipelines from external events.", readTime: "10 min", level: "Advanced" },
   { icon: "🎭", category: "advanced", title: "Custom Agent Personas", description: "Configure agent personality, instruction sets, and output formats for your domain.", readTime: "12 min", level: "Advanced" },
   { icon: "📊", category: "getting-started", title: "Generating Research Reports", description: "Automate structured report generation with custom templates and scheduled runs.", readTime: "7 min", level: "Intermediate" },
-  { icon: "🔐", category: "enterprise", title: "Enterprise SSO Setup", description: "Configure SAML 2.0 and OAuth for enterprise single sign-on and role-based access.", readTime: "15 min", level: "Enterprise" },
+  { icon: "🔐", category: "enterprise", title: "OAuth & BYOK Security Setup", description: "Configure Google or GitHub OAuth authentication and encrypted provider API keys.", readTime: "15 min", level: "Enterprise" },
   { icon: "🧠", category: "advanced", title: "Multi-Model Routing Strategy", description: "Dynamically route queries to different LLMs based on task complexity and cost.", readTime: "11 min", level: "Advanced" },
   { icon: "🏢", category: "enterprise", title: "Audit Logs & Compliance", description: "Set up logging, retention policies, and compliance exports for regulated industries.", readTime: "14 min", level: "Enterprise" },
 ];
@@ -108,9 +108,9 @@ export default function GuidesPage() {
       </Tabs>
 
       <Section title="Can't find what you need?" className="text-center mt-16 pt-12">
-        <p className="text-muted-foreground mb-6">Request a guide or ask questions in the community.</p>
-        <Link href="/community" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors group">
-          <BookOpen className="w-4 h-4 group-hover:scale-110 transition-transform" /> Visit the Community →
+        <p className="text-muted-foreground mb-6">Explore API endpoints, workflows, and architecture details in the documentation.</p>
+        <Link href="/docs" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors group">
+          <BookOpen className="w-4 h-4 group-hover:scale-110 transition-transform" /> Browse Documentation →
         </Link>
       </Section>
     </PageShell>

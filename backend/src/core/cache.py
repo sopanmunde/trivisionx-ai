@@ -14,19 +14,45 @@ Usage:
     result = await expensive_operation()
     await cache_set(key, result, ttl=3600)
 """
+import asyncio
 import json
 import hashlib
+import time
+import urllib.parse
 from typing import Any, Optional
 from core.logger import get_logger
 
 logger = get_logger(__name__)
 
 _redis_client = None
+_client_lock: Optional[asyncio.Lock] = None
+_client_lock_loop: Optional[asyncio.AbstractEventLoop] = None
+_last_failure_ts: float = 0.0
+_RETRY_COOLDOWN_SECONDS = 60.0
+
+
+def _get_lock() -> asyncio.Lock:
+    global _client_lock, _client_lock_loop
+    loop = asyncio.get_running_loop()
+    if _client_lock is None or _client_lock_loop is not loop:
+        _client_lock = asyncio.Lock()
+        _client_lock_loop = loop
+    return _client_lock
+
+
+def _redact_uri(uri: str) -> str:
+    try:
+        parsed = urllib.parse.urlparse(uri)
+        host = parsed.hostname or "unknown"
+        port = f":{parsed.port}" if parsed.port else ""
+        return f"{parsed.scheme}://{host}{port}{parsed.path or ''}"
+    except Exception:
+        return "<redacted>"
 
 
 async def _get_client():
     """Return cached Redis client or None if Redis is disabled/unavailable."""
-    global _redis_client
+    global _redis_client, _last_failure_ts
     if _redis_client is not None:
         return _redis_client
 
@@ -34,30 +60,52 @@ async def _get_client():
     if not settings.REDIS_URL:
         return None
 
-    try:
-        import redis.asyncio as aioredis  # type: ignore
-        _redis_client = aioredis.from_url(
-            settings.REDIS_URL,
-            encoding="utf-8",
-            decode_responses=True,
-            socket_connect_timeout=2,
-        )
-        await _redis_client.ping()
-        logger.info(f"Redis cache connected: {settings.REDIS_URL}")
-        return _redis_client
-    except Exception as e:
-        logger.warning(f"Redis unavailable — caching disabled: {e}")
-        _redis_client = None  # keep None so we don't retry on every call
+    now = time.monotonic()
+    if _last_failure_ts and (now - _last_failure_ts) < _RETRY_COOLDOWN_SECONDS:
         return None
+
+    async with _get_lock():
+        if _redis_client is not None:
+            return _redis_client
+        now = time.monotonic()
+        if _last_failure_ts and (now - _last_failure_ts) < _RETRY_COOLDOWN_SECONDS:
+            return None
+
+        try:
+            import redis.asyncio as aioredis  # type: ignore
+            client = aioredis.from_url(
+                settings.REDIS_URL,
+                encoding="utf-8",
+                decode_responses=True,
+                socket_connect_timeout=2,
+            )
+            await client.ping()
+            _redis_client = client
+            _last_failure_ts = 0.0
+            logger.info(f"Redis cache connected: {_redact_uri(settings.REDIS_URL)}")
+            return _redis_client
+        except Exception as e:
+            logger.warning(f"Redis unavailable — caching paused for {_RETRY_COOLDOWN_SECONDS:.0f}s: {e}")
+            _redis_client = None
+            _last_failure_ts = time.monotonic()
+            return None
+
+
+async def close_cache_client() -> None:
+    global _redis_client
+    if _redis_client is not None:
+        try:
+            await _redis_client.close()
+        finally:
+            _redis_client = None
 
 
 def make_cache_key(prefix: str, *parts: str) -> str:
     """
     Build a deterministic cache key from a prefix and variable parts.
-    SHA-256 hashes the joined parts so keys stay short.
     """
-    raw = "|".join(str(p) for p in parts)
-    digest = hashlib.sha256(raw.encode()).hexdigest()[:16]
+    raw = json.dumps([str(p) for p in parts], separators=(",", ":"))
+    digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()
     return f"{prefix}{digest}"
 
 

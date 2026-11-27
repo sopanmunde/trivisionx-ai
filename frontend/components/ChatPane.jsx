@@ -37,6 +37,7 @@ import {
   Route,
   BrainCircuit,
   Layers,
+  Loader2,
 } from "lucide-react";
 import { TriVisionXLogo } from "./TriVisionXLogo";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,11 +47,9 @@ import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { Textarea } from "./ui/textarea";
-import { Card, CardContent } from "./ui/card";
-import { ScrollArea } from "./ui/scroll-area";
+import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import ScrambleHover from "./ui/scramble";
 
 function getFileInfo(filename) {
   const ext = filename?.split(".").pop()?.toLowerCase() || "";
@@ -123,53 +122,27 @@ function ThinkingMessage({ onPause, agentState }) {
   };
 
   const agentInfo = getAgentInfo(agentState);
-  const dotColors = [
-    "var(--color-1, #9E7AFF)",
-    "var(--color-2, #FE8BBB)",
-    "var(--color-3, #54A3FF)",
-  ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex gap-2.5 sm:gap-4 px-1 sm:px-2 w-full justify-start"
-    >
-      {/* AI avatar with Magic UI pulse glow */}
-      <Avatar className="mt-1 h-7 w-7 sm:h-8 sm:w-8 border border-primary/20 bg-primary/5 shadow-xs ring-2 ring-primary/10 shrink-0">
-        <AvatarFallback className="bg-card text-foreground">
-          <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary animate-pulse" />
+    <div className="flex gap-2.5 sm:gap-4 px-1 sm:px-2 w-full justify-start">
+      <Avatar className="mt-1 h-7 w-7 sm:h-8 sm:w-8 border border-border bg-muted shrink-0">
+        <AvatarFallback className="bg-muted text-foreground">
+          <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
         </AvatarFallback>
       </Avatar>
       <div className="flex flex-col gap-1 py-0.5 min-w-0 flex-1">
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          {/* Staggered Magic UI dots */}
-          <div className="flex items-center gap-[3px] sm:gap-[4px]">
-            {dotColors.map((col, idx) => (
-              <motion.div
-                key={idx}
-                className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full"
-                style={{ backgroundColor: col }}
-                animate={{ scale: [0.7, 1.3, 0.7], opacity: [0.4, 1, 0.4] }}
-                transition={{
-                  duration: 1.2,
-                  repeat: Infinity,
-                  delay: (idx * 180) / 1000,
-                  ease: "easeInOut",
-                }}
-              />
-            ))}
-          </div>
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
 
-          <Badge variant="outline" className={cn("text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 shadow-2xs backdrop-blur-md truncate max-w-[200px] sm:max-w-none", agentInfo.color)}>
-            Node: {agentInfo.label}
+          <Badge variant="outline" className={cn("text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 truncate max-w-[200px] sm:max-w-none", agentInfo.color)}>
+            {agentInfo.label}
           </Badge>
 
           <Button
             variant="outline"
             size="sm"
             onClick={onPause}
-            className="ml-auto sm:ml-2 h-5 sm:h-6 rounded-full px-2 sm:px-2.5 text-[9px] sm:text-[10px] font-semibold transition-all border-border hover:border-destructive/40 hover:bg-destructive/10 text-muted-foreground hover:text-destructive shrink-0"
+            className="ml-auto sm:ml-2 h-6 rounded-md px-2 text-[10px] font-medium border-border hover:bg-destructive/10 text-muted-foreground hover:text-destructive shrink-0"
           >
             <Square className="h-2 w-2 mr-1 fill-current" /> Stop
           </Button>
@@ -179,7 +152,7 @@ function ThinkingMessage({ onPause, agentState }) {
           {agentInfo.desc}
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -349,49 +322,23 @@ const ChatPane = forwardRef(function ChatPane(
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col bg-background text-foreground relative overflow-hidden">
-      {/* Dynamic Ambient Lighting in both Light and Dark modes */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.06),transparent_65%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.12),transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 dot-grid [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)] opacity-35 dark:opacity-20 pointer-events-none" />
 
       {messages.length === 0 ? (
         <div className="flex flex-1 flex-col justify-between overflow-y-auto px-3 sm:px-6 py-5 sm:py-8 bg-transparent relative z-10 scrollbar-thin">
           <div className="flex flex-1 flex-col items-center justify-center w-full max-w-5xl mx-auto pt-6 sm:pt-0">
             {/* Top Logo & Greeting */}
             <div className="w-full max-w-2xl flex flex-col items-center justify-center mb-4 sm:mb-6 text-center">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                className="flex flex-col items-center gap-3 sm:gap-4 w-full"
-              >
-                <div className="relative">
-                  <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse" />
-                  <TriVisionXLogo size="lg" glow animate={false} />
-                </div>
+              <div className="flex flex-col items-center gap-3 sm:gap-4 w-full">
+                <TriVisionXLogo size="lg" animate={false} />
                 <div className="flex flex-col items-center gap-1 sm:gap-1.5 px-2">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-600 dark:from-white dark:via-zinc-200 dark:to-zinc-400 bg-clip-text text-transparent">
-                    Hello{user?.first_name ? (
-                      <motion.span
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        ,&nbsp;
-                        <ScrambleHover
-                          text={user.first_name}
-                          scrambleSpeed={80}
-                          maxIterations={8}
-                          characters="!<>-_\/[]{}—=+*^?#@"
-                          className="text-primary"
-                        />
-                      </motion.span>
-                    ) : ""}
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+                    Hello{user?.first_name ? `, ${user.first_name}` : ""}
                   </h2>
-                  <p className="text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400 max-w-md">
-                    <span>Autonomous Multi-Agent Workspace with Deep Citations & Live Sandbox</span>
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-md">
+                    Autonomous Multi-Agent Workspace with Deep Citations & Live Sandbox
                   </p>
                 </div>
-              </motion.div>
+              </div>
             </div>
 
             {/* Central Composer Input */}
@@ -415,27 +362,22 @@ const ChatPane = forwardRef(function ChatPane(
               />
             </div>
 
-            {/* Quick Prompt Pills — Touch-friendly centered pills below Composer */}
+            {/* Quick Prompt Pills — Clean shadcn outline buttons */}
             <div className="flex flex-wrap items-center justify-center gap-2 mt-3.5 relative z-10">
-              {QUICK_PROMPTS.map((s, i) => {
+              {QUICK_PROMPTS.map((s) => {
                 const Icon = s.icon;
                 return (
-                  <motion.button
+                  <Button
                     key={s.label}
                     type="button"
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.03, duration: 0.2 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.96 }}
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleFeatureLaunch(s)}
-                    className="group flex items-center gap-1.5 shrink-0 rounded-full border border-border/80 bg-card/80 dark:bg-card/60 px-3.5 py-1.5 [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_8px_rgba(0,0,0,.04)] dark:[box-shadow:0_-10px_25px_-10px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_4px_12px_rgba(0,0,0,.4)] hover:border-primary/40 hover:bg-card transition-all duration-200 cursor-pointer backdrop-blur-md hover:-translate-y-0.5"
+                    className="rounded-full h-8 px-3.5 gap-1.5 text-xs font-medium bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
                   >
-                    <Icon className="h-3.5 w-3.5 text-primary shrink-0 transition-transform group-hover:scale-110" />
-                    <span className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-950 dark:group-hover:text-white transition-colors whitespace-nowrap">
-                      {s.label}
-                    </span>
-                  </motion.button>
+                    <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="whitespace-nowrap">{s.label}</span>
+                  </Button>
                 );
               })}
             </div>
@@ -453,7 +395,7 @@ const ChatPane = forwardRef(function ChatPane(
       ) : (
         <>
           {/* Active Conversation Telemetry & Session Header */}
-          <div className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-zinc-200/60 dark:border-zinc-800/60 bg-white/75 dark:bg-zinc-950/75 backdrop-blur-md px-3 sm:px-4 py-2 sm:py-2.5">
+          <div className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-border bg-background px-3 sm:px-4 py-2 sm:py-2.5">
             <div className="flex items-center gap-2 min-w-0 pl-11 lg:pl-0">
               <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-lg border border-border bg-card shadow-2xs shrink-0">
                 <Bot className="h-3.5 w-3.5 text-primary" />
@@ -490,7 +432,7 @@ const ChatPane = forwardRef(function ChatPane(
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="flex items-center justify-center gap-2 bg-amber-50/90 dark:bg-amber-950/30 backdrop-blur-md border-b border-amber-200/60 dark:border-amber-800/30 px-4 py-2 text-[11.5px] sm:text-[12px] text-amber-800 dark:text-amber-300 font-medium shadow-xs relative z-10"
+                className="flex items-center justify-center gap-2 bg-muted/60 border-b border-border px-4 py-2 text-[11.5px] sm:text-[12px] text-amber-800 dark:text-amber-300 font-medium relative z-10"
               >
                 <span className="truncate">
                   Switched from <strong>{providerSwitchEvent.from}</strong> to{" "}
@@ -531,7 +473,7 @@ const ChatPane = forwardRef(function ChatPane(
                           initial={{ opacity: 0, y: 6 }}
                           animate={{ opacity: 1, y: 0 }}
                         >
-                          <Card className="border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/50 shadow-md backdrop-blur-md">
+                          <Card className="border-border bg-card shadow-sm">
                             <CardContent className="p-3">
                               <Textarea
                                 value={draft}
@@ -707,29 +649,21 @@ const ChatPane = forwardRef(function ChatPane(
                       const theme = agentThemeMap[agentKey] || agentThemeMap.research;
 
                       return (
-                        <motion.div
-                          initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          transition={{ duration: 0.25, ease: "easeOut" }}
-                          className="flex gap-2 sm:gap-4 px-1 sm:px-2 w-full justify-start mb-2"
-                        >
-                          <div className={cn(
-                            "ml-0 sm:ml-9 md:ml-12 flex items-start gap-2.5 sm:gap-3 rounded-xl sm:rounded-2xl border bg-gradient-to-r backdrop-blur-md px-3 sm:px-4 py-2.5 sm:py-3 shadow-md w-full max-w-full sm:max-w-xl",
-                            theme.bg
-                          )}>
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-background/80 shadow-xs border border-border">
+                        <div className="flex gap-2 sm:gap-4 px-1 sm:px-2 w-full justify-start mb-2">
+                          <div className="ml-0 sm:ml-9 md:ml-12 flex items-start gap-2.5 sm:gap-3 rounded-xl border border-border bg-card px-3 sm:px-4 py-2.5 sm:py-3 shadow-xs w-full max-w-full sm:max-w-xl">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted border border-border">
                               <Route className={cn("h-4 w-4", theme.text)} />
                             </div>
                             <div className="flex flex-col gap-1 min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                                <span className={cn("text-[10px] font-extrabold uppercase tracking-wider", theme.text)}>
+                                <span className={cn("text-[10px] font-semibold uppercase tracking-wider", theme.text)}>
                                   Supervisor Agent
                                 </span>
-                                <Badge variant="secondary" className={cn("text-[9.5px] px-2 py-0.5 font-mono font-bold tracking-wider rounded-md border", theme.badge)}>
+                                <Badge variant="secondary" className={cn("text-[9.5px] px-2 py-0.5 font-mono font-semibold tracking-wider rounded-md border", theme.badge)}>
                                   {supervisorDecision.selected_agent?.toUpperCase()}
                                 </Badge>
                                 {(supervisorDecision.trip_constraint || supervisorDecision.tripconstraint) && (
-                                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono tracking-wider text-muted-foreground border-border/70 bg-background/50">
+                                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono tracking-wider text-muted-foreground border-border bg-muted/40">
                                     {supervisorDecision.trip_constraint || supervisorDecision.tripconstraint}
                                   </Badge>
                                 )}
@@ -741,7 +675,7 @@ const ChatPane = forwardRef(function ChatPane(
                               )}
                             </div>
                           </div>
-                        </motion.div>
+                        </div>
                       );
                     })()}
                     <ThinkingMessage
@@ -757,35 +691,21 @@ const ChatPane = forwardRef(function ChatPane(
             </div>
           </div>
 
-          {/* Liquid fade gradient above composer */}
-          <div className="pointer-events-none absolute bottom-[var(--composer-h,140px)] left-0 right-0 h-16 sm:h-20 z-10 bg-gradient-to-t from-background via-background/80 to-transparent" />
-
           {/* Scroll-to-bottom button — sits just above the composer */}
-          <AnimatePresence>
-            {showScrollBtn && (
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 6 }}
-                transition={{ duration: 0.18 }}
-                className="relative z-20 flex justify-center py-1 sm:py-1.5"
+          {showScrollBtn && (
+            <div className="relative z-20 flex justify-center py-1 sm:py-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={scrollToBottom}
+                className="h-8 w-8 rounded-full bg-background border-border shadow-sm hover:bg-accent cursor-pointer"
+                aria-label="Scroll to bottom"
               >
-                <motion.button
-                  onClick={scrollToBottom}
-                  className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground border border-border shadow-md hover:bg-accent transition-all duration-200 cursor-pointer"
-                  aria-label="Scroll to bottom"
-                >
-                  <motion.span
-                    animate={{ y: [0, 3, 0] }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
-                    className="flex items-center justify-center"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </motion.span>
-                </motion.button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
 
           {/* Composer at the bottom */}
           <div className="relative z-10 w-full px-2 sm:px-4">

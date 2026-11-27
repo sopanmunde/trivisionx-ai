@@ -5,6 +5,15 @@ Helpers shared across all LangGraph agent nodes.
 """
 import json
 from typing import Any
+from langchain_core.callbacks.manager import adispatch_custom_event
+
+
+async def safe_dispatch_custom_event(name: str, data: dict) -> None:
+    """Dispatch a LangChain custom event safely (no-op outside a runnable context)."""
+    try:
+        await adispatch_custom_event(name, data)
+    except Exception:
+        pass
 
 
 def extract_text(content: Any) -> str:

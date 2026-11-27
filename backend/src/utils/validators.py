@@ -8,12 +8,19 @@ def validate_file(filename: str, size_bytes: int) -> None:
     Validate uploaded file extension and size.
     Raises UploadException on failure.
     """
-    ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if not filename or not str(filename).strip():
+        raise UploadException("Filename is required.")
+
+    clean_name = str(filename).strip()
+    ext = "." + clean_name.rsplit(".", 1)[-1].lower() if "." in clean_name else ""
 
     if ext not in ALLOWED_EXTENSIONS:
         raise UploadException(
             f"File type '{ext}' not supported. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
         )
+
+    if size_bytes < 0:
+        raise UploadException("Invalid file size.")
 
     if size_bytes > MAX_FILE_SIZE_BYTES:
         mb = size_bytes / (1024 * 1024)

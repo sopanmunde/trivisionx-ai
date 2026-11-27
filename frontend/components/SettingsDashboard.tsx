@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import {
   User, Palette, Key, Shield, Zap, CreditCard, Bell,
-  Save, Sun, Moon, Monitor, Eye, EyeOff,
-  RefreshCw, Smartphone, Laptop, Lock, ArrowLeft
+  Save, Sun, Moon, Monitor,
+  RefreshCw, Laptop, ArrowLeft, Plus, Trash2, CheckCircle2
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -24,92 +24,231 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
   const { theme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile")
   const [isSaving, setIsSaving] = useState(false)
-  const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({})
 
-  // User Profile State
+  // Real User Profile State populated from GET /api/me
   const [profile, setProfile] = useState({
-    firstName: "Alex",
-    lastName: "Dev",
-    username: "alex_dev",
-    email: "alex.dev@trivisionx.ai",
-    bio: "AI Systems Engineer & Agentic Automation Specialist.",
-    timezone: "UTC-5 (Eastern Time)",
+    firstName: "",
+    lastName: "",
+    username: "",
+    email: "",
+    bio: "",
+    timezone: "UTC",
+    plan: "Free",
+    authProvider: "password",
+    emailVerified: false,
   })
 
-  // Model & API Keys State
-  const [apiKeys, setApiKeys] = useState({
-    openai: "sk-proj-49912093821729103...",
-    anthropic: "sk-ant-api03-9912019...",
-    gemini: "AIzaSyB89102931...",
-    deepseek: "sk-ds-991204...",
-    pinecone: "pcsk_499201...",
-  })
+  // Real Stored Provider Keys (masked values returned by GET /api/brain/keys)
+  const [storedKeys, setStoredKeys] = useState<Array<{ id: string; providerId: string; label: string; key: string; isActive: boolean }>>([])
+  const [newKeyProvider, setNewKeyProvider] = useState("openai")
+  const [newKeyLabel, setNewKeyLabel] = useState("")
+  const [newKeyValue, setNewKeyValue] = useState("")
 
+  // Real Telemetry Totals
+  const [usageStats, setUsageStats] = useState({ totalTokens: 0, totalRequests: 0, docCount: 0 })
+
+  // Model Preferences persisted to localStorage
   const [modelSettings, setModelSettings] = useState({
-    defaultModel: "Claude 3.5 Sonnet",
+    defaultModel: "Gemini 2.5 Flash",
     temperature: "0.2",
     maxTokens: "4096",
-    enableFallback: true,
   })
 
-  // Security State
-  const [security, setSecurity] = useState({
-    twoFactor: true,
-    sessionTimeout: "30",
-  })
-
-  // Webhook State
+  // Real Slack/Integration Webhook Config
   const [webhooks, setWebhooks] = useState({
-    url: "https://api.trivisionx.ai/v1/webhooks/events",
-    secret: "whsec_99410293810293",
-    eventsPR: true,
-    eventsSecOps: true,
-    eventsRAG: true,
+    slackUrl: "",
+    slackChannel: "#research-reports",
+    teamsUrl: "",
   })
 
-  // Notifications State
+  // Notification & UI Preferences persisted locally
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
-    slackPush: true,
+    slackPush: false,
     weeklyDigest: false,
-    securityIncidentAlerts: true,
   })
+  const [compactDensity, setCompactDensity] = useState(false)
 
-  // Fetch logged in user details if available
-  useEffect(() => {
+  const loadSettingsData = async () => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
-    if (!token) return
+    if (!token || token === "demo_guest_token" || localStorage.getItem("is_demo") === "true") return
+    const headers = { Authorization: `Bearer ${token}` }
 
-    fetch(`${API_BASE_URL}/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data) {
-          setProfile((prev) => ({
-            ...prev,
-            firstName: data.first_name || prev.firstName,
-            lastName: data.last_name || prev.lastName,
-            username: data.username || prev.username,
-            email: data.email || prev.email,
-          }))
-        }
-      })
-      .catch(() => {})
-  }, [])
+    try {
+      const [meRes, keysRes, intRes, statsRes, docsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/me`, { headers }),
+        fetch(`${API_BASE_URL}/brain/keys`, { headers }),
+        fetch(`${API_BASE_URL}/integrations`, { headers }),
+        fetch(`${API_BASE_URL}/brain/telemetry/stats`, { headers }),
+        fetch(`${API_BASE_URL}/documents`, { headers }),
+      ])
 
-  const toggleShowKey = (keyName: string) => {
-    setShowApiKey((prev) => ({ ...prev, [keyName]: !prev[keyName] }))
+      if (meRes.ok) {
+        const data = await meRes.json()
+        setProfile({
+          firstName: data.first_name || "",
+          lastName: data.last_name || "",
+          username: data.username || "",
+          email: data.email || "",
+          bio: data.bio || "",
+          timezone: data.timezone || "UTC",
+          plan: data.plan || "Free",
+          authProvider: data.auth_provider || "password",
+          emailVerified: Boolean(data.email_verified),
+        })
+      }
+      if (keysRes.ok) {
+        const keysData = await keysRes.json()
+        if (Array.isArray(keysData)) setStoredKeys(keysData)
+      }
+      if (intRes.ok) {
+        const intData = await intRes.json()
+        setWebhooks({
+          slackUrl: intData?.slack?.webhookUrl || "",
+          slackChannel: intData?.slack?.channelName || "#research-reports",
+          teamsUrl: intData?.teams?.webhookUrl || "",
+        })
+        setNotifications((prev) => ({ ...prev, slackPush: Boolean(intData?.slack?.webhookUrl) }))
+      }
+      let totalTokens = 0
+      let totalRequests = 0
+      if (statsRes.ok) {
+        const s = await statsRes.json()
+        totalTokens = s.totalTokens ?? 0
+        totalRequests = s.totalRequests ?? 0
+      }
+      let docCount = 0
+      if (docsRes.ok) {
+        const docs = await docsRes.json()
+        docCount = Array.isArray(docs) ? docs.length : 0
+      }
+      setUsageStats({ totalTokens, totalRequests, docCount })
+    } catch (err) {
+      console.error("Failed loading workspace settings", err)
+    }
   }
 
-  const handleSaveSettings = () => {
-    setIsSaving(true)
-    setTimeout(() => {
-      setIsSaving(false)
-      toast.success("Settings saved successfully", {
-        description: "Your preferences and API configurations are active across all dashboard agent workflows.",
+  useEffect(() => {
+    loadSettingsData()
+    try {
+      const savedPrefs = localStorage.getItem("trivisionx_ui_prefs")
+      if (savedPrefs) {
+        const p = JSON.parse(savedPrefs)
+        if (typeof p.compactDensity === "boolean") setCompactDensity(p.compactDensity)
+        if (p.modelSettings) setModelSettings(p.modelSettings)
+        if (p.notifications) setNotifications(p.notifications)
+      }
+    } catch {}
+  }, [])
+
+  const handleAddKey = async () => {
+    const token = localStorage.getItem("token")
+    if (!token || token === "demo_guest_token") {
+      toast.error("Sign in to add API keys.")
+      return
+    }
+    if (!newKeyLabel.trim() || !newKeyValue.trim()) {
+      toast.error("Please provide both a label and API key.")
+      return
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/brain/keys`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          providerId: newKeyProvider,
+          label: newKeyLabel.trim(),
+          key: newKeyValue.trim(),
+          isActive: true,
+        }),
       })
-    }, 600)
+      if (!res.ok) throw new Error("Failed to save API key")
+      const created = await res.json()
+      setStoredKeys((prev) => [...prev, created])
+      setNewKeyLabel("")
+      setNewKeyValue("")
+      toast.success("Encrypted API key saved")
+    } catch (e: any) {
+      toast.error(e.message || "Failed to save key")
+    }
+  }
+
+  const handleDeleteKey = async (id: string) => {
+    const token = localStorage.getItem("token")
+    if (!token || token === "demo_guest_token") return
+    try {
+      const res = await fetch(`${API_BASE_URL}/brain/keys/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        setStoredKeys((prev) => prev.filter((k) => k.id !== id))
+        toast.success("API key removed")
+      }
+    } catch {
+      toast.error("Failed to remove API key")
+    }
+  }
+
+  const handleSaveSettings = async () => {
+    const token = localStorage.getItem("token")
+    if (!token || token === "demo_guest_token") {
+      toast.error("Sign in to persist account settings.")
+      return
+    }
+    setIsSaving(true)
+    try {
+      const profileRes = await fetch(`${API_BASE_URL}/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          first_name: profile.firstName,
+          last_name: profile.lastName,
+          username: profile.username || undefined,
+          bio: profile.bio,
+          timezone: profile.timezone,
+        }),
+      })
+      if (!profileRes.ok) {
+        const err = await profileRes.json().catch(() => ({}))
+        throw new Error(err.detail || "Failed to update profile")
+      }
+
+      if (webhooks.slackUrl && !webhooks.slackUrl.includes("•")) {
+        await fetch(`${API_BASE_URL}/integrations/slack`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            webhookUrl: webhooks.slackUrl,
+            channelName: webhooks.slackChannel || "#research-reports",
+          }),
+        })
+      }
+
+      try {
+        localStorage.setItem(
+          "trivisionx_ui_prefs",
+          JSON.stringify({ compactDensity, modelSettings, notifications })
+        )
+      } catch {}
+
+      toast.success("Settings saved to your account", {
+        description: "Profile, preferences, and integrations have been updated.",
+      })
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save settings")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -207,11 +346,13 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-4 border-b border-border pb-4">
                     <div className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold border border-border shadow-xs">
-                      {(profile.firstName[0] || "A") + (profile.lastName[0] || "D")}
+                      {((profile.firstName?.[0] || "") + (profile.lastName?.[0] || "")).toUpperCase() || profile.username?.[0]?.toUpperCase() || "U"}
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-foreground">{profile.firstName} {profile.lastName}</h4>
-                      <p className="text-xs text-muted-foreground">{profile.email}</p>
+                      <h4 className="font-bold text-sm text-foreground">
+                        {`${profile.firstName} ${profile.lastName}`.trim() || profile.username || "Workspace User"}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">{profile.email || "Not signed in"}</p>
                     </div>
                   </div>
 
@@ -252,20 +393,33 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
                         id="email"
                         type="email"
                         value={profile.email}
-                        onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                        className="h-9 text-xs"
+                        readOnly
+                        disabled
+                        className="h-9 text-xs opacity-75"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="bio" className="text-xs">Bio & Role</Label>
-                    <Input
-                      id="bio"
-                      value={profile.bio}
-                      onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                      className="h-9 text-xs"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="bio" className="text-xs">Bio &amp; Role</Label>
+                      <Input
+                        id="bio"
+                        value={profile.bio}
+                        onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                        placeholder="Role or workspace focus..."
+                        className="h-9 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="timezone" className="text-xs">Timezone</Label>
+                      <Input
+                        id="timezone"
+                        value={profile.timezone}
+                        onChange={(e) => setProfile({ ...profile, timezone: e.target.value })}
+                        className="h-9 text-xs font-mono"
+                      />
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter className="justify-end border-t border-border pt-3">
@@ -326,15 +480,7 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
                         <h4 className="font-semibold text-xs text-foreground">Compact Density</h4>
                         <p className="text-[11px] text-muted-foreground">Reduce panel spacing for high-density monitoring displays.</p>
                       </div>
-                      <Switch defaultChecked />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold text-xs text-foreground font-sans">Particle Workflow Animations</h4>
-                        <p className="text-[11px] text-muted-foreground">Display live glowing signal streams on agent canvas graphs.</p>
-                      </div>
-                      <Switch defaultChecked />
+                      <Switch checked={compactDensity} onCheckedChange={setCompactDensity} />
                     </div>
                   </div>
                 </CardContent>
@@ -345,48 +491,70 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
             {activeTab === "models" && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-bold">LLM API Keys & Model Runtimes</CardTitle>
+                  <CardTitle className="text-base font-bold">Encrypted BYOK Provider Keys</CardTitle>
                   <CardDescription className="text-xs">
-                    Configure provider credentials and default fallback model engines.
+                    Manage stored provider API credentials (encrypted on backend, returned masked).
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                  <div className="space-y-3">
-                    {[
-                      { id: "openai", name: "OpenAI API Key", value: apiKeys.openai },
-                      { id: "anthropic", name: "Anthropic Claude API Key", value: apiKeys.anthropic },
-                      { id: "gemini", name: "Google Gemini API Key", value: apiKeys.gemini },
-                      { id: "deepseek", name: "DeepSeek API Key", value: apiKeys.deepseek },
-                      { id: "pinecone", name: "Pinecone Vector DB Key", value: apiKeys.pinecone },
-                    ].map((keyItem) => (
-                      <div key={keyItem.id} className="space-y-1 font-mono text-xs">
-                        <Label htmlFor={keyItem.id} className="text-xs">{keyItem.name}</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id={keyItem.id}
-                            type={showApiKey[keyItem.id] ? "text" : "password"}
-                            value={keyItem.value}
-                            onChange={(e) => setApiKeys({ ...apiKeys, [keyItem.id]: e.target.value })}
-                            className="font-mono text-xs h-9"
-                          />
+                  {storedKeys.length > 0 ? (
+                    <div className="space-y-2">
+                      {storedKeys.map((k) => (
+                        <div key={k.id} className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 text-xs">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-foreground">{k.label}</span>
+                              <Badge variant="outline" className="text-[10px] font-mono uppercase">{k.providerId}</Badge>
+                            </div>
+                            <p className="font-mono text-[11px] text-muted-foreground mt-0.5">{k.key}</p>
+                          </div>
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="icon"
-                            className="shrink-0 h-9 w-9"
-                            onClick={() => toggleShowKey(keyItem.id)}
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDeleteKey(k.id)}
                           >
-                            {showApiKey[keyItem.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                      No custom API keys stored yet. Add one below to override backend default environment keys.
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-border">
+                    <Input
+                      value={newKeyProvider}
+                      onChange={(e) => setNewKeyProvider(e.target.value)}
+                      placeholder="Provider (openai, google...)"
+                      className="h-9 text-xs font-mono"
+                    />
+                    <Input
+                      value={newKeyLabel}
+                      onChange={(e) => setNewKeyLabel(e.target.value)}
+                      placeholder="Key label"
+                      className="h-9 text-xs"
+                    />
+                    <Input
+                      type="password"
+                      value={newKeyValue}
+                      onChange={(e) => setNewKeyValue(e.target.value)}
+                      placeholder="Paste secret key..."
+                      className="h-9 text-xs font-mono"
+                    />
+                    <Button size="sm" className="h-9 text-xs gap-1.5" onClick={handleAddKey}>
+                      <Plus className="w-3.5 h-3.5" /> Add Key
+                    </Button>
                   </div>
 
                   <Separator />
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
                     <div className="space-y-1">
-                      <Label htmlFor="defaultModel" className="text-xs">Default Model Engine</Label>
+                      <Label htmlFor="defaultModel" className="text-xs">Preferred Model Label</Label>
                       <Input
                         id="defaultModel"
                         value={modelSettings.defaultModel}
@@ -415,7 +583,7 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
                   </div>
                 </CardContent>
                 <CardFooter className="justify-end border-t border-border pt-3">
-                  <Button size="sm" className="h-8 text-xs" onClick={handleSaveSettings}>Save API Keys</Button>
+                  <Button size="sm" className="h-8 text-xs" onClick={handleSaveSettings}>Save Preferences</Button>
                 </CardFooter>
               </Card>
             )}
@@ -424,51 +592,39 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
             {activeTab === "security" && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-bold">Security & Authentication</CardTitle>
+                  <CardTitle className="text-base font-bold">Security &amp; Authentication Status</CardTitle>
                   <CardDescription className="text-xs">
-                    Manage multi-factor authentication, active login sessions, and password security.
+                    Account verification and active browser session details.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-5">
-                  <div className="flex items-center justify-between">
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
                     <div>
-                      <h4 className="font-semibold text-xs text-foreground">Two-Factor Authentication (2FA)</h4>
-                      <p className="text-[11px] text-muted-foreground">Secure your account with TOTP authenticator apps (Google Authenticator, 1Password).</p>
+                      <h4 className="font-semibold text-xs text-foreground">Authentication Provider</h4>
+                      <p className="text-[11px] text-muted-foreground capitalize">{profile.authProvider} sign-in</p>
                     </div>
-                    <Switch
-                      checked={security.twoFactor}
-                      onCheckedChange={(checked) => setSecurity({ ...security, twoFactor: checked })}
-                    />
+                    <Badge variant="outline" className="text-xs">
+                      {profile.emailVerified ? "Verified Email" : "Unverified Email"}
+                    </Badge>
                   </div>
 
                   <Separator />
 
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-xs text-foreground">Active Authorized Sessions</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
-                        <div className="flex items-center gap-2.5">
-                          <Laptop className="w-4 h-4 text-primary" />
-                          <div>
-                            <div className="font-bold text-xs">Chrome on Windows 11 (Current Session)</div>
-                            <div className="text-[10px] text-muted-foreground">IP: 194.26.29.10 • Active now</div>
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-xs text-foreground">Current Browser Session</h4>
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Laptop className="w-4 h-4 text-primary shrink-0" />
+                        <div className="min-w-0">
+                          <div className="font-bold text-xs truncate">
+                            {typeof navigator !== "undefined" ? navigator.userAgent : "Active Web Client"}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Authenticated Bearer JWT session
                           </div>
                         </div>
-                        <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 text-[9px] px-1.5 py-0">Active</Badge>
                       </div>
-
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
-                        <div className="flex items-center gap-2.5">
-                          <Smartphone className="w-4 h-4 text-muted-foreground" />
-                          <div>
-                            <div className="font-bold text-xs">Safari on iOS 18</div>
-                            <div className="text-[10px] text-muted-foreground">IP: 172.56.21.90 • 2 hours ago</div>
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:bg-destructive/10">
-                          Revoke
-                        </Button>
-                      </div>
+                      <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 text-[9px] px-1.5 py-0 shrink-0">Active</Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -479,62 +635,36 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
             {activeTab === "integrations" && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-bold">Webhooks & External Integrations</CardTitle>
+                  <CardTitle className="text-base font-bold">Configured Export Webhooks</CardTitle>
                   <CardDescription className="text-xs">
-                    Configure outgoing webhook payloads for agent events, GitHub PR comments, and Slack channels.
+                    Update Slack webhook settings or visit Integrations Hub for Teams, Notion, Confluence &amp; Jira.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-1 font-mono text-xs">
-                    <Label htmlFor="webhookUrl" className="text-xs">Webhook Endpoint URL</Label>
+                    <Label htmlFor="slackUrl" className="text-xs">Slack Incoming Webhook URL</Label>
                     <Input
-                      id="webhookUrl"
-                      value={webhooks.url}
-                      onChange={(e) => setWebhooks({ ...webhooks, url: e.target.value })}
+                      id="slackUrl"
+                      value={webhooks.slackUrl}
+                      onChange={(e) => setWebhooks({ ...webhooks, slackUrl: e.target.value })}
+                      placeholder="https://hooks.slack.com/services/..."
                       className="h-9 text-xs"
                     />
                   </div>
 
                   <div className="space-y-1 font-mono text-xs">
-                    <Label htmlFor="webhookSecret" className="text-xs">Signing Secret</Label>
+                    <Label htmlFor="slackChannel" className="text-xs">Default Slack Channel</Label>
                     <Input
-                      id="webhookSecret"
-                      type="password"
-                      value={webhooks.secret}
-                      onChange={(e) => setWebhooks({ ...webhooks, secret: e.target.value })}
+                      id="slackChannel"
+                      value={webhooks.slackChannel}
+                      onChange={(e) => setWebhooks({ ...webhooks, slackChannel: e.target.value })}
                       className="h-9 text-xs font-mono"
                     />
                   </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-xs text-foreground">Subscribed Event Triggers</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-foreground">GitHub PR Code Audit Approval Events</span>
-                        <Switch
-                          checked={webhooks.eventsPR}
-                          onCheckedChange={(c) => setWebhooks({ ...webhooks, eventsPR: c })}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-foreground">SecOps Automated Incident Alerts</span>
-                        <Switch
-                          checked={webhooks.eventsSecOps}
-                          onCheckedChange={(c) => setWebhooks({ ...webhooks, eventsSecOps: c })}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-foreground">RAG Vector Knowledge Graph Updates</span>
-                        <Switch
-                          checked={webhooks.eventsRAG}
-                          onCheckedChange={(c) => setWebhooks({ ...webhooks, eventsRAG: c })}
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
+                <CardFooter className="justify-end border-t border-border pt-3">
+                  <Button size="sm" className="h-8 text-xs" onClick={handleSaveSettings}>Save Integration</Button>
+                </CardFooter>
               </Card>
             )}
 
@@ -542,43 +672,35 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
             {activeTab === "billing" && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-bold">Billing & Subscription Plan</CardTitle>
+                  <CardTitle className="text-base font-bold">Plan &amp; Metered Workspace Usage</CardTitle>
                   <CardDescription className="text-xs">
-                    Manage your organization subscription, usage quotas, and payment receipts.
+                    Live usage totals aggregated from your MongoDB telemetry &amp; document library.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <Badge variant="default" className="mb-1.5 text-[9px]">PRO ENTERPRISE</Badge>
-                      <h3 className="font-extrabold text-lg text-foreground">$49 / month</h3>
-                      <p className="text-xs text-muted-foreground">Includes 5M tokens/mo, 128 parallel agent nodes, and priority support.</p>
+                      <Badge variant="default" className="mb-1.5 text-[9px] uppercase">{profile.plan} Plan</Badge>
+                      <h3 className="font-extrabold text-lg text-foreground">BYOK Workspace</h3>
+                      <p className="text-xs text-muted-foreground">Bring your own provider API keys or manage tier limits on the pricing page.</p>
                     </div>
-                    <Button variant="outline" size="sm" className="h-8 text-xs">Manage Subscription</Button>
+                    <Button asChild variant="outline" size="sm" className="h-8 text-xs">
+                      <a href="/pricing">View Plans</a>
+                    </Button>
                   </div>
 
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-xs text-foreground">Monthly Quota Consumption</h4>
-                    <div className="space-y-2 text-xs font-mono">
-                      <div>
-                        <div className="flex justify-between text-muted-foreground mb-1 text-[11px]">
-                          <span>Token Usage: 1,240,000 / 5,000,000</span>
-                          <span>24.8%</span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary w-[24.8%]" />
-                        </div>
-                      </div>
-
-                      <div className="pt-1">
-                        <div className="flex justify-between text-muted-foreground mb-1 text-[11px]">
-                          <span>Vector Storage: 4.8 GB / 20.0 GB</span>
-                          <span>24.0%</span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500 w-[24%]" />
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                    <div className="p-3 rounded-lg border border-border bg-muted/20">
+                      <span className="text-muted-foreground block text-[10px]">Cumulative Tokens</span>
+                      <span className="text-base font-bold text-foreground">{usageStats.totalTokens.toLocaleString()}</span>
+                    </div>
+                    <div className="p-3 rounded-lg border border-border bg-muted/20">
+                      <span className="text-muted-foreground block text-[10px]">Logged API Calls</span>
+                      <span className="text-base font-bold text-foreground">{usageStats.totalRequests.toLocaleString()}</span>
+                    </div>
+                    <div className="p-3 rounded-lg border border-border bg-muted/20">
+                      <span className="text-muted-foreground block text-[10px]">Indexed Documents</span>
+                      <span className="text-base font-bold text-foreground">{usageStats.docCount.toLocaleString()}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -591,18 +713,18 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base font-bold">Notification Preferences</CardTitle>
                   <CardDescription className="text-xs">
-                    Control how and when TriVisionX sends email alerts and Slack messages.
+                    Configure workspace alerts and Slack export notifications.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-semibold text-xs text-foreground">Critical Security Incident Alerts</h4>
-                      <p className="text-[11px] text-muted-foreground">Immediate alerts when Datadog SIEM or AWS WAF triggers automated remediation.</p>
+                      <h4 className="font-semibold text-xs text-foreground">Calendar Email Reminders</h4>
+                      <p className="text-[11px] text-muted-foreground">Dispatch scheduled event reminders when configured per calendar item.</p>
                     </div>
                     <Switch
-                      checked={notifications.securityIncidentAlerts}
-                      onCheckedChange={(c) => setNotifications({ ...notifications, securityIncidentAlerts: c })}
+                      checked={notifications.emailAlerts}
+                      onCheckedChange={(c) => setNotifications({ ...notifications, emailAlerts: c })}
                     />
                   </div>
 
@@ -610,26 +732,12 @@ export function SettingsDashboard({ onNavigateToChat }: { onNavigateToChat?: () 
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-semibold text-xs text-foreground">Slack Instant Push Notifications</h4>
-                      <p className="text-[11px] text-muted-foreground">Post PR review approvals directly to #engineering channel.</p>
+                      <h4 className="font-semibold text-xs text-foreground">Slack Webhook Connected</h4>
+                      <p className="text-[11px] text-muted-foreground">Status reflects whether a Slack Incoming Webhook URL is configured.</p>
                     </div>
-                    <Switch
-                      checked={notifications.slackPush}
-                      onCheckedChange={(c) => setNotifications({ ...notifications, slackPush: c })}
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold text-xs text-foreground">Weekly Usage & Cost Digest</h4>
-                      <p className="text-[11px] text-muted-foreground">Receive weekly summary emails detailing token throughput and cost breakdowns.</p>
-                    </div>
-                    <Switch
-                      checked={notifications.weeklyDigest}
-                      onCheckedChange={(c) => setNotifications({ ...notifications, weeklyDigest: c })}
-                    />
+                    <Badge variant="outline" className="text-xs">
+                      {webhooks.slackUrl ? "Configured" : "Not Set"}
+                    </Badge>
                   </div>
                 </CardContent>
               </Card>

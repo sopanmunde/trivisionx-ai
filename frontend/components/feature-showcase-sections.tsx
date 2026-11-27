@@ -155,10 +155,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 1: AGENT EXECUTION VELOCITY
          ========================================================================= */}
-      <section className="relative py-28 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
-        {/* 3D Ambient Backdrop Spotlight */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[380px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
-
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
           {/* LEFT SIDE: Description & Metrics */}
           <div className="lg:col-span-6 space-y-6">
@@ -168,8 +165,8 @@ export function FeatureShowcaseSections() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium tracking-wide shadow-xs mb-2">
-                <Activity className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium tracking-wide shadow-xs mb-2">
+                <Activity className="w-3.5 h-3.5 text-emerald-500" />
                 <span>REAL-TIME EXECUTION VELOCITY</span>
               </div>
             </motion.div>
@@ -213,7 +210,7 @@ export function FeatureShowcaseSections() {
                   4,820
                 </span>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1 font-mono font-medium">
-                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="size-1.5 rounded-full bg-emerald-500" />
                   streaming
                 </span>
               </div>
@@ -229,8 +226,8 @@ export function FeatureShowcaseSections() {
             </motion.div>
           </div>
 
-          {/* RIGHT SIDE: ELEVATED 3D CHART VISUAL */}
-          <div className="lg:col-span-6 relative w-full h-[360px] rounded-3xl border border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-2xl p-6 [box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_20px_50px_rgba(0,0,0,.1),0_40px_80px_rgba(0,0,0,.06)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff10_inset,0_0_0_1px_rgba(255,255,255,.06),0_20px_60px_rgba(0,0,0,.8)] flex flex-col justify-between">
+          {/* RIGHT SIDE: CLEAN SHADCN CHART CARD */}
+          <div className="lg:col-span-6 relative w-full h-[360px] rounded-xl border border-border bg-card text-card-foreground p-6 shadow-sm flex flex-col justify-between">
             <div className="w-full h-full flex flex-col justify-between font-mono text-xs">
               <div className="flex items-center justify-between pb-3 border-b border-border/70">
                 <span className="text-foreground font-bold flex items-center gap-2 text-sm">
@@ -269,13 +266,10 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 2: VECTOR RAG INTELLIGENCE
          ========================================================================= */}
-      <section className="relative py-28 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
-        {/* 3D Ambient Backdrop Spotlight */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[380px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
-
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
-          {/* LEFT SIDE: ELEVATED 3D VECTOR MATRIX */}
-          <div className="lg:col-span-6 relative w-full h-[360px] rounded-3xl border border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-2xl p-6 [box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_20px_50px_rgba(0,0,0,.1),0_40px_80px_rgba(0,0,0,.06)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff10_inset,0_0_0_1px_rgba(255,255,255,.06),0_20px_60px_rgba(0,0,0,.8)] flex items-center justify-center order-2 lg:order-1">
+          {/* LEFT SIDE: CLEAN SHADCN VECTOR CARD */}
+          <div className="lg:col-span-6 relative w-full h-[360px] rounded-xl border border-border bg-card text-card-foreground p-6 shadow-sm flex items-center justify-center order-2 lg:order-1">
             <div className="w-full h-full flex flex-col justify-between font-mono text-xs">
               <div className="flex items-center justify-between pb-3 border-b border-border/70">
                 <span className="text-foreground font-bold flex items-center gap-2 text-sm">
@@ -310,7 +304,7 @@ export function FeatureShowcaseSections() {
                       viewport={{ once: true }}
                       transition={{ duration: 0.4, delay: i * 0.1 }}
                       style={{ position: "absolute", top: vec.top, left: vec.left }}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/90 border border-border/80 text-foreground text-[10.5px] shadow-sm font-mono backdrop-blur-md"
+                      className="flex items-center gap-2 px-3 py-1 rounded-full bg-background border border-border text-foreground text-[10.5px] shadow-xs font-mono"
                     >
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: vec.color }} />
                       <span className="text-foreground">{vec.label}</span>
@@ -368,10 +362,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 3: DYNAMIC MULTI-LLM GATEWAY
          ========================================================================= */}
-      <section className="relative py-28 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
-        {/* 3D Ambient Backdrop Spotlight */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[380px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
-
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
           {/* LEFT SIDE: Description & Metrics */}
           <div className="lg:col-span-6 space-y-6">
@@ -414,8 +405,8 @@ export function FeatureShowcaseSections() {
             </div>
           </div>
 
-          {/* RIGHT SIDE: ELEVATED 3D PROGRESS BARS */}
-          <div className="lg:col-span-6 relative w-full h-[360px] rounded-3xl border border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-2xl p-6 [box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_20px_50px_rgba(0,0,0,.1),0_40px_80px_rgba(0,0,0,.06)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff10_inset,0_0_0_1px_rgba(255,255,255,.06),0_20px_60px_rgba(0,0,0,.8)] flex flex-col justify-center">
+          {/* RIGHT SIDE: CLEAN SHADCN MODEL DISTRIBUTION CARD */}
+          <div className="lg:col-span-6 relative w-full h-[360px] rounded-xl border border-border bg-card text-card-foreground p-6 shadow-sm flex flex-col justify-center">
             <div className="w-full space-y-6 font-mono text-xs">
               <div className="flex items-center justify-between pb-3 border-b border-border/70">
                 <span className="text-foreground font-bold flex items-center gap-2 text-sm">
@@ -454,10 +445,7 @@ export function FeatureShowcaseSections() {
       {/* =========================================================================
          SECTION 4: REAL-TIME LOGS & OBSERVABILITY
          ========================================================================= */}
-      <section className="relative py-28 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
-        {/* 3D Ambient Backdrop Spotlight */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[380px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
-
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
           {/* LEFT SIDE: ELEVATED 3D STREAMING LOG LINES */}
           <div className="lg:col-span-6 relative w-full h-[360px] rounded-3xl border border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-2xl p-6 [box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_20px_50px_rgba(0,0,0,.1),0_40px_80px_rgba(0,0,0,.06)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff10_inset,0_0_0_1px_rgba(255,255,255,.06),0_20px_60px_rgba(0,0,0,.8)] font-mono text-xs order-2 lg:order-1 flex flex-col justify-between">
@@ -542,12 +530,12 @@ export function FeatureShowcaseSections() {
       {/* JSON Inspection Modal */}
       {selectedLog && (
         <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-background/80 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedLog(null)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-card text-card-foreground border border-border/80 rounded-2xl p-6 max-w-lg w-full font-mono text-xs space-y-4 shadow-2xl"
+            className="bg-card text-card-foreground border border-border rounded-xl p-6 max-w-lg w-full font-mono text-xs space-y-4 shadow-lg"
           >
             <div className="flex items-center justify-between border-b border-border pb-3">
               <span className="font-bold text-foreground text-sm">Log Event Details</span>

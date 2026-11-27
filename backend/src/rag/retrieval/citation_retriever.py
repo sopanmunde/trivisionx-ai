@@ -61,6 +61,7 @@ async def retrieve_with_citations(
     query: str,
     top_k: int = 6,
     filter: Optional[Dict] = None,
+    namespace: Optional[str] = None,
 ) -> Tuple[List[Document], List[Dict]]:
     """
     Retrieve documents via MMR and generate citation metadata for each.
@@ -68,7 +69,7 @@ async def retrieve_with_citations(
     Returns:
         (documents, citations) — parallel lists, same order as retrieval.
     """
-    docs = await semantic_search(query=query, top_k=top_k, filter=filter)
+    docs = await semantic_search(query=query, top_k=top_k, filter=filter, namespace=namespace)
     citations = [format_citation(doc, i) for i, doc in enumerate(docs)]
     logger.info(
         f"Retrieved {len(docs)} docs with citations for '{query[:60]}'"

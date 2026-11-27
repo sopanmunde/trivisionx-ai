@@ -29,20 +29,30 @@ async def list_emails(request: Request, current_user=Depends(get_current_user)):
 async def add_email(request: Request, email_data: Dict, current_user=Depends(get_current_user)):
     """Send or compose a new email."""
     user_id = str(current_user["_id"])
+    folder = email_data.get("folder", "sent")
+    to_email = str(email_data.get("email") or "").strip()
+
+    if folder == "sent" and (not to_email or "@" not in to_email):
+        raise HTTPException(status_code=400, detail="A valid recipient email address is required to send an email.")
+
     result = await create_email(user_id, email_data)
-    
-    # If the email is sent (not draft), dispatch a real email
-    if email_data.get("folder", "sent") == "sent":
+
+    # If the email is sent (not draft), dispatch a real email and surface accurate delivery status
+    if folder == "sent":
+        sent_ok = False
         try:
             from services.email_service import send_real_email
-            await send_real_email(
-                to_email=email_data.get("email"),
+            sent_ok = await send_real_email(
+                to_email=to_email,
                 subject=email_data.get("subject", "(No Subject)"),
                 body=email_data.get("body", "")
             )
         except Exception as e:
             logger.error(f"Failed to dispatch real SMTP email: {e}")
-            
+        result["smtp_delivered"] = bool(sent_ok)
+        if not sent_ok:
+            result["delivery_warning"] = "Email saved to Sent, but external SMTP delivery is unavailable or not configured."
+
     return result
 
 

@@ -39,16 +39,23 @@ async def memory_retrieval_node(state: AgentState) -> dict:
     except Exception as e:
         logger.error(f"[Memory Retrieval] Failed to fetch user facts from MongoDB: {e}")
 
-    # 2. Fetch semantically similar past chat segments from Pinecone
+    # 2. Fetch semantically similar past chat segments from Pinecone (memory namespace)
     mem_docs = []
     try:
         store = get_vector_store()
-        # Query the Pinecone index for past chat messages matching the query
+        mem_ns = f"memory:{user_id}"
         mem_docs = await store.asimilarity_search(
             query,
             k=4,
-            filter={"user_id": user_id, "type": "chat_memory"}
+            filter={"user_id": user_id, "type": "chat_memory"},
+            namespace=mem_ns,
         )
+        if not mem_docs:
+            mem_docs = await store.asimilarity_search(
+                query,
+                k=4,
+                filter={"user_id": user_id, "type": "chat_memory"},
+            )
         logger.info(f"[Memory Retrieval] Retrieved {len(mem_docs)} relevant past chat segments from Pinecone")
     except Exception as e:
         logger.error(f"[Memory Retrieval] Failed to retrieve past chat segments from Pinecone: {e}")

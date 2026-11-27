@@ -11,10 +11,10 @@ Uses the dynamically selected LLM from the factory.
 """
 from typing import Dict, Any, Type
 from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
-from langchain_core.callbacks.manager import adispatch_custom_event
 from pydantic import BaseModel, Field
 from typing import List
 from agents.langgraph.state import AgentState
+from agents.langgraph.nodes.utils import safe_dispatch_custom_event
 from core.llm_factory import get_llm
 from core.logger import get_logger
 
@@ -165,6 +165,7 @@ async def planner_node(state: AgentState) -> dict:
     decision: PlannerDecision | None = None
     plan: list[str] = []
     requires_context = False
+    errors: list[str] = list(state.get("errors", []))
 
     for attempt_idx, attempt_provider in enumerate(fallback_providers):
         try:
@@ -195,20 +196,21 @@ async def planner_node(state: AgentState) -> dict:
             if has_more:
                 next_prov = fallback_providers[attempt_idx + 1]
                 logger.warning(f"[Planner] failing over: {attempt_provider} -> {next_prov}")
-                
+
                 reason = "Error"
                 if "quota" in err_msg or "429" in err_msg:
                     reason = "Quota exhausted"
                 elif "503" in err_msg or "unavailable" in err_msg:
                     reason = "Service unavailable"
-                    
-                await adispatch_custom_event(
-                    "provider_switch", 
+
+                await safe_dispatch_custom_event(
+                    "provider_switch",
                     {"from": attempt_provider, "to": next_prov, "reason": reason}
                 )
                 continue
             plan = []
             requires_context = False
+            errors.append(f"Planner error ({attempt_provider}): {str(e)[:160]}")
 
     reasoning = (decision.reasoning[:60] if decision and hasattr(decision, 'reasoning') else 'fallback')
     logger.info(
@@ -220,5 +222,5 @@ async def planner_node(state: AgentState) -> dict:
         "plan": plan,
         "requires_context": requires_context,
         "current_node": "planner",
-        "errors": [],
+        "errors": errors,
     }

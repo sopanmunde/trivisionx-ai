@@ -3,6 +3,7 @@ name: Deploy Frontend to Azure
 on:
   push:
     branches:
+      - main
       - master
     paths:
       - "frontend/**"

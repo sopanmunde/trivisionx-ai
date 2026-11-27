@@ -61,18 +61,34 @@ export function BrainDashboard() {
   const [liveP95, setLiveP95] = useState(0);
   const [liveReqPerMin, setLiveReqPerMin] = useState(0);
   const [liveVectorLatency, setLiveVectorLatency] = useState(0);
+  const [totalTokensStat, setTotalTokensStat] = useState(0);
+  const [successRate, setSuccessRate] = useState(100);
+  const [cacheHitRate, setCacheHitRate] = useState(0);
+  const [providerShare, setProviderShare] = useState<any[]>([]);
+  const [weeklyTokens, setWeeklyTokens] = useState<any[]>([]);
 
   const [telemetryStreamLogs, setTelemetryStreamLogs] = useState<TelemetryLog[]>([]);
 
   const [throughputGraph, setThroughputGraph] = useState<number[]>([]);
 
-  // Live Real Telemetry Polling Loop
+  const filterLogsByWindow = (logs: TelemetryLog[], win: "1m" | "5m" | "1h" | "24h") => {
+    const windowMsMap = { "1m": 60_000, "5m": 300_000, "1h": 3_600_000, "24h": 86_400_000 };
+    const cutoff = Date.now() - windowMsMap[win];
+    return logs.filter((l: any) => {
+      if (!l.created_at) return true;
+      const t = Date.parse(l.created_at);
+      return Number.isNaN(t) || t >= cutoff;
+    });
+  };
+
+  // Live Real Telemetry Polling Loop (disabled in unauthenticated/demo sessions)
   useEffect(() => {
     if (!telemetryLive) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token || token === "demo_guest_token" || localStorage.getItem("is_demo") === "true") return;
 
     const pollRealTelemetry = async () => {
       try {
-        const token = localStorage.getItem("token");
         const headers = { Authorization: `Bearer ${token}` };
 
         const [resStats, resLogs] = await Promise.all([
@@ -87,14 +103,22 @@ export function BrainDashboard() {
           setLiveP95(stats.liveP95 ?? 0);
           setLiveReqPerMin(stats.liveReqPerMin ?? 0);
           setLiveVectorLatency(stats.liveVectorLatency ?? 0);
+          setTotalTokensStat(stats.totalTokens ?? 0);
+          setSuccessRate(stats.successRate ?? 100);
+          setCacheHitRate(stats.cacheHitRate ?? 0);
+          setProviderShare(Array.isArray(stats.providerShare) ? stats.providerShare : []);
+          setWeeklyTokens(Array.isArray(stats.weeklyTokens) ? stats.weeklyTokens : []);
         }
 
         if (resLogs.ok) {
           const logs: TelemetryLog[] = await resLogs.json();
           if (Array.isArray(logs)) {
-            setTelemetryStreamLogs(logs);
-            const graphPoints = logs.slice(0, 15).reverse().map((l) => {
-              if (l.latency && l.latency > 0) return Math.round(100000 / l.latency);
+            const windowed = filterLogsByWindow(logs, telemetryWindow);
+            setTelemetryStreamLogs(windowed);
+            const graphPoints = windowed.slice(0, 15).reverse().map((l) => {
+              if (l.latency && l.latency > 0 && l.tokensOut > 0) {
+                return Math.round((l.tokensOut / l.latency) * 1000);
+              }
               return 0;
             });
             setThroughputGraph(graphPoints);
@@ -108,7 +132,7 @@ export function BrainDashboard() {
     pollRealTelemetry();
     const timer = setInterval(pollRealTelemetry, telemetryInterval * 1000);
     return () => clearInterval(timer);
-  }, [telemetryLive, telemetryInterval]);
+  }, [telemetryLive, telemetryInterval, telemetryWindow]);
 
   // Advanced configurations
   const [temperature, setTemperature] = useState<number>(0.7);
@@ -163,7 +187,11 @@ export function BrainDashboard() {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token || token === "demo_guest_token" || localStorage.getItem("is_demo") === "true") {
+        setIsLoading(false);
+        return;
+      }
       const headers = { Authorization: `Bearer ${token}` };
 
       const [resProviders, resKeys, resTelemetry] = await Promise.all([
@@ -186,10 +214,16 @@ export function BrainDashboard() {
         if (stats.recentLogs && stats.recentLogs.length > 0) {
           setTelemetryStreamLogs(stats.recentLogs);
         }
-        if (stats.liveTokensPerSec) setLiveTokensPerSec(stats.liveTokensPerSec);
-        if (stats.liveTtft) setLiveTtft(stats.liveTtft);
-        if (stats.liveP95) setLiveP95(stats.liveP95);
-        if (stats.liveReqPerMin) setLiveReqPerMin(stats.liveReqPerMin);
+        setLiveTokensPerSec(stats.liveTokensPerSec ?? 0);
+        setLiveTtft(stats.liveTtft ?? 0);
+        setLiveP95(stats.liveP95 ?? 0);
+        setLiveReqPerMin(stats.liveReqPerMin ?? 0);
+        setLiveVectorLatency(stats.liveVectorLatency ?? 0);
+        setTotalTokensStat(stats.totalTokens ?? 0);
+        setSuccessRate(stats.successRate ?? 100);
+        setCacheHitRate(stats.cacheHitRate ?? 0);
+        setProviderShare(Array.isArray(stats.providerShare) ? stats.providerShare : []);
+        setWeeklyTokens(Array.isArray(stats.weeklyTokens) ? stats.weeklyTokens : []);
       }
     } catch (e) {
       console.error("Failed to fetch brain configs", e);
@@ -226,7 +260,7 @@ export function BrainDashboard() {
     }
   };
 
-  // Real Connection Ping
+  // Real Connection Ping (persists any pending endpoint edit first)
   const testConnection = async (id: string) => {
     setTestingId(id);
     const setT = (p: LLMProvider) => p.id === id ? { ...p, status: "testing" as ProviderStatus } : p;
@@ -235,6 +269,18 @@ export function BrainDashboard() {
 
     try {
       const token = localStorage.getItem("token");
+      if (endpointEdited && id === selectedProviderId && endpoint.trim()) {
+        await fetch(`${API_BASE_URL}/brain/providers/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ endpoint: endpoint.trim() }),
+        });
+        setEndpointEdited(false);
+      }
+
       const res = await fetch(`${API_BASE_URL}/brain/providers/${id}/ping`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
@@ -569,6 +615,11 @@ export function BrainDashboard() {
                     liveTokensPerSec={liveTokensPerSec}
                     liveReqPerMin={liveReqPerMin}
                     liveVectorLatency={liveVectorLatency}
+                    totalTokens={totalTokensStat || totalTokens}
+                    successRate={successRate}
+                    cacheHitRate={cacheHitRate}
+                    providerShare={providerShare}
+                    weeklyTokens={weeklyTokens}
                     fastestComparedModel={fastestComparedModel}
                     cheapestComparedModel={cheapestComparedModel}
                     highestQualityComparedModel={highestQualityComparedModel}
@@ -587,13 +638,17 @@ export function BrainDashboard() {
                     liveTtft={liveTtft}
                     liveP95={liveP95}
                     liveTokensPerSec={liveTokensPerSec}
-                    setLiveTokensPerSec={setLiveTokensPerSec}
                     liveReqPerMin={liveReqPerMin}
-                    setLiveReqPerMin={setLiveReqPerMin}
                     liveVectorLatency={liveVectorLatency}
+                    totalTokens={totalTokensStat || totalTokens}
+                    successRate={successRate}
+                    cacheHitRate={cacheHitRate}
+                    providerShare={providerShare}
+                    providers={allProviders}
                     throughputGraph={throughputGraph}
                     telemetryStreamLogs={telemetryStreamLogs}
                     setTelemetryStreamLogs={setTelemetryStreamLogs}
+                    onRefresh={fetchData}
                   />
                 )}
 
@@ -662,7 +717,7 @@ export function BrainDashboard() {
 
             {/* RIGHT: Usage Stats Visualization Drawer */}
             {mainTab !== "telemetry" && mainTab !== "overview" && (
-              <BrainUsageSidebar providers={allProviders} />
+              <BrainUsageSidebar providers={allProviders} weeklyTokens={weeklyTokens} />
             )}
           </div>
         </div>

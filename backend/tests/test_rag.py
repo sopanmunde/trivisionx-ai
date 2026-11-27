@@ -84,28 +84,39 @@ class TestCitationNode:
 
     @pytest.mark.asyncio
     async def test_citation_node_deduplicates(self):
+        from unittest.mock import AsyncMock, patch
         from agents.langgraph.nodes.citation_node import citation_node
 
         citations = [
-            {"doc_id": "abc123", "source": "paper.pdf", "page": 1, "snippet": "..."},
-            {"doc_id": "abc123", "source": "paper.pdf", "page": 1, "snippet": "..."},  # duplicate
-            {"doc_id": "def456", "source": "other.pdf", "page": 2, "snippet": "..."},
+            {"doc_id": "abc123", "source": "paper.pdf", "page": 1, "snippet": "snippet 1"},
+            {"doc_id": "abc123", "source": "paper.pdf", "page": 1, "snippet": "snippet 1"},  # duplicate
+            {"doc_id": "def456", "source": "other.pdf", "page": 2, "snippet": "snippet 2"},
         ]
-        state = {"citations": citations, "retrieved_docs": [], "current_node": ""}
-        result = await citation_node(state)
+        state = {"citations": citations, "retrieved_docs": [], "current_node": "", "query": "test"}
+        with patch(
+            "agents.langgraph.nodes.citation_node.evaluate_citations_relevance",
+            new_callable=AsyncMock,
+            return_value=[0.95, 0.85],
+        ):
+            result = await citation_node(state)
         assert len(result["citations"]) == 2, "Duplicate doc_id should be removed"
 
     @pytest.mark.asyncio
     async def test_citation_confidence_decays(self):
+        from unittest.mock import AsyncMock, patch
         from agents.langgraph.nodes.citation_node import citation_node
 
         citations = [
             {"doc_id": f"id{i}", "source": f"doc{i}.pdf", "page": i, "snippet": f"snippet{i}"}
             for i in range(5)
         ]
-        state = {"citations": citations, "retrieved_docs": [], "current_node": ""}
-        # pyrefly: ignore[bad-argument-type]
-        result = await citation_node(state)
+        state = {"citations": citations, "retrieved_docs": [], "current_node": "", "query": "test"}
+        with patch(
+            "agents.langgraph.nodes.citation_node.evaluate_citations_relevance",
+            new_callable=AsyncMock,
+            return_value=[0.95, 0.90, 0.85, 0.80, 0.75],
+        ):
+            result = await citation_node(state)
         confs = [c["confidence"] for c in result["citations"]]
         assert confs == sorted(confs, reverse=True), "Confidence should decay with rank"
 

@@ -4,13 +4,19 @@ src/api/routes/health_routes.py — Enhanced health check with dependency status
 GET /api/health/  — returns service health, version, and status of all
                     external dependencies (MongoDB, Pinecone, LangGraph).
 """
+import asyncio
 import time
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from core.config import settings
 from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)
+
+
+def _format_error(err: Exception) -> str:
+    return str(err)[:120] if settings.DEBUG else "Dependency check failed"
 
 
 async def _check_mongodb() -> dict:
@@ -23,7 +29,7 @@ async def _check_mongodb() -> dict:
         latency_ms = round((time.monotonic() - start) * 1000, 1)
         return {"status": "healthy", "latency_ms": latency_ms}
     except Exception as e:
-        return {"status": "unhealthy", "error": str(e)[:120]}
+        return {"status": "unhealthy", "error": _format_error(e)}
 
 
 def _check_pinecone() -> dict:
@@ -40,7 +46,7 @@ def _check_pinecone() -> dict:
             "latency_ms": latency_ms,
         }
     except Exception as e:
-        return {"status": "unhealthy", "error": str(e)[:120]}
+        return {"status": "unhealthy", "error": _format_error(e)}
 
 
 def _check_langgraph() -> dict:
@@ -57,7 +63,7 @@ def _check_langgraph() -> dict:
             "latency_ms": latency_ms,
         }
     except Exception as e:
-        return {"status": "unhealthy", "error": str(e)[:120]}
+        return {"status": "unhealthy", "error": _format_error(e)}
 
 
 async def _check_redis() -> dict:
@@ -74,7 +80,7 @@ async def _check_redis() -> dict:
             return {"status": "healthy", "latency_ms": latency_ms}
         return {"status": "disabled"}
     except Exception as e:
-        return {"status": "unhealthy", "error": str(e)[:80]}
+        return {"status": "unhealthy", "error": _format_error(e)}
 
 
 @router.get("/", summary="Comprehensive health check with dependency status")
@@ -90,10 +96,12 @@ async def health():
     """
     start = time.monotonic()
 
-    mongodb   = await _check_mongodb()
-    pinecone  = _check_pinecone()
-    langgraph = _check_langgraph()
-    redis     = await _check_redis()
+    mongodb, pinecone, langgraph, redis = await asyncio.gather(
+        _check_mongodb(),
+        asyncio.to_thread(_check_pinecone),
+        asyncio.to_thread(_check_langgraph),
+        _check_redis(),
+    )
 
     total_ms = round((time.monotonic() - start) * 1000, 1)
 
@@ -101,8 +109,7 @@ async def health():
         d["status"] == "healthy"
         for d in [mongodb, pinecone, langgraph]
     )
-
-    return {
+    payload = {
         "status": "healthy" if all_healthy else "degraded",
         "version": settings.VERSION,
         "project": settings.PROJECT_NAME,
@@ -114,3 +121,5 @@ async def health():
             "redis": redis,
         },
     }
+    status_code = 503 if mongodb["status"] != "healthy" else 200
+    return JSONResponse(status_code=status_code, content=payload)

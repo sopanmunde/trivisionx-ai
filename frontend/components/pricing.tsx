@@ -4,54 +4,56 @@ import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import { Check, Bot, Zap, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const plans = [
   {
     name: "Developer",
-    description: "Ideal for building and testing agent logic locally",
+    description: "Open BYOK workspace for solo researchers and builders",
     price: { monthly: 0, yearly: 0 },
     features: [
-      "10,000 execution runs/month",
-      "Single active agent pipeline",
-      "Shared Pinecone retriever",
-      "Standard OpenAI & Anthropic routing",
-      "Discord & email support",
+      "Full LangGraph multi-agent & quick modes",
+      "Isolated per-user Pinecone vector namespace",
+      "BYOK support (OpenAI, Gemini, Anthropic, DeepSeek, Groq, Ollama)",
+      "Integrated Notes, Tasks, Calendar & Email hub",
+      "Markdown research report export",
     ],
     cta: "Start Building Free",
+    href: "/signup",
     highlighted: false,
     icon: Bot,
   },
   {
-    name: "Production",
-    description: "For production deployments requiring scalable orchestration",
+    name: "Team Preview",
+    description: "Extended workspace automation & multi-format publishing",
     price: { monthly: 49, yearly: 39 },
     features: [
-      "1,000,000 execution runs/month",
-      "16 concurrent agent pipelines",
-      "Dynamic model routing (Claude, Gemini, DeepSeek)",
-      "Self-correcting code execution logs",
-      "Dedicated vector store connections",
-      "Priority developer Slack support",
-      "API & webhook web triggers",
+      "Scheduled Cron & event-driven agent workflows",
+      "Branded PDF, DOCX & XLSX deliverable exports",
+      "Slack, Teams, Notion, Confluence & Jira publishing",
+      "Custom system-prompt skills & MCP server registry",
+      "Gemini audio transcription & voice playback",
+      "Explainable AI audit trail inspector",
     ],
-    cta: "Deploy Production Scale",
+    cta: "Create Free Account",
+    href: "/signup?plan=team",
     highlighted: true,
     icon: Zap,
   },
   {
-    name: "Enterprise",
-    description: "For organizations requiring isolated execution runtimes",
-    price: { monthly: 299, yearly: 239 },
+    name: "Self-Hosted",
+    description: "For organizations deploying on private cloud or Docker",
+    price: { monthly: 0, yearly: 0 },
+    customPriceLabel: "OSS / Custom",
     features: [
-      "Unlimited execution runs",
-      "Unlimited concurrency & sub-graphs",
-      "Isolated sovereign runtime hosting",
-      "Anti-CSRF SSO & SAML enforcement",
-      "99.9% runtime uptime SLA",
-      "Custom LLM finetuning & adapters",
-      "Dedicated agent solution engineers",
+      "Full Docker Compose stack (Next.js, FastAPI, MongoDB, Redis)",
+      "Fernet-encrypted BYOK & webhook secrets vault",
+      "Google & GitHub OAuth 2.0 authentication",
+      "SSRF-protected web scraping & webhook dispatchers",
+      "Complete control over LLM endpoints & data residency",
     ],
-    cta: "Request Demo",
+    cta: "Contact Us",
+    href: "/contact",
     highlighted: false,
     icon: ShieldAlert,
   },
@@ -183,7 +185,9 @@ export function Pricing() {
                   <div className="mb-8">
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-extrabold text-foreground">
-                        ${plan.price[billingCycle]}
+                        {"customPriceLabel" in plan && plan.customPriceLabel
+                          ? plan.customPriceLabel
+                          : `$${plan.price[billingCycle]}`}
                       </span>
                       {plan.price.monthly > 0 && (
                         <span className="text-muted-foreground text-xs font-mono">/month</span>
@@ -191,7 +195,7 @@ export function Pricing() {
                     </div>
                     {billingCycle === "yearly" && plan.price.yearly > 0 && (
                       <p className="text-[10px] text-muted-foreground mt-1 font-mono">
-                        Billed annually (${plan.price.yearly * 12}/yr)
+                        Preview tier • ${plan.price.yearly * 12}/yr billed annually when enabled
                       </p>
                     )}
                   </div>
@@ -213,13 +217,14 @@ export function Pricing() {
                 </div>
 
                 <Button
+                  asChild
                   className={`w-full rounded-xl h-11 text-xs font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer ${
                     plan.highlighted
                       ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
                       : "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border"
                   }`}
                 >
-                  {plan.cta}
+                  <Link href={plan.href}>{plan.cta}</Link>
                 </Button>
               </motion.div>
             );

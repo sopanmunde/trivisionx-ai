@@ -7,6 +7,8 @@ import {
   ArrowRight, ShieldCheck, Activity, Cpu, HelpCircle,
   Brain, GitMerge, FileText, Terminal
 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
+import { toast } from "sonner";
 
 export function ContactSection() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -36,38 +38,52 @@ export function ContactSection() {
         }
 
         if (lower.includes("love") || lower.includes("great") || lower.includes("good") || lower.includes("thanks")) {
-          setSentiment("Positive (Confidence: 98%)");
+          setSentiment("Positive");
         } else if (lower.includes("bad") || lower.includes("slow") || lower.includes("worst") || lower.includes("frustrated")) {
-          setSentiment("Urgent / Escalated (Confidence: 94%)");
+          setSentiment("Priority");
         } else {
-          setSentiment("Neutral (Confidence: 89%)");
+          setSentiment("Standard");
         }
       }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.message) return;
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) return;
 
     setIsSubmitting(true);
-    setSubmitStep(1); // Intent Analysis
-  };
+    setSubmitStep(1);
+    const nameParts = form.name.trim().split(/\s+/);
+    const firstName = nameParts[0] || form.name.trim();
+    const lastName = nameParts.slice(1).join(" ");
 
-  useEffect(() => {
-    if (!isSubmitting) return;
-
-    let timer: NodeJS.Timeout;
-    if (submitStep === 1) {
-      timer = setTimeout(() => setSubmitStep(2), 1500); // Route Determination
-    } else if (submitStep === 2) {
-      timer = setTimeout(() => setSubmitStep(3), 1500); // Auto-drafting Reply
-    } else if (submitStep === 3) {
-      timer = setTimeout(() => setSubmitStep(4), 1800); // Complete
+    try {
+      setSubmitStep(2);
+      const res = await fetch(`${API_BASE_URL}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email: form.email.trim(),
+          subject: intent !== "Awaiting intent..." ? intent : "General Inquiry",
+          message: form.message.trim(),
+        }),
+      });
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(resData.detail || "Failed to send message");
+      }
+      setSubmitStep(3);
+      setTimeout(() => setSubmitStep(4), 600);
+      toast.success("Message saved successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit message.");
+      setIsSubmitting(false);
+      setSubmitStep(0);
     }
-
-    return () => clearTimeout(timer);
-  }, [isSubmitting, submitStep]);
+  };
 
   const resetForm = () => {
     setForm({ name: "", email: "", message: "" });
@@ -400,21 +416,21 @@ export function ContactSection() {
                       className="p-2.5 bg-zinc-950 border border-zinc-900 rounded-lg text-zinc-400 text-[10px] mt-2 space-y-1 font-mono"
                     >
                       <div className="flex justify-between text-zinc-500">
-                        <span>Destination Resolved:</span>
+                        <span>Destination Queue:</span>
                         <span className="text-purple-400 font-bold">
-                          {intent.includes("Sales") ? "sales@trivisionx" : "support@trivisionx"}
+                          MongoDB contact_messages
                         </span>
                       </div>
                       <div className="flex justify-between text-zinc-500">
-                        <span>Database Session ID:</span>
-                        <span className="text-zinc-300">sso_inquiry_9a3f</span>
+                        <span>Topic Classification:</span>
+                        <span className="text-zinc-300">{intent}</span>
                       </div>
                     </motion.div>
                   )}
                 </div>
               </div>
 
-              {/* Auto reply draft step */}
+              {/* Confirmation step */}
               <div className="flex items-start gap-4">
                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${submitStep >= 3 ? "border-purple-400 bg-purple-500/10 text-purple-400" : "border-zinc-800 text-zinc-600"
                   }`}>
@@ -422,17 +438,17 @@ export function ContactSection() {
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-center text-zinc-300 font-bold mb-1">
-                    <span>Auto-Draft Response</span>
+                    <span>Submission Confirmation</span>
                     {submitStep === 3 ? (
-                      <span className="text-purple-400 text-[10px]">COMPILING...</span>
+                      <span className="text-purple-400 text-[10px]">SAVING...</span>
                     ) : submitStep >= 4 ? (
-                      <span className="text-emerald-400 text-[10px]">COMPLETED</span>
+                      <span className="text-emerald-400 text-[10px]">SAVED</span>
                     ) : (
                       <span className="text-zinc-600 text-[10px]">PENDING</span>
                     )}
                   </div>
                   <p className="text-zinc-500 leading-relaxed text-[10px]">
-                    Drafts a contextual response based on the category using the designated LLM, ready for verification.
+                    Stores your inquiry in MongoDB via the FastAPI `/api/contact` endpoint for review.
                   </p>
                   {submitStep >= 3 && (
                     <motion.div
@@ -440,9 +456,9 @@ export function ContactSection() {
                       animate={{ opacity: 1, y: 0 }}
                       className="p-2.5 bg-zinc-950 border border-zinc-900 rounded-lg text-zinc-500 text-[10px] mt-2 space-y-1 font-mono"
                     >
-                      <span className="text-zinc-600 text-[9px] uppercase font-bold tracking-wider">Draft Response:</span>
+                      <span className="text-zinc-600 text-[9px] uppercase font-bold tracking-wider">Receipt Preview:</span>
                       <p className="text-zinc-300 italic text-[9.5px] leading-relaxed mt-1">
-                        "Hi {form.name || "there"}, thank you for your query regarding {intent.toLowerCase()}. An agent has been assigned to your request and will follow up within 2 hours."
+                        "Hi {form.name || "there"}, your {intent.toLowerCase()} message has been recorded in TriVisionX."
                       </p>
                     </motion.div>
                   )}

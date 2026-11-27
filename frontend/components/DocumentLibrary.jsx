@@ -254,6 +254,27 @@ export default function DocumentLibrary({ open, onClose }) {
     }
   };
 
+  const handleDownload = async (doc) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE_URL}/documents/${doc.id}/download`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.filename || "document";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error("Failed to download document");
+    }
+  };
+
   const handleUpload = useCallback(async (file) => {
     if (!file) return;
 
@@ -289,40 +310,42 @@ export default function DocumentLibrary({ open, onClose }) {
       const reader = res.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let done = false;
+      let buffer = "";
 
       while (!done) {
         const { value, done: readerDone } = await reader.read();
         done = readerDone;
         if (value) {
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n\n");
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop() || "";
           for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.stage) {
-                  setUploadingStage(data.stage);
-                  setUploadProgress(data.progress || 0);
-                  if (data.chunks) setUploadChunks(data.chunks);
-                }
-                if (data.error) throw new Error(data.error);
-
-                if (data.stage === "done") {
-                  setTimeout(() => {
-                    setUploadingStage(null);
-                    fetchDocuments();
-                    toast.success("Document indexed successfully.");
-                  }, 2000);
-                }
-              } catch (e) {
-              }
+            if (!line.startsWith("data: ")) continue;
+            let data;
+            try {
+              data = JSON.parse(line.slice(6));
+            } catch {
+              continue;
+            }
+            if (data.error) throw new Error(data.error);
+            if (data.stage) {
+              setUploadingStage(data.stage);
+              setUploadProgress(data.progress || 0);
+              if (data.chunks) setUploadChunks(data.chunks);
+            }
+            if (data.stage === "done") {
+              setTimeout(() => {
+                setUploadingStage(null);
+                fetchDocuments();
+                toast.success("Document indexed successfully.");
+              }, 1200);
             }
           }
         }
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to upload document");
+      toast.error(err.message || "Failed to upload document");
       setUploadingStage(null);
     }
 
@@ -528,17 +551,15 @@ export default function DocumentLibrary({ open, onClose }) {
                         </div>
 
                         <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-end text-[10.5px] font-mono text-muted-foreground">
-                          <a
-                            href={`${API_BASE_URL}/documents/${doc.id}/download`}
-                            target="_blank"
-                            rel="noreferrer"
-                            download={doc.filename}
-                            className="inline-flex items-center gap-1 text-primary hover:underline font-semibold"
+                          <button
+                            type="button"
+                            onClick={() => handleDownload(doc)}
+                            className="inline-flex items-center gap-1 text-primary hover:underline font-semibold cursor-pointer"
                             title="Download file"
                           >
                             <Download className="h-3 w-3" />
                             Save
-                          </a>
+                          </button>
                         </div>
                       </motion.div>
                     );

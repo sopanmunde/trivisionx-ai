@@ -84,17 +84,21 @@ async def run_ingestion_pipeline(
         f"(user={user_id}, semantic={use_semantic_chunking})"
     )
 
+    ns = f"user:{user_id}" if user_id else None
     if not allow_reindex:
         try:
             index = vector_store.index
             stats = index.describe_index_stats()
             dimension = stats.dimension
             dummy_vector = [0.0] * dimension
-            existing = index.query(
-                vector=dummy_vector,
-                filter={"user_id": user_id, "filename": filename},
-                top_k=1,
-            )
+            query_kwargs = {
+                "vector": dummy_vector,
+                "filter": {"user_id": user_id, "filename": filename},
+                "top_k": 1,
+            }
+            if ns:
+                query_kwargs["namespace"] = ns
+            existing = index.query(**query_kwargs)
             if existing:
                 matches = getattr(existing, "matches", None)
                 if matches is None and isinstance(existing, dict):
@@ -124,7 +128,12 @@ async def run_ingestion_pipeline(
 
     chunks = enrich_metadata(chunks, user_id=user_id, filename=filename)
 
-    vector_store.add_documents(chunks)
-    logger.info(f"Indexed {len(chunks)} chunks for '{filename}' (user={user_id})")
+    from rag.vectorstores.pinecone_store import make_chunk_ids
+    ids = make_chunk_ids(chunks, namespace_hint=ns or "")
+    add_kwargs = {"ids": ids}
+    if ns:
+        add_kwargs["namespace"] = ns
+    vector_store.add_documents(chunks, **add_kwargs)
+    logger.info(f"Indexed {len(chunks)} chunks for '{filename}' (user={user_id}, ns={ns or 'default'})")
 
     return len(chunks)

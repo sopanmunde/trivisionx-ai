@@ -7,8 +7,9 @@ Periodically checks stored calendar events for upcoming email notification trigg
 import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
+from bson import ObjectId
 from database.mongodb.connection import get_database
-from core.constants import COLLECTION_EVENTS, COLLECTION_EMAILS
+from core.constants import COLLECTION_EVENTS, COLLECTION_EMAILS, COLLECTION_USERS
 from core.logger import get_logger
 from services.email_service import send_real_email
 
@@ -44,6 +45,7 @@ async def check_and_dispatch_event_notifications():
         return
 
     now = datetime.now(timezone.utc)
+    user_email_cache: Dict[str, Optional[str]] = {}
     try:
         events = await db[COLLECTION_EVENTS].find({
             "emailNotifications": {"$exists": True, "$not": {"$size": 0}}
@@ -62,68 +64,94 @@ async def check_and_dispatch_event_notifications():
                 continue
 
             email_notifications = event.get("emailNotifications", [])
-            sent_notifications = event.get("sentNotifications", [])
-            target_email = event.get("notificationEmail") or "user@trivisionx.ai"
-            user_id = event.get("user_id", "system")
+            sent_notifications = set(event.get("sentNotifications", []))
+            user_id = str(event.get("user_id") or "")
+            target_email = str(event.get("notificationEmail") or "").strip()
+
+            if not target_email and user_id and user_id != "system":
+                if user_id not in user_email_cache:
+                    user_email = None
+                    if ObjectId.is_valid(user_id):
+                        user_doc = await db[COLLECTION_USERS].find_one(
+                            {"_id": ObjectId(user_id)},
+                            {"email": 1},
+                        )
+                        if user_doc:
+                            user_email = str(user_doc.get("email") or "").strip() or None
+                    user_email_cache[user_id] = user_email
+                target_email = user_email_cache.get(user_id) or ""
+
             title = event.get("title", "Upcoming Meeting")
 
-            newly_sent = []
+            # Identify due notifications ordered from closest to event start backwards
+            due_candidates = []
             for notif_code in email_notifications:
                 if notif_code in sent_notifications:
                     continue
-
                 offset = NOTIFICATION_OFFSETS.get(notif_code)
                 if offset is None:
                     continue
-
                 trigger_time = event_start - offset
-                # If current time is past or equal to trigger_time and not expired by more than 2 hours
-                if now >= trigger_time and now <= (event_start + timedelta(hours=2)):
-                    label = OFFSET_LABELS.get(notif_code, notif_code)
-                    subject = f"[Reminder: {label}] {title}"
-                    body = (
-                        f"Hello,\n\n"
-                        f"This is an automated email reminder for your upcoming calendar event:\n\n"
-                        f"Event Title: {title}\n"
-                        f"Scheduled Start: {event_start.strftime('%B %d, %Y at %I:%M %p UTC')}\n"
-                        f"Reminder Timing: {label}\n"
-                        f"Location: {event.get('location', 'N/A')}\n"
-                        f"Description: {event.get('description', 'N/A')}\n\n"
-                        f"Best regards,\nTriVisionX AI Assistant"
-                    )
+                if trigger_time <= now <= (event_start + timedelta(minutes=30)):
+                    due_candidates.append((offset, notif_code, trigger_time))
 
-                    email_doc = {
-                        "user_id": user_id,
-                        "name": "TriVisionX Calendar Reminders",
-                        "email": target_email,
-                        "subject": subject,
-                        "date": "Just now",
-                        "fullDate": now.strftime("%b %d, %Y, %I:%M:%S %p"),
-                        "snippet": f"Reminder ({label}): {title} at {event_start.strftime('%I:%M %p')}",
-                        "body": body,
-                        "tags": ["calendar", "reminder", "important"],
-                        "unread": True,
-                        "favorite": True,
-                        "folder": "inbox",
-                        "category": "updates",
-                        "created_at": now
-                    }
-                    await db[COLLECTION_EMAILS].insert_one(email_doc)
-                    newly_sent.append(notif_code)
-                    logger.info(f"Dispatched in-app email reminder [{notif_code}] for event '{title}' to {target_email}")
+            if not due_candidates:
+                continue
 
-                    # Attempt to send real SMTP email if credentials are set
-                    try:
-                        await send_real_email(to_email=target_email, subject=subject, body=body)
-                    except Exception as email_err:
-                        logger.error(f"Failed to send real SMTP email: {email_err}")
+            # Dispatch only the most imminent due reminder and mark skipped older due offsets as claimed
+            due_candidates.sort(key=lambda item: item[0])
+            _, active_code, _ = due_candidates[0]
+            claim_codes = [code for _, code, _ in due_candidates]
 
-            if newly_sent:
-                updated_sent = list(set(sent_notifications + newly_sent))
-                await db[COLLECTION_EVENTS].update_one(
-                    {"_id": event["_id"]},
-                    {"$set": {"sentNotifications": updated_sent}}
-                )
+            claimed = await db[COLLECTION_EVENTS].find_one_and_update(
+                {
+                    "_id": event["_id"],
+                    "sentNotifications": {"$ne": active_code},
+                },
+                {
+                    "$addToSet": {"sentNotifications": {"$each": claim_codes}}
+                },
+            )
+            if not claimed:
+                continue
+
+            label = OFFSET_LABELS.get(active_code, active_code)
+            subject = f"[Reminder: {label}] {title}"
+            body = (
+                f"Hello,\n\n"
+                f"This is an automated email reminder for your upcoming calendar event:\n\n"
+                f"Event Title: {title}\n"
+                f"Scheduled Start: {event_start.strftime('%B %d, %Y at %I:%M %p UTC')}\n"
+                f"Reminder Timing: {label}\n"
+                f"Location: {event.get('location', 'N/A')}\n"
+                f"Description: {event.get('description', 'N/A')}\n\n"
+                f"Best regards,\nTriVisionX AI Assistant"
+            )
+
+            email_doc = {
+                "user_id": user_id or "system",
+                "name": "TriVisionX Calendar Reminders",
+                "email": target_email or "noreply@trivisionx.local",
+                "subject": subject,
+                "date": "Just now",
+                "fullDate": now.strftime("%b %d, %Y, %I:%M:%S %p"),
+                "snippet": f"Reminder ({label}): {title} at {event_start.strftime('%I:%M %p')}",
+                "body": body,
+                "tags": ["calendar", "reminder", "important"],
+                "unread": True,
+                "favorite": True,
+                "folder": "inbox",
+                "category": "updates",
+                "created_at": now
+            }
+            await db[COLLECTION_EMAILS].insert_one(email_doc)
+            logger.info(f"Dispatched in-app email reminder [{active_code}] for event '{title}'")
+
+            if target_email and "@" in target_email:
+                try:
+                    await send_real_email(to_email=target_email, subject=subject, body=body)
+                except Exception as email_err:
+                    logger.error(f"Failed to send real SMTP email: {email_err}")
     except Exception as e:
         err_str = str(e)
         if "getaddrinfo failed" in err_str or "ServerSelectionTimeoutError" in err_str or "AutoReconnect" in err_str:

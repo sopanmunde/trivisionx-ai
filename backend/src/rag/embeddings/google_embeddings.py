@@ -59,15 +59,20 @@ def get_embeddings() -> Embeddings:
       - huggingface: HuggingFaceEmbeddings (dim=384)
     """
     provider = (settings.EMBEDDING_PROVIDER or "google").lower().strip()
-    model_name = settings.EMBEDDING_MODEL or "models/gemini-embedding-001"
+    configured_model = (settings.EMBEDDING_MODEL or "").strip()
     dimension = settings.EMBEDDING_DIMENSION or PINECONE_INDEX_DIMENSION
 
-    logger.info(f"Initializing embeddings: provider={provider}, model={model_name}, dim={dimension}")
-
     if provider == "huggingface":
+        if not configured_model or configured_model.startswith("models/gemini"):
+            model_name = "sentence-transformers/all-MiniLM-L12-v2"
+        else:
+            model_name = configured_model
+        logger.info(f"Initializing embeddings: provider={provider}, model={model_name}, dim={dimension}")
         return _build_huggingface_embeddings(model_name, dimension)
-    else:
-        return _build_google_embeddings(model_name, dimension)
+
+    model_name = configured_model or "models/gemini-embedding-001"
+    logger.info(f"Initializing embeddings: provider={provider}, model={model_name}, dim={dimension}")
+    return _build_google_embeddings(model_name, dimension)
 
 
 def _build_google_embeddings(model_name: str, dimension: int) -> Embeddings:

@@ -1,4 +1,5 @@
 """PDF document loader with metadata extraction."""
+import asyncio
 import os
 import tempfile
 from typing import List
@@ -21,7 +22,7 @@ async def load_pdf(file_bytes: bytes, filename: str) -> List[Document]:
             tmp_path = tmp.name
 
         loader = PyPDFLoader(tmp_path)
-        docs = loader.load()
+        docs = await asyncio.to_thread(loader.load)
 
         for i, doc in enumerate(docs):
             doc.metadata.update({

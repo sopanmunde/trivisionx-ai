@@ -9,6 +9,7 @@ Uses the 5-section report structure:
 """
 from typing import List, Dict, Optional
 from langchain_core.messages import SystemMessage, HumanMessage
+from agents.langgraph.nodes.utils import extract_text
 from rag.retrieval.citation_retriever import retrieve_with_citations
 from rag.pipelines.rag_pipeline import build_context_string
 from core.logger import get_logger
@@ -57,6 +58,7 @@ async def generate_report(
     llm,
     top_k: int = 10,
     user_filter: Optional[Dict] = None,
+    namespace: Optional[str] = None,
 ) -> Dict:
     """
     Generate a full structured research report from Pinecone-retrieved context.
@@ -66,14 +68,18 @@ async def generate_report(
         llm:         An instantiated LangChain chat model (GPT-4o recommended).
         top_k:       Number of chunks to retrieve (default 10 for reports).
         user_filter: Pinecone metadata filter (e.g. {"user_id": "..."}).
+        namespace:   Optional Pinecone namespace for tenant isolation.
 
     Returns:
         {"report": str, "citations": List[Dict], "query": str, "chunk_count": int}
     """
+    from rag.vectorstores.pinecone_store import user_namespace
+
     logger.info(f"Generating research report for: '{query[:60]}'")
 
+    ns = namespace or (user_namespace(user_filter.get("user_id")) if user_filter else None)
     docs, citations = await retrieve_with_citations(
-        query=query, top_k=top_k, filter=user_filter
+        query=query, top_k=top_k, filter=user_filter, namespace=ns
     )
 
     if not docs:
@@ -98,14 +104,15 @@ async def generate_report(
     ]
 
     response = await llm.ainvoke(messages)
+    report_text = extract_text(response.content)
 
     logger.info(
-        f"Report generated: {len(response.content)} chars, "
+        f"Report generated: {len(report_text)} chars, "
         f"{len(citations)} citations, {len(docs)} source chunks"
     )
 
     return {
-        "report": response.content,
+        "report": report_text,
         "citations": citations,
         "query": query,
         "chunk_count": len(docs),

@@ -51,10 +51,27 @@ async def data_analysis_node(state: AgentState) -> dict:
     logger.info(f"[DataAnalysis] provider={provider}, query='{query[:60]}'")
 
     llm = get_llm(
-        provider=provider or "google",
-        model_name=model_name or "gemini-2.5-flash",
+        provider=provider or "",
+        model_name=model_name or "",
         temperature=0.2,
     )
+
+    attachment_context = ""
+    filename = state.get("filename")
+    user_id = state.get("user_id")
+    if filename and user_id:
+        try:
+            from database.mongodb.connection import get_database
+            from core.constants import COLLECTION_DOCUMENTS
+            doc = await get_database()[COLLECTION_DOCUMENTS].find_one({
+                "user_id": user_id,
+                "filename": filename,
+            })
+            if doc and doc.get("file_bytes"):
+                raw_text = bytes(doc["file_bytes"]).decode("utf-8", errors="replace")[:8000]
+                attachment_context = f"\n\nAttached file '{filename}' preview:\n```\n{raw_text}\n```"
+        except Exception as e:
+            logger.debug(f"[DataAnalysis] Could not read attached file '{filename}': {e}")
 
     messages: list[BaseMessage] = [SystemMessage(content=DATA_ANALYSIS_SYSTEM)]
 
@@ -66,7 +83,7 @@ async def data_analysis_node(state: AgentState) -> dict:
         elif role == "assistant":
             messages.append(AIMessage(content=content))
 
-    messages.append(HumanMessage(content=query))
+    messages.append(HumanMessage(content=f"{query}{attachment_context}"))
 
     try:
         response = await llm.ainvoke(messages)

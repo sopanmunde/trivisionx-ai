@@ -22,11 +22,14 @@ class CompressionMiddleware:
             path = scope.get("path", "")
             normalized_path = path.rstrip("/")
             normalized_excludes = [p.rstrip("/") for p in self.exclude_paths]
-            
-            if any(normalized_path.startswith(ex_path) for ex_path in normalized_excludes if ex_path):
+
+            if any(
+                normalized_path == ex_path or normalized_path.startswith(ex_path + "/")
+                for ex_path in normalized_excludes if ex_path
+            ):
                 await self.app(scope, receive, send)
                 return
-                
+
         await self.gzip_middleware(scope, receive, send)
 
         

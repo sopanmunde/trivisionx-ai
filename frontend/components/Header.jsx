@@ -110,7 +110,7 @@ export default function Header({
   return (
     <div className="sticky top-0 z-30 px-2 sm:px-3.5 pt-2 sm:pt-3 pb-1 w-full bg-transparent">
       {/* Container Box for Header inside ChatPane */}
-      <div className="w-full rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-[#0C0C0D]/80 backdrop-blur-2xl shadow-xs px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between transition-all duration-200">
+      <div className="w-full rounded-xl border border-border bg-card shadow-xs px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between transition-colors">
         {/* Left side: Mobile trigger + Model dropdown + Active Status */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
           {/* Mobile menu button */}
@@ -135,7 +135,7 @@ export default function Header({
                 <ChevronDown className="h-3.5 w-3.5 opacity-60 shrink-0 ml-0.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[250px] max-h-[350px] overflow-y-auto rounded-2xl p-1.5 border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-[#0C0C0D]/95 text-foreground backdrop-blur-2xl shadow-2xl scrollbar-thin z-50">
+            <DropdownMenuContent align="start" className="w-[250px] max-h-[350px] overflow-y-auto rounded-lg p-1 border-border bg-popover text-popover-foreground shadow-md scrollbar-thin z-50">
               <DropdownMenuLabel className="px-2.5 py-1.5 text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground">
                 Select AI Model
               </DropdownMenuLabel>
@@ -169,8 +169,8 @@ export default function Header({
           </DropdownMenu>
 
           {/* Active status indicator pill */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold leading-none shrink-0">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary border border-border text-secondary-foreground text-[11px] font-medium leading-none shrink-0">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
             <span>Agent Active</span>
           </div>
         </div>
@@ -204,7 +204,7 @@ export default function Header({
           {/* User Account Avatar & Name */}
           {userName && (
             <div className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-zinc-200 dark:border-zinc-800">
-              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[10px] font-extrabold text-primary-foreground select-none shadow-xs border border-primary-foreground/20 overflow-hidden shrink-0">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-[10px] font-bold text-primary-foreground select-none shadow-xs overflow-hidden shrink-0">
                 {user?.avatar_url || user?.picture ? (
                   <img
                     src={user.avatar_url || user.picture}

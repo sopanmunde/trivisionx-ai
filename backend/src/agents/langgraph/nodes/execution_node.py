@@ -9,31 +9,16 @@ State reads:  generated_code, retry_count
 State writes: execution_output, execution_errors, retry_count, current_node
 """
 import asyncio
+import re
 import sys
 import tempfile
 import os
-from datetime import datetime, timezone
 from agents.langgraph.state import AgentState
+from tools.code_tools import _is_safe_code as _is_code_safe, _safe_subprocess_env
 from core.config import settings
 from core.logger import get_logger
 
 logger = get_logger(__name__)
-
-# Dangerous patterns that should never be executed server-side
-_BLOCKED_PATTERNS = [
-    "import os", "os.system", "os.popen", "os.remove", "os.rmdir",
-    "import subprocess", "subprocess.run", "subprocess.Popen",
-    "import socket", "import shutil", "shutil.rmtree",
-    "__import__", "sys.exit",
-]
-
-
-def _is_code_safe(code: str) -> tuple[bool, str]:
-    code_lower = code.lower()
-    for pattern in _BLOCKED_PATTERNS:
-        if pattern.lower() in code_lower:
-            return False, f"Blocked pattern: '{pattern}'"
-    return True, ""
 
 
 async def execution_node(state: AgentState) -> dict:
@@ -53,14 +38,13 @@ async def execution_node(state: AgentState) -> dict:
     """
     generated_code = state.get("generated_code", "").strip()
     retry_count = state.get("retry_count", 0)
-    timeout = getattr(settings, "CODE_EXECUTION_TIMEOUT_SECONDS", 30)
+    timeout = min(30, max(1, getattr(settings, "CODE_EXECUTION_TIMEOUT_SECONDS", 30)))
 
     logger.info(
         f"[Execution] Running code ({len(generated_code)} chars), "
         f"retry_count={retry_count}, timeout={timeout}s"
     )
 
-    # If no code was generated, pass through
     if not generated_code:
         logger.info("[Execution] No generated_code in state — skipping execution")
         return {
@@ -69,10 +53,15 @@ async def execution_node(state: AgentState) -> dict:
             "current_node": "execution",
         }
 
-    # Extract code block from markdown if present (```python ... ```)
-    code_to_run = _extract_code_block(generated_code)
+    lang, code_to_run = _extract_code_block_with_lang(generated_code)
+    if lang and lang not in ("python", "py"):
+        logger.info(f"[Execution] Non-Python language '{lang}' — skipping Python sandbox")
+        return {
+            "execution_output": f"Skipped sandbox execution for non-Python snippet ({lang}).",
+            "execution_errors": "",
+            "current_node": "execution",
+        }
 
-    # Safety check
     is_safe, reason = _is_code_safe(code_to_run)
     if not is_safe:
         logger.warning(f"[Execution] Blocked unsafe code: {reason}")
@@ -83,7 +72,6 @@ async def execution_node(state: AgentState) -> dict:
             "current_node": "execution",
         }
 
-    # Write to temp file and execute
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".py", delete=False, encoding="utf-8"
     ) as tmp:
@@ -93,14 +81,14 @@ async def execution_node(state: AgentState) -> dict:
     stdout_output = ""
     stderr_output = ""
     exit_code = -1
-    start = asyncio.get_event_loop().time()
+    start = asyncio.get_running_loop().time()
 
     try:
         proc = await asyncio.create_subprocess_exec(
             sys.executable, tmp_path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env={"PYTHONPATH": "", "HOME": tempfile.gettempdir()},
+            env=_safe_subprocess_env(tempfile.gettempdir()),
         )
         try:
             raw_out, raw_err = await asyncio.wait_for(
@@ -123,10 +111,10 @@ async def execution_node(state: AgentState) -> dict:
         except Exception:
             pass
 
-    elapsed_ms = int((asyncio.get_event_loop().time() - start) * 1000)
+    elapsed_ms = int((asyncio.get_running_loop().time() - start) * 1000)
 
     if exit_code == 0:
-        logger.info(f"[Execution] ✅ Success in {elapsed_ms}ms: {stdout_output[:100]}")
+        logger.info(f"[Execution] Success in {elapsed_ms}ms: {stdout_output[:100]}")
         return {
             "execution_output": stdout_output or "(No output)",
             "execution_errors": "",
@@ -135,7 +123,7 @@ async def execution_node(state: AgentState) -> dict:
     else:
         new_retry = retry_count + 1
         logger.warning(
-            f"[Execution] ❌ Failed (exit={exit_code}), retry_count → {new_retry}: "
+            f"[Execution] Failed (exit={exit_code}), retry_count -> {new_retry}: "
             f"{stderr_output[:150]}"
         )
         return {
@@ -146,16 +134,17 @@ async def execution_node(state: AgentState) -> dict:
         }
 
 
-def _extract_code_block(text: str) -> str:
-    """
-    Extract raw Python code from a markdown fenced code block if present.
-    Falls back to the full text if no code block is found.
-    """
-    import re
-    # Match ```python ... ``` or ``` ... ```
-    pattern = re.compile(r"```(?:python|py)?\s*\n(.*?)```", re.DOTALL | re.IGNORECASE)
+def _extract_code_block_with_lang(text: str) -> tuple[str, str]:
+    pattern = re.compile(r"```([a-zA-Z0-9_+-]*)\s*\n(.*?)```", re.DOTALL)
     matches = pattern.findall(text)
     if matches:
-        return "\n\n".join(m.strip() for m in matches)
-    # If no code fence, return as-is
-    return text
+        py_blocks = [code.strip() for lang, code in matches if lang.lower() in ("", "python", "py")]
+        if py_blocks:
+            first_nonempty = next((lang.lower() for lang, _ in matches if lang), "")
+            return first_nonempty or "python", "\n\n".join(py_blocks)
+        return matches[0][0].lower(), matches[0][1].strip()
+    return "", text
+
+
+def _extract_code_block(text: str) -> str:
+    return _extract_code_block_with_lang(text)[1]

@@ -75,6 +75,8 @@ export function NotesDashboard() {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [editCategory, setEditCategory] = useState("work");
+  const [aiActionResult, setAiActionResult] = useState<{ action: string; result: string } | null>(null);
+  const [aiActionLoading, setAiActionLoading] = useState(false);
 
   // Creation
   const [isNewNoteOpen, setIsNewNoteOpen] = useState(false);
@@ -85,6 +87,10 @@ export function NotesDashboard() {
   const fetchNotes = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token || token === "demo_guest_token" || localStorage.getItem("is_demo") === "true") {
+        setIsLoading(false);
+        return;
+      }
       const res = await fetch(`${API_BASE_URL}/notes`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -130,19 +136,21 @@ export function NotesDashboard() {
         },
         body: JSON.stringify(payload),
       });
-      if (res.ok) {
-        const created = await res.json();
-        setNotes([created, ...notes]);
-        setSelectedNoteId(created.id);
-        setIsNewNoteOpen(false);
-        setNewTitle("");
-        setNewContent("");
-        setNewCategory("work");
-        toast.success("Note created successfully");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Failed (${res.status})`);
       }
-    } catch (err) {
+      const created = await res.json();
+      setNotes([created, ...notes]);
+      setSelectedNoteId(created.id);
+      setIsNewNoteOpen(false);
+      setNewTitle("");
+      setNewContent("");
+      setNewCategory("work");
+      toast.success("Note created successfully");
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to save new note");
+      toast.error(err.message || "Failed to save new note");
     }
   };
 
@@ -157,15 +165,45 @@ export function NotesDashboard() {
         },
         body: JSON.stringify(updates),
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setNotes(notes.map((n) => (n.id === id ? updated : n)));
-        setIsEditing(false);
-        toast.success("Note updated successfully");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Failed (${res.status})`);
       }
-    } catch (err) {
+      const updated = await res.json();
+      setNotes(notes.map((n) => (n.id === id ? updated : n)));
+      setIsEditing(false);
+      toast.success("Note updated successfully");
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to update note");
+      toast.error(err.message || "Failed to update note");
+    }
+  };
+
+  const handleNoteAiAction = async (noteId: string, action: "summarize" | "action_items" | "polish") => {
+    const token = localStorage.getItem("token");
+    if (!token || token === "demo_guest_token") {
+      toast.error("Sign in to run AI actions on notes.");
+      return;
+    }
+    setAiActionLoading(true);
+    setAiActionResult(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/notes/${noteId}/ai-action`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "AI action failed");
+      setAiActionResult({ action, result: data.result });
+      toast.success(`AI ${action.replace("_", " ")} complete`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to run AI action");
+    } finally {
+      setAiActionLoading(false);
     }
   };
 
@@ -239,17 +277,19 @@ export function NotesDashboard() {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (res.ok) {
-        const filtered = notes.filter((n) => n.id !== id);
-        setNotes(filtered);
-        if (selectedNoteId === id) {
-          setSelectedNoteId(filtered.length > 0 ? filtered[0].id : "");
-        }
-        toast.success("Note deleted successfully");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Failed (${res.status})`);
       }
-    } catch (err) {
+      const filtered = notes.filter((n) => n.id !== id);
+      setNotes(filtered);
+      if (selectedNoteId === id) {
+        setSelectedNoteId(filtered.length > 0 ? filtered[0].id : "");
+      }
+      toast.success("Note deleted successfully");
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to delete note");
+      toast.error(err.message || "Failed to delete note");
     }
   };
 
@@ -326,26 +366,51 @@ export function NotesDashboard() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowVisuals(!showVisuals)}
-                className="h-8.5 text-xs font-semibold border-border hover:bg-muted gap-1.5 px-3 rounded-xl transition-all shadow-xs"
-              >
-                <Cpu className="size-3.5" />
-                <span>{showVisuals ? "Hide Analytics" : "Show Analytics"}</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center rounded-xl border border-border bg-muted/30 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("grid")}
+                    title="Card View"
+                    className={cn(
+                      "h-7.5 px-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
+                      viewMode === "grid" ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <LayoutGrid className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("table")}
+                    title="Table View"
+                    className={cn(
+                      "h-7.5 px-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
+                      viewMode === "table" ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <List className="size-3.5" />
+                  </button>
+                </div>
 
-              <Button
-                size="sm"
-                onClick={() => setIsNewNoteOpen(true)}
-                className="h-8.5 text-xs font-semibold bg-foreground hover:bg-foreground/90 text-background gap-1.5 px-3 rounded-xl shadow-md border border-foreground/10 cursor-pointer transition-all hover:scale-102"
-              >
-                <Plus className="size-3.5" />
-                <span>New Note</span>
-              </Button>
-            </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowVisuals(!showVisuals)}
+                  className="h-8.5 text-xs font-semibold border-border hover:bg-muted gap-1.5 px-3 rounded-xl transition-all shadow-xs"
+                >
+                  <Cpu className="size-3.5" />
+                  <span>{showVisuals ? "Hide Analytics" : "Show Analytics"}</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  onClick={() => setIsNewNoteOpen(true)}
+                  className="h-8.5 text-xs font-semibold bg-foreground hover:bg-foreground/90 text-background gap-1.5 px-3 rounded-xl shadow-md border border-foreground/10 cursor-pointer transition-all hover:scale-102"
+                >
+                  <Plus className="size-3.5" />
+                  <span>New Note</span>
+                </Button>
+              </div>
           </div>
 
           {/* Visual Analytics Telemetry Bar */}
@@ -416,7 +481,7 @@ export function NotesDashboard() {
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Vault Engine</span>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-sm font-bold text-foreground">Sync Active</span>
-                      <span className="text-[10px] text-emerald-500 font-mono">~90ms</span>
+                      <span className="text-[10px] text-emerald-500 font-mono">MongoDB</span>
                     </div>
                   </div>
                 </div>
@@ -480,63 +545,111 @@ export function NotesDashboard() {
 
             {/* Notes items loop inside 3D elevated cards */}
             <div className="flex-1 overflow-y-auto p-3 space-y-2.5 scrollbar-thin">
-              {filteredNotes.map((note) => (
-                <div
-                  key={note.id}
-                  onClick={() => {
-                    setSelectedNoteId(note.id);
-                    setIsEditing(false);
-                  }}
-                  className={cn(
-                    "group flex flex-col p-3.5 rounded-xl border text-left cursor-pointer transition-all duration-200 select-none relative",
-                    selectedNoteId === note.id
-                      ? "border-foreground/40 bg-muted/30 shadow-md ring-1 ring-foreground/15"
-                      : "border-border/80 bg-card hover:border-foreground/30 hover:shadow-sm"
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <span className="font-bold text-xs text-foreground truncate flex-1">
-                      {note.title || "Untitled Note"}
-                    </span>
-                    <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleUpdateNote(note.id, { favorite: !note.favorite });
-                        }}
-                        className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
-                      >
-                        <Star
+              {viewMode === "table" && filteredNotes.length > 0 ? (
+                <div className="rounded-xl border border-border/80 bg-card overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border/60 hover:bg-transparent">
+                        <TableHead className="text-[10px] font-bold uppercase tracking-wider h-8 px-2.5">Title</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-wider h-8 px-2">Tag</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-wider h-8 px-2 text-right">Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredNotes.map((note) => (
+                        <TableRow
+                          key={note.id}
+                          onClick={() => {
+                            setSelectedNoteId(note.id);
+                            setIsEditing(false);
+                          }}
                           className={cn(
-                            "size-3.5",
-                            note.favorite && "fill-amber-400 text-amber-400"
+                            "cursor-pointer border-border/40",
+                            selectedNoteId === note.id
+                              ? "bg-muted/50 font-semibold"
+                              : "hover:bg-muted/20"
                           )}
-                        />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteNote(note.id);
-                        }}
-                        className="p-1 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
+                        >
+                          <TableCell className="py-2 px-2.5 text-xs font-medium max-w-[140px] truncate">
+                            <span className="inline-flex items-center gap-1.5">
+                              {note.favorite && (
+                                <Star className="size-3 fill-amber-400 text-amber-400 shrink-0" />
+                              )}
+                              <span className="truncate">{note.title || "Untitled Note"}</span>
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-2 px-2">
+                            <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 font-bold uppercase rounded-md", getCategoryColor(note.category))}>
+                              {note.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-2 px-2 text-right text-[10px] font-mono text-muted-foreground whitespace-nowrap">
+                            {new Date(note.updatedAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                filteredNotes.map((note) => (
+                  <div
+                    key={note.id}
+                    onClick={() => {
+                      setSelectedNoteId(note.id);
+                      setIsEditing(false);
+                    }}
+                    className={cn(
+                      "group flex flex-col p-3.5 rounded-xl border text-left cursor-pointer transition-all duration-200 select-none relative",
+                      selectedNoteId === note.id
+                        ? "border-foreground/40 bg-muted/30 shadow-md ring-1 ring-foreground/15"
+                        : "border-border/80 bg-card hover:border-foreground/30 hover:shadow-sm"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <span className="font-bold text-xs text-foreground truncate flex-1">
+                        {note.title || "Untitled Note"}
+                      </span>
+                      <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUpdateNote(note.id, { favorite: !note.favorite });
+                          }}
+                          className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                        >
+                          <Star
+                            className={cn(
+                              "size-3.5",
+                              note.favorite && "fill-amber-400 text-amber-400"
+                            )}
+                          />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteNote(note.id);
+                          }}
+                          className="p-1 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed mb-2.5 font-medium">
+                      {note.content || "Empty content..."}
+                    </p>
+                    <div className="flex items-center justify-between pt-1 border-t border-border/40">
+                      <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0.5 font-bold uppercase rounded-md", getCategoryColor(note.category))}>
+                        {note.category}
+                      </Badge>
+                      <span className="text-[9.5px] font-mono text-muted-foreground">
+                        {new Date(note.updatedAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                      </span>
                     </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed mb-2.5 font-medium">
-                    {note.content || "Empty content..."}
-                  </p>
-                  <div className="flex items-center justify-between pt-1 border-t border-border/40">
-                    <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0.5 font-bold uppercase rounded-md", getCategoryColor(note.category))}>
-                      {note.category}
-                    </Badge>
-                    <span className="text-[9.5px] font-mono text-muted-foreground">
-                      {new Date(note.updatedAt).toLocaleDateString([], { month: "short", day: "numeric" })}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
               {filteredNotes.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                   <BookOpen className="size-8 text-muted-foreground/30 mb-2" />
@@ -837,6 +950,73 @@ export function NotesDashboard() {
                       </Tooltip>
                     </div>
                   </div>
+
+                  {/* AI Copilot Actions Toolbar */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-1 flex items-center gap-1">
+                        <Sparkles className="size-3 text-purple-500" /> AI Copilot:
+                      </span>
+                      {(
+                        [
+                          { id: "summarize", label: "Summarize" },
+                          { id: "action_items", label: "Extract Tasks" },
+                          { id: "polish", label: "Polish Markdown" },
+                        ] as const
+                      ).map((act) => (
+                        <Button
+                          key={act.id}
+                          size="sm"
+                          variant="outline"
+                          disabled={aiActionLoading}
+                          onClick={() => handleNoteAiAction(selectedNote.id, act.id)}
+                          className="h-7 text-[11px] font-semibold px-2.5 rounded-lg"
+                        >
+                          {aiActionLoading ? (
+                            <RefreshCw className="size-3 mr-1 animate-spin" />
+                          ) : (
+                            <Sparkles className="size-3 mr-1 text-purple-500" />
+                          )}
+                          {act.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {aiActionResult && (
+                    <div className="mb-3 rounded-xl border border-purple-500/30 bg-purple-500/5 p-3.5 text-xs space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold uppercase tracking-wider text-[10px] text-purple-600 dark:text-purple-400">
+                          AI {aiActionResult.action.replace("_", " ")} Output
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {aiActionResult.action === "polish" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                handleUpdateNote(selectedNote.id, { content: aiActionResult.result });
+                                setAiActionResult(null);
+                              }}
+                              className="h-6 text-[10px] px-2"
+                            >
+                              Apply to Note
+                            </Button>
+                          )}
+                          <button
+                            onClick={() => setAiActionResult(null)}
+                            className="p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                            title="Dismiss AI output"
+                          >
+                            <X className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="whitespace-pre-wrap text-foreground/90 leading-relaxed max-h-48 overflow-y-auto">
+                        {aiActionResult.result}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Scrollable Note Body Container with Enhanced Readability */}
                   <ScrollArea className="flex-1 min-h-[380px] w-full rounded-2xl border border-border/60 bg-card p-5 shadow-sm">

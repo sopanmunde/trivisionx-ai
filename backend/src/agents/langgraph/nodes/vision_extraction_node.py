@@ -86,6 +86,8 @@ async def extract_vision_data(
         mime_type = "image/gif"
     elif ext == "bmp":
         mime_type = "image/bmp"
+    elif ext in ("tif", "tiff"):
+        mime_type = "image/tiff"
     elif ext == "svg":
         mime_type = "image/svg+xml"
 
@@ -172,9 +174,11 @@ async def extract_scanned_pdf(
     Uses native Google Gemini PDF support when using the Google provider.
     Otherwise, renders PDF pages into images page-by-page using fitz (PyMuPDF) and does OCR.
     """
-    resolved_provider = (provider or "google").lower().strip()
-    
-    if resolved_provider == "google":
+    from core.llm_factory import get_available_providers
+    available = get_available_providers()
+    resolved_provider = (provider or ("google" if available.get("google") else next((k for k, v in available.items() if v), "google"))).lower().strip()
+
+    if resolved_provider == "google" and available.get("google"):
         logger.info(f"[Vision Extraction] Using native Gemini PDF processing for '{filename}'")
         try:
             base64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
@@ -230,40 +234,40 @@ async def extract_scanned_pdf(
 
     documents: List[Document] = []
     try:
-        pdf_doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-        num_pages = len(pdf_doc)
-        logger.info(f"[Vision Extraction] Total PDF pages to render: {num_pages}")
+        with fitz.open(stream=pdf_bytes, filetype="pdf") as pdf_doc:
+            num_pages = min(len(pdf_doc), 25)
+            logger.info(f"[Vision Extraction] Total PDF pages to render: {num_pages}")
 
-        for page_num in range(num_pages):
-            page = pdf_doc.load_page(page_num)
-            
-            # Matrix(2, 2) scales page by 2x for highly readable OCR resolution
-            zoom = 2.0
-            mat = fitz.Matrix(zoom, zoom)
-            pix = page.get_pixmap(matrix=mat)
-            image_bytes = pix.tobytes("png")
+            for page_num in range(num_pages):
+                page = pdf_doc.load_page(page_num)
 
-            page_text = await extract_vision_data(
-                content=image_bytes,
-                filename=filename,
-                file_type="png",
-                extraction_type="scanned_pdf",
-                provider=provider,
-                model_name=model_name
-            )
+                # Matrix(2, 2) scales page by 2x for highly readable OCR resolution
+                zoom = 2.0
+                mat = fitz.Matrix(zoom, zoom)
+                pix = page.get_pixmap(matrix=mat)
+                image_bytes = pix.tobytes("png")
 
-            doc = Document(
-                page_content=page_text,
-                metadata={
-                    "filename": filename,
-                    "source": filename,
-                    "file_type": "pdf",
-                    "page": page_num,
-                    "is_scanned": True,
-                }
-            )
-            documents.append(doc)
-            logger.info(f"[Vision Extraction] Processed page {page_num + 1}/{num_pages}")
+                page_text = await extract_vision_data(
+                    content=image_bytes,
+                    filename=filename,
+                    file_type="png",
+                    extraction_type="scanned_pdf",
+                    provider=provider,
+                    model_name=model_name
+                )
+
+                doc = Document(
+                    page_content=page_text,
+                    metadata={
+                        "filename": filename,
+                        "source": filename,
+                        "file_type": "pdf",
+                        "page": page_num,
+                        "is_scanned": True,
+                    }
+                )
+                documents.append(doc)
+                logger.info(f"[Vision Extraction] Processed page {page_num + 1}/{num_pages}")
 
     except Exception as e:
         logger.error(f"[Vision Extraction] Failed to process scanned PDF '{filename}': {e}", exc_info=True)

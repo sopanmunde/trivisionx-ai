@@ -25,22 +25,27 @@ logger = get_logger(__name__)
 
 
 def _get_workspace_root() -> Path:
-    """Returns the resolved, absolute workspace root directory."""
+    """Returns the resolved, per-user workspace root directory."""
+    from core.llm_factory import current_user_id
     workspace = getattr(settings, "CODE_EXECUTION_WORKSPACE", "./workspace")
-    root = Path(workspace).resolve()
+    base_root = Path(workspace).resolve()
+    uid = re.sub(r"[^a-zA-Z0-9_-]", "", current_user_id.get() or "")
+    root = (base_root / uid).resolve() if uid else base_root
     root.mkdir(parents=True, exist_ok=True)
     return root
 
 
 def _safe_resolve(relative_path: str) -> tuple[Path, str]:
     """
-    Resolves a relative path against workspace root.
-    Returns (resolved_path, error_message). If error_message is non-empty, the path is unsafe.
+    Resolves a relative path against workspace root and rejects symlinks escaping root.
     """
     root = _get_workspace_root()
     try:
-        resolved = (root / relative_path).resolve()
-        # Ensure path is within workspace (prevent directory traversal)
+        candidate = root / relative_path
+        if candidate.is_symlink():
+            target = candidate.resolve()
+            target.relative_to(root)
+        resolved = candidate.resolve()
         resolved.relative_to(root)
         return resolved, ""
     except ValueError:
@@ -260,11 +265,11 @@ def apply_git_diff(path: str, diff: str) -> str:
 
 
 def _apply_unified_diff(original_lines: list, diff_lines: list) -> tuple:
-    """Simple unified diff applier. Returns (patched_lines, added, removed) or (None, 0, 0)."""
+    """Unified diff applier. Returns (patched_lines, added, removed) or (None, 0, 0)."""
     patched = list(original_lines)
     added = 0
     removed = 0
-    offset = 0  # Track line shifts as we apply hunks
+    offset = 0
 
     hunk_header = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 
@@ -273,33 +278,42 @@ def _apply_unified_diff(original_lines: list, diff_lines: list) -> tuple:
         line = diff_lines[i]
         m = hunk_header.match(line)
         if m:
-            orig_start = int(m.group(1)) - 1  # 0-indexed
+            orig_start = max(0, int(m.group(1)) - 1)
             hunk_lines = []
             i += 1
             while i < len(diff_lines) and not hunk_header.match(diff_lines[i]):
-                hunk_lines.append(diff_lines[i])
+                if not diff_lines[i].startswith("\\"):
+                    hunk_lines.append(diff_lines[i])
                 i += 1
 
-            # Apply this hunk
             pos = orig_start + offset
             result_pos = pos
             new_patch = []
+            old_span = 0
             hunk_removed = 0
             hunk_added = 0
 
             for hl in hunk_lines:
                 if hl.startswith("-"):
+                    expected = hl[1:]
+                    if result_pos >= len(patched) or patched[result_pos].rstrip("\r\n") != expected.rstrip("\r\n"):
+                        return None, 0, 0
+                    result_pos += 1
+                    old_span += 1
                     hunk_removed += 1
                 elif hl.startswith("+"):
-                    new_patch.append(hl[1:] + "\n" if not hl[1:].endswith("\n") else hl[1:])
+                    content_line = hl[1:]
+                    new_patch.append(content_line if content_line.endswith("\n") else content_line + "\n")
                     hunk_added += 1
                 elif hl.startswith(" "):
-                    new_patch.append(patched[result_pos] if result_pos < len(patched) else "")
+                    expected = hl[1:]
+                    if result_pos >= len(patched) or patched[result_pos].rstrip("\r\n") != expected.rstrip("\r\n"):
+                        return None, 0, 0
+                    new_patch.append(patched[result_pos])
                     result_pos += 1
-                    continue
+                    old_span += 1
 
-            # Replace removed lines with new_patch
-            patched[pos:pos + hunk_removed] = new_patch
+            patched[pos:pos + old_span] = new_patch
             offset += hunk_added - hunk_removed
             added += hunk_added
             removed += hunk_removed

@@ -109,6 +109,7 @@ interface ChatMessage {
 export function EmailDashboard() {
   const [emails, setEmails] = useState<Email[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [accountEmail, setAccountEmail] = useState("");
   const [activeNav, setActiveNav] = useState("inbox");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -192,14 +193,22 @@ export function EmailDashboard() {
   const fetchEmails = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/emails`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      if (!token || token === "demo_guest_token" || localStorage.getItem("is_demo") === "true") {
+        setIsLoading(false);
+        return;
+      }
+      const headers = { Authorization: `Bearer ${token}` };
+      const [res, meRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/emails`, { headers }),
+        fetch(`${API_BASE_URL}/me`, { headers }),
+      ]);
       if (res.ok) {
         const data = await res.json();
         setEmails(data);
+      }
+      if (meRes.ok) {
+        const me = await meRes.json();
+        if (me?.email) setAccountEmail(me.email);
       }
     } catch (e) {
       console.error("Failed to fetch emails", e);
@@ -256,23 +265,27 @@ export function EmailDashboard() {
   const filteredEmails = getFilteredEmails();
 
   useEffect(() => {
-    const isSelectedInFolder = filteredEmails.some((e) => e.id === selectedEmailId);
-    if (!isSelectedInFolder) {
+    const isFolder = ["inbox", "drafts", "sent", "junk", "trash", "archive"].includes(activeNav);
+    const isSelectedInNav = emails.some(
+      (e) => e.id === selectedEmailId && (isFolder ? e.folder === activeNav : e.category === activeNav)
+    );
+    if (selectedEmailId && !isSelectedInNav) {
       setSelectedEmailId("");
     }
-  }, [activeNav]);
+  }, [activeNav, emails, selectedEmailId]);
 
-  const generateAIDraft = async () => {
-    if (!aiPrompt.trim()) return;
+  const generateAIDraft = async (overridePrompt?: string) => {
+    const currentPrompt = (overridePrompt ?? aiPrompt).trim();
+    if (!currentPrompt) return;
     setIsGenerating(true);
     setAiDraft("");
 
-    setAiChat((prev) => [...prev, { role: "user", text: aiPrompt }]);
-    const currentPrompt = aiPrompt;
+    setAiChat((prev) => [...prev, { role: "user", text: currentPrompt }]);
     setAiPrompt("");
 
     let draftText = "";
     let streamedSuccess = false;
+    let errorDetail = "";
 
     try {
       const token = localStorage.getItem("token");
@@ -293,7 +306,11 @@ export function EmailDashboard() {
         }),
       });
 
-      if (res.ok && res.body) {
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      if (res.body) {
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let buffer = "";
@@ -308,42 +325,37 @@ export function EmailDashboard() {
 
           for (const line of lines) {
             const trimmed = line.trim();
-            if (trimmed.startsWith("data: ")) {
-              try {
-                const data = JSON.parse(trimmed.slice(6));
-                if (data.type === "token" && data.data) {
-                  draftText += data.data;
-                  setAiDraft(draftText);
-                  streamedSuccess = true;
-                }
-              } catch {}
+            if (!trimmed.startsWith("data: ")) continue;
+            let data;
+            try {
+              data = JSON.parse(trimmed.slice(6));
+            } catch {
+              continue;
+            }
+            if (data.error) {
+              throw new Error(data.error);
+            }
+            if (data.type === "token" && data.data) {
+              draftText += data.data;
+              setAiDraft(draftText);
+              streamedSuccess = true;
             }
           }
         }
       }
-    } catch (err) {
-      console.warn("Real-time AI draft stream failed, falling back to smart template:", err);
+    } catch (err: any) {
+      errorDetail = err?.message || "LLM stream failed";
+      console.error("Real-time AI draft stream failed:", err);
     }
 
     if (!streamedSuccess || !draftText.trim()) {
-      // Smart Fallback generator
-      if (composeMode === "reply" && selectedEmail) {
-        if (aiTone === "professional") {
-          draftText = `Dear ${selectedEmail.name},\n\nThank you for reaching out regarding "${selectedEmail.subject}". I have reviewed your points, and I agree that aligning on our next steps is crucial.\n\nI am available to sync tomorrow to finalize these items. Please let me know what time works best for you.\n\nBest regards,\n[Your Name]`;
-        } else if (aiTone === "friendly") {
-          draftText = `Hi ${selectedEmail.name}!\n\nThanks for the email! I'd love to chat more about this. Meeting tomorrow sounds like a plan — let me know what time you're free and we'll set it up.\n\nTalk soon,\n[Your Name]`;
-        } else {
-          draftText = `Hi ${selectedEmail.name},\n\nRegarding "${selectedEmail.subject}": I need to review the details first but let's connect tomorrow to make sure we are on the same page.\n\nThanks,\n[Your Name]`;
-        }
-      } else {
-        if (aiTone === "professional") {
-          draftText = `Subject: ${composeSubject || "Update regarding Project Plan"}\n\nDear Team,\n\nI wanted to check in regarding our current development milestones. Please review the updated items in our library and prepare your feedback for tomorrow.\n\nSincerely,\n[Your Name]`;
-        } else {
-          draftText = `Subject: Quick catchup\n\nHey everyone,\n\nJust wanted to check in and see how we are tracking on our project work. Let's sync up briefly tomorrow if you have some open slots.\n\nBest,\n[Your Name]`;
-        }
-      }
-
-      setAiDraft(draftText);
+      const msg = errorDetail
+        ? `Unable to generate AI draft: ${errorDetail}`
+        : "Unable to generate AI draft. Check that an active LLM API key is configured in Brain Studio.";
+      toast.error(msg);
+      setAiChat((prev) => [...prev, { role: "assistant", text: msg }]);
+      setIsGenerating(false);
+      return;
     }
 
     setAiChat((prev) => [...prev, { role: "assistant", text: draftText }]);
@@ -518,7 +530,7 @@ export function EmailDashboard() {
           </div>
           <div className="min-w-0">
             <span className="text-xs font-semibold text-foreground block truncate">Email Workspace</span>
-            <span className="text-[10px] text-muted-foreground block truncate">sopanmunde5@gmail.com</span>
+            <span className="text-[10px] text-muted-foreground block truncate">{accountEmail || "Authenticated Inbox"}</span>
           </div>
         </div>
 
@@ -1244,9 +1256,14 @@ export function EmailDashboard() {
                                     if (res.ok) {
                                       const newEmailObj = await res.json();
                                       setEmails([newEmailObj, ...emails]);
-                                      toast.success(`Email sent via SMTP to ${composeTo}!`);
+                                      if (newEmailObj.smtp_delivered) {
+                                        toast.success(`Email sent via SMTP to ${composeTo}!`);
+                                      } else {
+                                        toast.warning(newEmailObj.delivery_warning || "Saved to Sent folder; SMTP delivery not configured.");
+                                      }
                                     } else {
-                                      toast.error("Backend dispatch error.");
+                                      const errData = await res.json().catch(() => ({}));
+                                      toast.error(errData.detail || "Backend dispatch error.");
                                     }
                                   } catch (e) {
                                     console.error("Failed to send email", e);
@@ -1792,7 +1809,7 @@ export function EmailDashboard() {
                         <Button
                           size="icon-xs"
                           variant="ghost"
-                          onClick={generateAIDraft}
+                          onClick={() => generateAIDraft()}
                           disabled={!aiPrompt.trim() || isGenerating}
                           className="absolute right-1.5 top-1/2 -translate-y-1/2 text-primary hover:text-primary/85 disabled:text-muted-foreground"
                         >
@@ -1808,10 +1825,7 @@ export function EmailDashboard() {
                     <Button
                       size="xs"
                       variant="outline"
-                      onClick={() => {
-                        setAiPrompt("Generate a clean summary of the current email thread with bold action points.");
-                        setTimeout(() => generateAIDraft(), 50);
-                      }}
+                      onClick={() => generateAIDraft("Generate a clean summary of the current email thread with bold action points.")}
                       className="text-[9px] h-6 justify-start font-medium text-left truncate rounded-md hover:bg-muted border-border"
                     >
                       Summarize Thread
@@ -1819,10 +1833,7 @@ export function EmailDashboard() {
                     <Button
                       size="xs"
                       variant="outline"
-                      onClick={() => {
-                        setAiPrompt("Decline this reminder/request politely due to schedule limits.");
-                        setTimeout(() => generateAIDraft(), 50);
-                      }}
+                      onClick={() => generateAIDraft("Decline this reminder/request politely due to schedule limits.")}
                       className="text-[9px] h-6 justify-start font-medium text-left truncate rounded-md hover:bg-muted border-border"
                     >
                       Decline Politely

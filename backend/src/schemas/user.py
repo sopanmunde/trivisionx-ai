@@ -1,12 +1,12 @@
 import re
-from pydantic import BaseModel, EmailStr, model_validator, field_validator
-from typing import Optional
-from datetime import datetime
+from typing import Any, Optional
 from bson import ObjectId
+from pydantic import BaseModel, EmailStr, Field, GetCoreSchemaHandler, model_validator, field_validator
+from pydantic_core import core_schema
 
 
 PASSWORD_MIN_LENGTH = 8
-PASSWORD_MAX_LENGTH = 12
+PASSWORD_MAX_LENGTH = 128
 PASSWORD_RULES = [
     (r"[A-Z]", "at least one uppercase letter (A-Z)"),
     (r"[a-z]", "at least one lowercase letter (a-z)"),
@@ -30,29 +30,38 @@ def validate_password_strength(password: str) -> str:
     return password
 
 
-class PyObjectId(ObjectId):
+class PyObjectId(str):
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, _source_type: Any, _handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls.validate,
+            core_schema.union_schema([
+                core_schema.is_instance_schema(ObjectId),
+                core_schema.str_schema(),
+            ]),
+        )
 
     @classmethod
-    def validate(cls, v):
+    def validate(cls, v: Any) -> str:
         if not ObjectId.is_valid(v):
             raise ValueError("Invalid objectid")
-        return ObjectId(v)
-
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+        return str(v)
 
 
 class UserCreate(BaseModel):
     email: EmailStr
-    username: str
-    first_name: str
-    last_name: str
+    username: str = Field(..., min_length=1, max_length=64)
+    first_name: str = Field("", max_length=64)
+    last_name: str = Field("", max_length=64)
     password: str
     confirm_password: str
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email_field(cls, v: EmailStr) -> str:
+        return str(v).strip().lower()
 
     @field_validator("password")
     @classmethod
@@ -68,13 +77,20 @@ class UserCreate(BaseModel):
 
 class UserLogin(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(..., min_length=1, max_length=256)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email_field(cls, v: EmailStr) -> str:
+        return str(v).strip().lower()
 
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    username: Optional[str] = None
+    first_name: Optional[str] = Field(None, max_length=64)
+    last_name: Optional[str] = Field(None, max_length=64)
+    username: Optional[str] = Field(None, min_length=1, max_length=64)
+    bio: Optional[str] = Field(None, max_length=500)
+    timezone: Optional[str] = Field(None, max_length=64)
 
 
 class Token(BaseModel):

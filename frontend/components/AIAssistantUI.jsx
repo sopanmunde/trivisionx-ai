@@ -11,6 +11,7 @@ import Sidebar from "./Sidebar";
 import ChatPane from "./ChatPane";
 import Header from "./Header";
 import { INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
@@ -53,43 +54,6 @@ export default function AIAssistantUI({ isDemo = false }) {
     }
     return isDemo;
   });
-
-  const [theme, setTheme] = useState(() => {
-    const saved =
-      typeof window !== "undefined" && localStorage.getItem("theme");
-    if (saved) return saved;
-    if (
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    )
-      return "dark";
-    return "light";
-  });
-
-  useEffect(() => {
-    try {
-      if (theme === "dark") document.documentElement.classList.add("dark");
-      else document.documentElement.classList.remove("dark");
-      document.documentElement.setAttribute("data-theme", theme);
-      document.documentElement.style.colorScheme = theme;
-      localStorage.setItem("theme", theme);
-    } catch { }
-  }, [theme]);
-
-  useEffect(() => {
-    try {
-      const media =
-        window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-      if (!media) return;
-      const listener = (e) => {
-        const saved = localStorage.getItem("theme");
-        if (!saved) setTheme(e.matches ? "dark" : "light");
-      };
-      media.addEventListener("change", listener);
-      return () => media.removeEventListener("change", listener);
-    } catch { }
-  }, []);
 
   useEffect(() => {
     try {
@@ -183,7 +147,7 @@ export default function AIAssistantUI({ isDemo = false }) {
       if (saved) {
         setSelectedId(saved);
       }
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -204,6 +168,15 @@ export default function AIAssistantUI({ isDemo = false }) {
   const [query, setQuery] = useState("");
   const searchRef = useRef(null);
   const touchStartRef = useRef({ x: 0, y: 0 });
+  const chatAbortRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (chatAbortRef.current) {
+        chatAbortRef.current.abort();
+      }
+    };
+  }, []);
 
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingConvId, setThinkingConvId] = useState(null);
@@ -577,12 +550,12 @@ export default function AIAssistantUI({ isDemo = false }) {
           prev.map((c) =>
             c.id === targetConvId
               ? {
-                  ...c,
-                  messages: [...(c.messages || []), userMsg],
-                  messageCount: (c.messages || []).length + 1,
-                  preview: content.slice(0, 80),
-                  updatedAt: now,
-                }
+                ...c,
+                messages: [...(c.messages || []), userMsg],
+                messageCount: (c.messages || []).length + 1,
+                preview: content.slice(0, 80),
+                updatedAt: now,
+              }
               : c,
           ),
         );
@@ -613,11 +586,11 @@ export default function AIAssistantUI({ isDemo = false }) {
           prev.map((c) =>
             c.id === targetConvId
               ? {
-                  ...c,
-                  messages: [...(c.messages || []), assistantMsg],
-                  messageCount: (c.messages || []).length + 1,
-                  preview: demoResponseText.slice(0, 80),
-                }
+                ...c,
+                messages: [...(c.messages || []), assistantMsg],
+                messageCount: (c.messages || []).length + 1,
+                preview: demoResponseText.slice(0, 80),
+              }
               : c,
           ),
         );
@@ -687,6 +660,26 @@ export default function AIAssistantUI({ isDemo = false }) {
     }
 
     const asstMsgId = Math.random().toString(36).slice(2);
+    // Pre-create empty assistant placeholder so early supervisor/node/citation events attach reliably
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id !== targetConvId) return c;
+        if ((c.messages || []).some((m) => m.id === asstMsgId)) return c;
+        return {
+          ...c,
+          messages: [
+            ...(c.messages || []),
+            {
+              id: asstMsgId,
+              role: "assistant",
+              content: "",
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        };
+      }),
+    );
+
     if (selectedBot !== "Fast") {
       setIsThinking(true);
       setThinkingConvId(targetConvId);
@@ -696,6 +689,23 @@ export default function AIAssistantUI({ isDemo = false }) {
     setProviderSwitchEvent(null);
     setSupervisorDecision(null);
 
+    if (chatAbortRef.current) {
+      chatAbortRef.current.abort();
+    }
+    const abortController = new AbortController();
+    chatAbortRef.current = abortController;
+
+    const BOT_MODEL_MAP = {
+      "Gemini 2.5 Flash": { model_provider: "google", model_name: "gemini-2.5-flash" },
+      "GPT-4o": { model_provider: "openai", model_name: "gpt-4o" },
+      "Claude Sonnet 4": { model_provider: "anthropic", model_name: "claude-sonnet-4-20250514" },
+      "Llama 3.3 70B": { model_provider: "groq", model_name: "llama-3.3-70b-versatile" },
+      "Mistral Large": { model_provider: "mistral", model_name: "mistral-large-latest" },
+      "Command R+": { model_provider: "cohere", model_name: "command-r-plus" },
+      "Ollama Local": { model_provider: "ollama", model_name: "llama3.2" },
+    };
+    const modelSelection = BOT_MODEL_MAP[selectedBot] || { model_provider: null, model_name: null };
+
     try {
       const apiUrl = API_BASE_URL;
       const response = await fetch(`${apiUrl}/chat`, {
@@ -704,10 +714,13 @@ export default function AIAssistantUI({ isDemo = false }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        signal: abortController.signal,
         body: JSON.stringify({
           msg: content,
           conversation_id: targetConvId,
           mode,
+          model_provider: modelSelection.model_provider,
+          model_name: modelSelection.model_name,
           filename: fileRef ? fileRef.name : null,
           active_features: activeFeatures,
           is_voice: isVoice,
@@ -730,135 +743,134 @@ export default function AIAssistantUI({ isDemo = false }) {
         if (value) {
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split("\n\n");
-          buffer = lines.pop() || ""; // keep the incomplete part in buffer
+          buffer = lines.pop() || "";
           for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const dataStr = line.slice(6);
-              try {
-                const data = JSON.parse(dataStr);
+            if (!line.startsWith("data: ")) continue;
+            const dataStr = line.slice(6);
+            let data;
+            try {
+              data = JSON.parse(dataStr);
+            } catch {
+              continue;
+            }
 
-                if (data.error) {
-                  throw new Error(data.error);
-                }
+            if (data.error) {
+              throw new Error(data.error);
+            }
 
-                if (data.type === "token" && data.data) {
-                  setIsThinking(false);
-                  setThinkingConvId(null);
+            if (data.type === "token" && data.data) {
+              setIsThinking(false);
+              setThinkingConvId(null);
 
-                  textContent += data.data;
-                  setConversations((prev) =>
-                    prev.map((c) => {
-                      if (c.id !== targetConvId) return c;
-                      const hasAsstMsg = c.messages.some((m) => m.id === asstMsgId);
-                      let msgs;
-                      if (!hasAsstMsg) {
-                        msgs = [
-                          ...c.messages,
-                          {
-                            id: asstMsgId,
-                            role: "assistant",
-                            content: textContent,
-                            createdAt: new Date().toISOString(),
-                          },
-                        ];
-                      } else {
-                        msgs = c.messages.map((m) =>
-                          m.id === asstMsgId ? { ...m, content: textContent } : m,
-                        );
-                      }
-                      return { ...c, messages: msgs, preview: textContent.slice(0, 80) };
-                    }),
+              textContent += data.data;
+              setConversations((prev) =>
+                prev.map((c) => {
+                  if (c.id !== targetConvId) return c;
+                  const msgs = (c.messages || []).map((m) =>
+                    m.id === asstMsgId ? { ...m, content: textContent } : m,
                   );
-                }
+                  return { ...c, messages: msgs, preview: textContent.slice(0, 80) };
+                }),
+              );
+            }
 
-                if (data.node) {
-                  setAgentState(data.node);
-                  setConversations((prev) =>
-                    prev.map((c) => {
-                      if (c.id !== targetConvId) return c;
-                      const msgs = c.messages.map((m) => {
-                        if (m.id !== asstMsgId) return m;
-                        const currentSteps = m.agent_steps || [];
-                        const existingStepIdx = currentSteps.findIndex((s) => s.node === data.node);
-                        let updatedSteps = [...currentSteps];
-                        if (existingStepIdx === -1) {
-                          updatedSteps.push({
-                            node: data.node,
-                            status: data.status,
-                            output: data.output || null,
-                            timestamp: new Date().toISOString(),
-                          });
-                        } else {
-                          updatedSteps[existingStepIdx] = {
-                            ...updatedSteps[existingStepIdx],
-                            status: data.status,
-                            output: data.output || updatedSteps[existingStepIdx].output || null,
-                          };
-                        }
-                        return { ...m, agent_steps: updatedSteps };
+            if (data.node) {
+              setAgentState(data.node);
+              setConversations((prev) =>
+                prev.map((c) => {
+                  if (c.id !== targetConvId) return c;
+                  const msgs = (c.messages || []).map((m) => {
+                    if (m.id !== asstMsgId) return m;
+                    const currentSteps = m.agent_steps || [];
+                    const existingStepIdx = currentSteps.findIndex((s) => s.node === data.node);
+                    const updatedSteps = [...currentSteps];
+                    if (existingStepIdx === -1) {
+                      updatedSteps.push({
+                        node: data.node,
+                        status: data.status,
+                        output: data.output || null,
+                        timestamp: new Date().toISOString(),
                       });
-                      return { ...c, messages: msgs };
-                    })
+                    } else {
+                      updatedSteps[existingStepIdx] = {
+                        ...updatedSteps[existingStepIdx],
+                        status: data.status,
+                        output: data.output || updatedSteps[existingStepIdx].output || null,
+                      };
+                    }
+                    return { ...m, agent_steps: updatedSteps };
+                  });
+                  return { ...c, messages: msgs };
+                })
+              );
+            }
+
+            if (data.type === "citations" && Array.isArray(data.data)) {
+              setConversations((prev) =>
+                prev.map((c) => {
+                  if (c.id !== targetConvId) return c;
+                  const msgs = (c.messages || []).map((m) =>
+                    m.id === asstMsgId ? { ...m, sources: data.data } : m,
                   );
-                }
+                  return { ...c, messages: msgs };
+                }),
+              );
+            }
 
-                if (data.type === "citations" && data.data) {
-                }
-
-                if (data.type === "quality_score" && data.data) {
-                  setConversations((prev) =>
-                    prev.map((c) => {
-                      if (c.id !== targetConvId) return c;
-                      const msgs = c.messages.map((m) =>
-                        m.id === asstMsgId ? { ...m, quality_score: data.data } : m,
-                      );
-                      return { ...c, messages: msgs };
-                    }),
+            if (data.type === "quality_score" && data.data) {
+              setConversations((prev) =>
+                prev.map((c) => {
+                  if (c.id !== targetConvId) return c;
+                  const msgs = (c.messages || []).map((m) =>
+                    m.id === asstMsgId ? { ...m, quality_score: data.data } : m,
                   );
-                }
+                  return { ...c, messages: msgs };
+                }),
+              );
+            }
 
-                if (data.type === "provider_switch") {
-                  setProviderSwitchEvent({ from: data.from, to: data.to, reason: data.reason });
-                }
+            if (data.type === "provider_switch") {
+              setProviderSwitchEvent({ from: data.from, to: data.to, reason: data.reason });
+            }
 
-                if (data.type === "supervisor_decision" && data.data) {
-                  setSupervisorDecision(data.data);
-                  setConversations((prev) =>
-                    prev.map((c) => {
-                      if (c.id !== targetConvId) return c;
-                      const msgs = c.messages.map((m) =>
-                        m.id === asstMsgId ? { ...m, supervisor_decision: data.data } : m,
-                      );
-                      return { ...c, messages: msgs };
-                    }),
+            if (data.type === "supervisor_decision" && data.data) {
+              setSupervisorDecision(data.data);
+              setConversations((prev) =>
+                prev.map((c) => {
+                  if (c.id !== targetConvId) return c;
+                  const msgs = (c.messages || []).map((m) =>
+                    m.id === asstMsgId ? { ...m, supervisor_decision: data.data } : m,
                   );
-                }
+                  return { ...c, messages: msgs };
+                }),
+              );
+            }
 
-                if (data.done) {
-                  setConversations((prev) =>
-                    prev.map((c) => {
-                      if (c.id !== targetConvId) return c;
-                      const msgs = c.messages.map((m) =>
-                        m.id === asstMsgId ? { ...m, sources: data.sources, source_heatmap: data.source_heatmap || [] } : m,
-                      );
-                      return { ...c, messages: msgs };
-                    }),
+            if (data.done) {
+              setConversations((prev) =>
+                prev.map((c) => {
+                  if (c.id !== targetConvId) return c;
+                  const msgs = (c.messages || []).map((m) =>
+                    m.id === asstMsgId ? { ...m, sources: data.sources ?? m.sources, source_heatmap: data.source_heatmap || [] } : m,
                   );
-                  setAgentState(null);
-                  setIsThinking(false);
-                  setThinkingConvId(null);
-                  setSupervisorDecision(null);
-                  setIsResponding(false);
-                  setProviderSwitchEvent(null);
-                }
-              } catch (e) {
-              }
+                  return { ...c, messages: msgs };
+                }),
+              );
+              setAgentState(null);
+              setIsThinking(false);
+              setThinkingConvId(null);
+              setSupervisorDecision(null);
+              setIsResponding(false);
+              setProviderSwitchEvent(null);
             }
           }
         }
       }
       setIsResponding(false);
     } catch (error) {
+      if (error?.name === "AbortError") {
+        return;
+      }
       console.error("Error fetching response:", error);
       setIsResponding(false);
       setIsThinking(false);
@@ -866,18 +878,21 @@ export default function AIAssistantUI({ isDemo = false }) {
       setConversations((prev) =>
         prev.map((c) => {
           if (c.id !== targetConvId) return c;
-          const msgs = c.messages.map((m) =>
+          const msgs = (c.messages || []).map((m) =>
             m.id === asstMsgId
               ? {
-                  ...m,
-                  content:
-                    "Sorry, I couldn't process your request. Please try again.",
-                }
+                ...m,
+                content: m.content || (error?.message || "Sorry, I couldn't process your request. Please try again."),
+              }
               : m,
           );
           return { ...c, messages: msgs };
         }),
       );
+    } finally {
+      if (chatAbortRef.current === abortController) {
+        chatAbortRef.current = null;
+      }
     }
   }
   function editMessage(convId, messageId, newContent) {
@@ -901,10 +916,14 @@ export default function AIAssistantUI({ isDemo = false }) {
     const conv = conversations.find((c) => c.id === convId);
     const msg = conv?.messages?.find((m) => m.id === messageId);
     if (!msg) return;
-    sendMessage(convId, msg.content, undefined, undefined, selectedBot);
+    sendMessage(convId, msg.content, "research", msg.attachedFile || null, selectedBot);
   }
 
   function pauseThinking() {
+    if (chatAbortRef.current) {
+      chatAbortRef.current.abort();
+      chatAbortRef.current = null;
+    }
     setIsThinking(false);
     setThinkingConvId(null);
     setIsResponding(false);
@@ -980,18 +999,18 @@ export default function AIAssistantUI({ isDemo = false }) {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <a
+            <Link
               href="/signup"
               className="text-xs bg-primary text-primary-foreground px-3 py-1 rounded-md font-semibold hover:bg-primary/90 transition-all shadow-xs"
             >
               Sign Up Free
-            </a>
-            <a
+            </Link>
+            <Link
               href="/login"
               className="text-xs text-muted-foreground hover:text-foreground hidden sm:inline"
             >
               Sign In
-            </a>
+            </Link>
           </div>
         </div>
       )}
@@ -1001,185 +1020,166 @@ export default function AIAssistantUI({ isDemo = false }) {
         onTouchEnd={handleTouchEnd}
         className="relative flex flex-1 min-h-0 w-full overflow-hidden"
       >
-        {/* Background radial glows to match landing page */}
-        <div
-          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none opacity-0 dark:opacity-[0.06] transition-opacity duration-300 z-0"
-          style={{
-            background:
-              "radial-gradient(ellipse, rgba(139,92,246,1) 0%, rgba(59,130,246,0.5) 40%, transparent 70%)",
-          }}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[120px] pointer-events-none opacity-0 dark:opacity-[0.04] transition-opacity duration-300 z-0"
-          style={{
-            background:
-              "radial-gradient(ellipse, rgba(59,130,246,1) 0%, rgba(139,92,246,0.5) 40%, transparent 70%)",
-          }}
-        />
 
         <div className="relative z-10 flex h-full w-full overflow-hidden p-0 md:p-4 md:gap-4">
-        <Sidebar
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          collapsed={collapsed}
-          setCollapsed={setCollapsed}
-          sidebarCollapsed={sidebarCollapsed}
-          setSidebarCollapsed={setSidebarCollapsed}
-          conversations={conversations}
-          pinned={pinned}
-          recent={recent}
-          folders={folders}
-          folderCounts={folderCounts}
-          selectedId={selectedId}
-          onSelect={(id) => {
-            setSelectedId(id);
-            setSidebarOpen(false);
-          }}
-          togglePin={togglePin}
-          query={query}
-          setQuery={setQuery}
-          searchRef={searchRef}
-          createFolder={createFolder}
-          deleteFolder={deleteFolder}
-          renameFolder={renameFolder}
-          createNewChat={createNewChat}
-          templates={templates}
-          setTemplates={setTemplates}
-          onUseTemplate={handleUseTemplate}
-          onDeleteConversation={deleteConversation}
-          onRenameConversation={renameConversation}
-          user={user}
-          onUserUpdate={fetchUser}
-        />
+          <Sidebar
+            open={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            collapsed={collapsed}
+            setCollapsed={setCollapsed}
+            sidebarCollapsed={sidebarCollapsed}
+            setSidebarCollapsed={setSidebarCollapsed}
+            conversations={conversations}
+            pinned={pinned}
+            recent={recent}
+            folders={folders}
+            folderCounts={folderCounts}
+            selectedId={selectedId}
+            onSelect={(id) => {
+              setSelectedId(id);
+              setSidebarOpen(false);
+            }}
+            togglePin={togglePin}
+            query={query}
+            setQuery={setQuery}
+            searchRef={searchRef}
+            createFolder={createFolder}
+            deleteFolder={deleteFolder}
+            renameFolder={renameFolder}
+            createNewChat={createNewChat}
+            templates={templates}
+            setTemplates={setTemplates}
+            onUseTemplate={handleUseTemplate}
+            onDeleteConversation={deleteConversation}
+            onRenameConversation={renameConversation}
+            user={user}
+            onUserUpdate={fetchUser}
+          />
 
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background md:border md:border-black/15 dark:md:border-white/20 md:rounded-3xl md:bg-card/85 dark:md:bg-card/65 md:backdrop-blur-2xl transition-all duration-300 md:[box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_8px_32px_rgba(0,0,0,.06),0_20px_60px_rgba(0,0,0,.04)] dark:md:[box-shadow:0_0_0_1px_rgba(255,255,255,.1),0_16px_45px_rgba(0,0,0,.6)]">
-          {!["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings", "competitive", "memory"].includes(selectedId) && (
-            <Header
-              createNewChat={createNewChat}
-              sidebarCollapsed={sidebarCollapsed}
-              setSidebarOpen={setSidebarOpen}
-              user={user}
-              onUserUpdate={fetchUser}
-              selectedBot={selectedBot}
-              setSelectedBot={setSelectedBot}
-              onToggleIntegrations={() => setSelectedId(selectedId === "integrations" || selectedId === "plugins" ? null : "integrations")}
-              onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
-              onOpenWorkflows={() => setIsWorkflowsOpen(true)}
-            />
-          )}
-          {["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings", "competitive", "memory"].includes(selectedId) && (
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden absolute top-4 left-4 z-40 p-2 bg-background/80 hover:bg-muted border border-border/80 rounded-xl text-muted-foreground hover:text-foreground shadow-md transition-colors cursor-pointer"
-            >
-              <Menu className="size-4.5" />
-            </button>
-          )}
-          {selectedId === "docs" ? (
-            <div className="relative flex-1 overflow-y-auto bg-background pb-16">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_60%)] pointer-events-none" />
-              <div className="relative px-6 py-8 lg:px-8 max-w-7xl mx-auto">
-                <div className="flex flex-col space-y-4 mb-8">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl" />
-                      <span className="relative inline-flex items-center rounded-full border border-border/60 bg-card/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+          <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background md:border md:border-border md:rounded-xl md:bg-card md:shadow-sm transition-colors duration-200">
+            {!["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings", "competitive", "memory"].includes(selectedId) && (
+              <Header
+                createNewChat={createNewChat}
+                sidebarCollapsed={sidebarCollapsed}
+                setSidebarOpen={setSidebarOpen}
+                user={user}
+                onUserUpdate={fetchUser}
+                selectedBot={selectedBot}
+                setSelectedBot={setSelectedBot}
+                onToggleIntegrations={() => setSelectedId(selectedId === "integrations" || selectedId === "plugins" ? null : "integrations")}
+                onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
+                onOpenWorkflows={() => setIsWorkflowsOpen(true)}
+              />
+            )}
+            {["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings", "competitive", "memory"].includes(selectedId) && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden absolute top-4 left-4 z-40 p-2 bg-background/80 hover:bg-muted border border-border/80 rounded-xl text-muted-foreground hover:text-foreground shadow-md transition-colors cursor-pointer"
+              >
+                <Menu className="size-4.5" />
+              </button>
+            )}
+            {selectedId === "docs" ? (
+              <div className="relative flex-1 overflow-y-auto bg-background pb-16">
+                <div className="relative px-6 py-8 lg:px-8 max-w-7xl mx-auto">
+                  <div className="flex flex-col space-y-4 mb-8">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center rounded-md border border-border bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                         Data Overview
                       </span>
                     </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                      Gallery
+                    </h1>
+                    <p className="max-w-2xl text-base text-muted-foreground">
+                      Browse and manage your uploaded documents, images, and conversations. Use the
+                      tables below to search, sort, and organize your files.
+                    </p>
                   </div>
-                  <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                    Gallery
-                  </h1>
-                  <p className="max-w-2xl text-base text-muted-foreground">
-                    Browse and manage your uploaded documents, images, and conversations. Use the
-                    tables below to search, sort, and organize your files.
-                  </p>
+                  <DashboardDocsTable />
                 </div>
-                <DashboardDocsTable />
               </div>
-            </div>
-          ) : selectedId === "calendar" ? (
-            <CalendarDashboard />
-          ) : selectedId === "email" ? (
-            <EmailDashboard />
-          ) : selectedId === "brain" ? (
-            <BrainDashboard />
-          ) : selectedId === "tasks" ? (
-            <TaskDashboard />
-          ) : selectedId === "notes" ? (
-            <NotesDashboard />
-          ) : selectedId === "integrations" || selectedId === "plugins" ? (
-            <IntegrationsDashboard onNavigateToChat={() => setSelectedId(null)} />
-          ) : selectedId === "setting" || selectedId === "settings" ? (
-            <SettingsDashboard onNavigateToChat={() => setSelectedId(null)} />
-          ) : selectedId === "competitive" ? (
-            <CompetitiveIntelligenceDashboard />
-          ) : selectedId === "memory" ? (
-            <MemoryTimeline />
-          ) : (
-            <ChatPane
-              ref={composerRef}
-              conversation={selected}
-              user={user}
-              onSend={(content, mode, fileRef, activeFeatures, isVoice = false) => {
-                if (selected) sendMessage(selected.id, content, mode, fileRef, selectedBot, activeFeatures, isVoice);
-              }}
-              onEditMessage={(messageId, newContent) =>
-                selected && editMessage(selected.id, messageId, newContent)
-              }
-              onResendMessage={(messageId) => {
-                if (selected) resendMessage(selected.id, messageId, selectedBot);
-              }}
-              isThinking={isThinking && thinkingConvId === selected?.id}
-              isResponding={isResponding}
-              onPauseThinking={pauseThinking}
-              agentState={agentState}
-              providerSwitchEvent={providerSwitchEvent}
-              onDismissProviderSwitch={() => setProviderSwitchEvent(null)}
-              supervisorDecision={supervisorDecision}
-              selectedBot={selectedBot}
-              onNavigateTo={(id) => setSelectedId(id)}
-              onAddNewSkill={() => setSelectedId("integrations")}
+            ) : selectedId === "calendar" ? (
+              <CalendarDashboard />
+            ) : selectedId === "email" ? (
+              <EmailDashboard />
+            ) : selectedId === "brain" ? (
+              <BrainDashboard />
+            ) : selectedId === "tasks" ? (
+              <TaskDashboard />
+            ) : selectedId === "notes" ? (
+              <NotesDashboard />
+            ) : selectedId === "integrations" || selectedId === "plugins" ? (
+              <IntegrationsDashboard onNavigateToChat={() => setSelectedId(null)} />
+            ) : selectedId === "setting" || selectedId === "settings" ? (
+              <SettingsDashboard onNavigateToChat={() => setSelectedId(null)} />
+            ) : selectedId === "competitive" ? (
+              <CompetitiveIntelligenceDashboard />
+            ) : selectedId === "memory" ? (
+              <MemoryTimeline />
+            ) : (
+              <ChatPane
+                ref={composerRef}
+                conversation={selected}
+                user={user}
+                onSend={(content, mode, fileRef, activeFeatures, isVoice = false) => {
+                  if (selected) sendMessage(selected.id, content, mode, fileRef, selectedBot, activeFeatures, isVoice);
+                }}
+                onEditMessage={(messageId, newContent) =>
+                  selected && editMessage(selected.id, messageId, newContent)
+                }
+                onResendMessage={(messageId) => {
+                  if (selected) resendMessage(selected.id, messageId, selectedBot);
+                }}
+                isThinking={isThinking && thinkingConvId === selected?.id}
+                isResponding={isResponding}
+                onPauseThinking={pauseThinking}
+                agentState={agentState}
+                providerSwitchEvent={providerSwitchEvent}
+                onDismissProviderSwitch={() => setProviderSwitchEvent(null)}
+                supervisorDecision={supervisorDecision}
+                selectedBot={selectedBot}
+                onNavigateTo={(id) => setSelectedId(id)}
+                onAddNewSkill={() => setSelectedId("integrations")}
+              />
+            )}
+            <IntegrationsPanel
+              isOpen={isIntegrationsOpen}
+              onClose={() => setIsIntegrationsOpen(false)}
             />
-          )}
-          <IntegrationsPanel
-            isOpen={isIntegrationsOpen}
-            onClose={() => setIsIntegrationsOpen(false)}
-          />
-          <AuditLogsModal
-            isOpen={isAuditLogsOpen}
-            onClose={() => setIsAuditLogsOpen(false)}
-          />
-          <WorkflowsModal
-            isOpen={isWorkflowsOpen}
-            onClose={() => setIsWorkflowsOpen(false)}
-          />
-          <OnboardingWizard
-            isOpen={isOnboardingOpen}
-            onClose={() => setIsOnboardingOpen(false)}
-            onSelectPrompt={(promptText) => {
-              setSelectedId("new");
-              setTimeout(() => {
-                composerRef.current?.setValue?.(promptText);
+            <AuditLogsModal
+              isOpen={isAuditLogsOpen}
+              onClose={() => setIsAuditLogsOpen(false)}
+            />
+            <WorkflowsModal
+              isOpen={isWorkflowsOpen}
+              onClose={() => setIsWorkflowsOpen(false)}
+            />
+            <OnboardingWizard
+              isOpen={isOnboardingOpen}
+              onClose={() => setIsOnboardingOpen(false)}
+              onSelectPrompt={(promptText) => {
+                setSelectedId("new");
+                setTimeout(() => {
+                  composerRef.current?.setValue?.(promptText);
+                  composerRef.current?.focus?.();
+                }, 150);
+              }}
+            />
+            <FloatingVoiceAssistant
+              onTranscribeText={(text) => {
+                composerRef.current?.setValue?.(text);
                 composerRef.current?.focus?.();
-              }, 150);
-            }}
-          />
-          <FloatingVoiceAssistant
-            onTranscribeText={(text) => {
-              composerRef.current?.setValue?.(text);
-              composerRef.current?.focus?.();
-            }}
-            onSendPrompt={(text) => {
-              if (selected) {
-                sendMessage(selected.id, text, "agentic", null, selectedBot, {}, true);
-              }
-            }}
-          />
-        </main>
+              }}
+              onSendPrompt={(text) => {
+                if (selected) {
+                  sendMessage(selected.id, text, "agentic", null, selectedBot, {}, true);
+                }
+              }}
+            />
+          </main>
+        </div>
       </div>
     </div>
-  </div>
   );
 }

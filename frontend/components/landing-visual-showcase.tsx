@@ -52,7 +52,7 @@ export function LandingVisualShowcase() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-xs font-mono font-semibold text-purple-400 mb-4 tracking-wider uppercase shadow-[0_0_15px_rgba(168,85,247,0.15)]"
           >
             <Activity className="w-3.5 h-3.5 animate-pulse" />
-            Live Observability & Visual Insights
+            Interactive Architecture Preview
           </motion.div>
 
           <motion.h2
@@ -62,7 +62,7 @@ export function LandingVisualShowcase() {
             transition={{ delay: 0.1 }}
             className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-4"
           >
-            Real-Time Agent Matrix & Vector Intelligence
+            Multi-Agent Matrix &amp; Vector Retrieval
           </motion.h2>
 
           <motion.p
@@ -72,7 +72,7 @@ export function LandingVisualShowcase() {
             transition={{ delay: 0.2 }}
             className="text-zinc-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed"
           >
-            Monitor high-concurrency multi-agent workloads, inspect Pinecone vector similarity clusters, and track multi-model routing latencies with sub-millisecond precision.
+            Explore how TriVisionX orchestrates LangGraph workflows, queries per-user Pinecone vector namespaces with MMR reranking, and tracks telemetry per request.
           </motion.p>
         </div>
 
@@ -155,7 +155,7 @@ export function LandingVisualShowcase() {
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full ${isLive ? "bg-emerald-400 animate-ping" : "bg-zinc-500"}`} />
-                {isLive ? "LIVE TELEMETRY" : "PAUSED"}
+                {isLive ? "SIMULATED PREVIEW" : "PAUSED"}
               </button>
             </div>
           </div>

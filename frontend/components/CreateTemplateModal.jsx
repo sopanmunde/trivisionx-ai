@@ -27,6 +27,7 @@ export default function TemplatePopover({
   children,
   onCreateTemplate,
   editingTemplate = null,
+  onClearEditing = () => {},
 }) {
   const [open, setOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
@@ -73,10 +74,17 @@ export default function TemplatePopover({
     setTemplateContent("");
     setCategory("General");
     setOpen(false);
+    onClearEditing?.();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(nextOpen) => {
+      if (!nextOpen) {
+        handleClose();
+      } else {
+        setOpen(true);
+      }
+    }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[460px] p-0 overflow-hidden gap-0 bg-white/95 dark:bg-[#0C0C0D]/95 border border-zinc-200/90 dark:border-zinc-800/90 backdrop-blur-2xl shadow-2xl rounded-2xl text-foreground">
         {/* Header */}

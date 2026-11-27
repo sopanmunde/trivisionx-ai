@@ -68,9 +68,6 @@ export function ComparisonSection() {
 
   return (
     <section className="relative py-24 px-4 sm:px-6 overflow-hidden bg-background select-none">
-      {/* Background glow */}
-      <div className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_40%,transparent_100%)] opacity-30 dark:opacity-20 dot-grid" />
-
       <div ref={ref} className="max-w-5xl mx-auto">
         {/* Section header */}
         <motion.div
@@ -79,7 +76,7 @@ export function ComparisonSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-card/80 backdrop-blur-md text-xs font-mono text-muted-foreground mb-6">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-secondary text-secondary-foreground text-xs font-mono mb-6">
             <span className="size-1.5 rounded-full bg-primary" />
             Why TriVisionX
           </span>
@@ -96,7 +93,7 @@ export function ComparisonSection() {
           initial={{ opacity: 0, y: 24 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7, delay: 0.15 }}
-          className="overflow-x-auto rounded-2xl border border-border/80 bg-card/85 dark:bg-card/60 backdrop-blur-xl [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_8px_32px_rgba(0,0,0,.08)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_40px_rgba(0,0,0,.5)]"
+          className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm"
         >
           <table className="w-full text-sm">
             <thead>

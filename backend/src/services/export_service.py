@@ -1,13 +1,30 @@
 """
 export_service.py — PDF, DOCX, XLSX, and Markdown export builders for research reports and tasks.
 """
+import html
 import io
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from core.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _pdf_rich_text(text: str) -> str:
+    """Escape ReportLab XML entities and render **bold** markdown cleanly."""
+    escaped = html.escape(text or "", quote=True)
+    return re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", escaped)
+
+
+def _safe_cell(value: Any) -> Any:
+    """Guard spreadsheet/CSV cells against formula injection."""
+    if not isinstance(value, str):
+        return value
+    stripped = value.lstrip()
+    if stripped and stripped[0] in ("=", "+", "-", "@", "\t", "\r"):
+        return f"'{value}"
+    return value
 
 
 def generate_pdf_report(
@@ -20,7 +37,7 @@ def generate_pdf_report(
 ) -> bytes:
     """Generate a formatted PDF document for research reports using ReportLab (with fallback)."""
     citations = citations or []
-    ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     try:
         from reportlab.lib.pagesizes import letter
@@ -106,13 +123,13 @@ def generate_pdf_report(
         story = []
 
         # Company Header & Date
-        story.append(Paragraph(company_name.upper(), company_style))
+        story.append(Paragraph(html.escape(company_name.upper(), quote=True), company_style))
         story.append(Spacer(1, 4))
-        story.append(Paragraph(f"AI Research Report — {ts}", meta_style))
+        story.append(Paragraph(f"AI Research Report — {html.escape(ts)}", meta_style))
         story.append(Spacer(1, 10))
 
         # Title / Query
-        clean_query = query.strip() or "Research Summary"
+        clean_query = html.escape(query.strip() or "Research Summary", quote=True)
         story.append(Paragraph(f"Query: {clean_query}", title_style))
         story.append(Spacer(1, 10))
         story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#E5E7EB"), spaceAfter=15))
@@ -125,40 +142,40 @@ def generate_pdf_report(
                 story.append(Spacer(1, 6))
                 continue
             if line_str.startswith("# "):
-                story.append(Paragraph(line_str.replace("# ", ""), title_style))
+                story.append(Paragraph(_pdf_rich_text(line_str[2:]), title_style))
                 story.append(Spacer(1, 6))
             elif line_str.startswith("## "):
-                story.append(Paragraph(line_str.replace("## ", ""), h2_style))
+                story.append(Paragraph(_pdf_rich_text(line_str[3:]), h2_style))
                 story.append(Spacer(1, 4))
             elif line_str.startswith("### "):
-                story.append(Paragraph(line_str.replace("### ", ""), h2_style))
+                story.append(Paragraph(_pdf_rich_text(line_str[4:]), h2_style))
                 story.append(Spacer(1, 4))
             elif line_str.startswith("- ") or line_str.startswith("* "):
-                bullet_text = line_str[2:].replace("**", "<b>").replace("**", "</b>")
+                bullet_text = _pdf_rich_text(line_str[2:])
                 story.append(Paragraph(f"• {bullet_text}", body_style))
             else:
-                formatted_line = line_str.replace("**", "<b>").replace("**", "</b>")
+                formatted_line = _pdf_rich_text(line_str)
                 story.append(Paragraph(formatted_line, body_style))
 
         # Citations Section
         if citations:
             story.append(Spacer(1, 15))
             story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#E5E7EB"), spaceAfter=10))
-            story.append(Paragraph("References & Citations", h2_style))
+            story.append(Paragraph("References &amp; Citations", h2_style))
             for cit in citations:
-                source = cit.get("filename") or cit.get("source") or "Document Source"
+                source = html.escape(str(cit.get("filename") or cit.get("source") or "Document Source"), quote=True)
                 page = cit.get("page", "")
-                snippet = cit.get("snippet", "")
-                page_str = f" (Page {page})" if page and page != "N/A" else ""
+                snippet = str(cit.get("snippet", "") or "")
+                page_str = f" (Page {html.escape(str(page), quote=True)})" if page and page != "N/A" else ""
                 cit_line = f"<b>• {source}{page_str}</b>"
                 if snippet:
-                    cit_line += f"<br/><i>\"{snippet[:120]}...\"</i>"
+                    cit_line += f'<br/><i>&quot;{html.escape(snippet[:120], quote=True)}...&quot;</i>'
                 story.append(Paragraph(cit_line, citation_style))
                 story.append(Spacer(1, 4))
 
         # Footer space
         story.append(Spacer(1, 20))
-        story.append(Paragraph(footer_text, meta_style))
+        story.append(Paragraph(html.escape(footer_text, quote=True), meta_style))
 
         doc.build(story)
         return buffer.getvalue()
@@ -184,7 +201,7 @@ def generate_docx_report(
 ) -> bytes:
     """Generate a Microsoft Word (.docx) document for research reports using python-docx."""
     citations = citations or []
-    ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     try:
         import docx
@@ -289,7 +306,7 @@ def generate_xlsx_report(
     """Generate an Excel (.xlsx) workbook containing structured findings, citations, and tasks."""
     citations = citations or []
     tasks = tasks or []
-    ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     try:
         import openpyxl
@@ -308,7 +325,7 @@ def generate_xlsx_report(
         ws1["A1"].font = Font(name="Calibri", size=16, bold=True, color="4F46E5")
         
         ws1["A3"] = "Query:"
-        ws1["B3"] = query
+        ws1["B3"] = _safe_cell(query)
         ws1["A4"] = "Generated At:"
         ws1["B4"] = ts
         
@@ -324,11 +341,11 @@ def generate_xlsx_report(
         for line in lines:
             if line.startswith("#"):
                 ws1.cell(row=row_idx, column=1, value="Heading")
-                ws1.cell(row=row_idx, column=2, value=line.replace("#", "").strip())
+                ws1.cell(row=row_idx, column=2, value=_safe_cell(line.lstrip("#").strip()))
                 ws1.cell(row=row_idx, column=1).font = Font(bold=True)
             else:
                 ws1.cell(row=row_idx, column=1, value="Key Point")
-                ws1.cell(row=row_idx, column=2, value=line.replace("**", ""))
+                ws1.cell(row=row_idx, column=2, value=_safe_cell(line.replace("**", "")))
             row_idx += 1
 
         ws1.column_dimensions["A"].width = 15
@@ -345,9 +362,9 @@ def generate_xlsx_report(
 
             for idx, cit in enumerate(citations, 1):
                 ws2.cell(row=idx + 1, column=1, value=idx)
-                ws2.cell(row=idx + 1, column=2, value=cit.get("filename") or cit.get("source") or "N/A")
-                ws2.cell(row=idx + 1, column=3, value=cit.get("page") or "N/A")
-                ws2.cell(row=idx + 1, column=4, value=cit.get("snippet") or "")
+                ws2.cell(row=idx + 1, column=2, value=_safe_cell(cit.get("filename") or cit.get("source") or "N/A"))
+                ws2.cell(row=idx + 1, column=3, value=_safe_cell(cit.get("page") or "N/A"))
+                ws2.cell(row=idx + 1, column=4, value=_safe_cell(cit.get("snippet") or ""))
 
             ws2.column_dimensions["A"].width = 6
             ws2.column_dimensions["B"].width = 30
@@ -364,17 +381,17 @@ def generate_xlsx_report(
                 cell.font = header_font
 
             for idx, task in enumerate(tasks, 1):
-                ws3.cell(row=idx + 1, column=1, value=task.get("code") or task.get("id") or f"TASK-{idx}")
-                ws3.cell(row=idx + 1, column=2, value=task.get("title") or "")
-                ws3.cell(row=idx + 1, column=3, value=task.get("type") or "Task")
-                ws3.cell(row=idx + 1, column=4, value=task.get("status") or "todo")
-                ws3.cell(row=idx + 1, column=5, value=task.get("priority") or "medium")
+                ws3.cell(row=idx + 1, column=1, value=_safe_cell(task.get("code") or task.get("id") or f"TASK-{idx}"))
+                ws3.cell(row=idx + 1, column=2, value=_safe_cell(task.get("title") or ""))
+                ws3.cell(row=idx + 1, column=3, value=_safe_cell(task.get("type") or "Task"))
+                ws3.cell(row=idx + 1, column=4, value=_safe_cell(task.get("status") or "todo"))
+                ws3.cell(row=idx + 1, column=5, value=_safe_cell(task.get("priority") or "medium"))
                 ws3.cell(row=idx + 1, column=6, value=f"{task.get('progress', 0)}%")
                 
                 assignee = task.get("assignee", {})
                 assignee_name = assignee.get("name") if isinstance(assignee, dict) else str(assignee)
-                ws3.cell(row=idx + 1, column=7, value=assignee_name or "Unassigned")
-                ws3.cell(row=idx + 1, column=8, value=task.get("dueDate") or "N/A")
+                ws3.cell(row=idx + 1, column=7, value=_safe_cell(assignee_name or "Unassigned"))
+                ws3.cell(row=idx + 1, column=8, value=_safe_cell(task.get("dueDate") or "N/A"))
 
             ws3.column_dimensions["A"].width = 12
             ws3.column_dimensions["B"].width = 35
@@ -391,9 +408,10 @@ def generate_xlsx_report(
 
     except ImportError:
         logger.warning("openpyxl not installed. Returning CSV content.")
-        csv_lines = [f"Query,{query}", f"Generated,{ts}", "", "Key Points:"]
+        safe_q = str(_safe_cell(query)).replace('"', '""')
+        csv_lines = [f'Query,"{safe_q}"', f"Generated,{ts}", "", "Key Points:"]
         for line in report_text.split("\n"):
             if line.strip():
-                clean_line = line.replace('"', '""').strip()
-                csv_lines.append(f'"{clean_line}"')
+                safe_line = str(_safe_cell(line.strip())).replace('"', '""')
+                csv_lines.append(f'"{safe_line}"')
         return "\n".join(csv_lines).encode("utf-8")

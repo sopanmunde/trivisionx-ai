@@ -24,8 +24,8 @@ def clean_email(email: Dict) -> Dict:
 def get_seed_emails() -> List[Dict]:
     return [
         {
-            "name": "Sopan Munde",
-            "email": "sopan@example.com",
+            "name": "William Hayes",
+            "email": "william.hayes@example.com",
             "subject": "Meeting Tomorrow",
             "date": "4 months ago",
             "fullDate": "Oct 22, 2023, 9:00:00 AM",
@@ -38,8 +38,8 @@ def get_seed_emails() -> List[Dict]:
             "category": "updates"
         },
         {
-            "name": "Vicky Jadhav",
-            "email": "vicky@example.com",
+            "name": "Alice Mercer",
+            "email": "alice.mercer@example.com",
             "subject": "Re: Project Update",
             "date": "4 months ago",
             "fullDate": "Oct 20, 2023, 2:15:00 PM",
@@ -52,8 +52,8 @@ def get_seed_emails() -> List[Dict]:
             "category": "updates"
         },
         {
-            "name": "Krushana Kalamkar",
-            "email": "krushana@example.com",
+            "name": "Bob Bennett",
+            "email": "bob.bennett@example.com",
             "subject": "Weekend Plans",
             "date": "about 3 years ago",
             "fullDate": "Jun 12, 2021, 11:30:00 AM",
@@ -66,8 +66,8 @@ def get_seed_emails() -> List[Dict]:
             "category": "social"
         },
         {
-            "name": "Aditya Bhayar",
-            "email": "aditya@example.com",
+            "name": "Emily Foster",
+            "email": "emily.foster@example.com",
             "subject": "Re: Question about Budget",
             "date": "over 3 years ago",
             "fullDate": "Apr 5, 2021, 4:45:00 PM",
@@ -80,8 +80,8 @@ def get_seed_emails() -> List[Dict]:
             "category": "forums"
         },
         {
-            "name": "Piyush Manmode",
-            "email": "piyush@example.com",
+            "name": "Michael Grant",
+            "email": "michael.grant@example.com",
             "subject": "Important Announcement",
             "date": "over 3 years ago",
             "fullDate": "Mar 10, 2021, 3:00:00 PM",
@@ -94,8 +94,8 @@ def get_seed_emails() -> List[Dict]:
             "category": "updates"
         },
         {
-            "name": "Aditya Jadhav",
-            "email": "aditya@example.com",
+            "name": "Alex Rivera",
+            "email": "alex.rivera@example.com",
             "subject": "Draft: Spacing issues on dashboard",
             "date": "1 day ago",
             "fullDate": "Yesterday, 6:00:00 PM",
@@ -108,8 +108,8 @@ def get_seed_emails() -> List[Dict]:
             "category": "updates"
         },
         {
-            "name": "Ajit Thale",
-            "email": "ajit@sky.net",
+            "name": "Jordan Lee",
+            "email": "jordan.lee@example.com",
             "subject": "Sent: Re: Project Milestones",
             "date": "2 weeks ago",
             "fullDate": "Oct 5, 2023, 10:00:00 AM",
@@ -122,8 +122,8 @@ def get_seed_emails() -> List[Dict]:
             "category": "updates"
         },
         {
-            "name": "Pratik Shimpi",
-            "email": "pratik@example.com",
+            "name": "Maya Patel",
+            "email": "maya.patel@example.com",
             "subject": "Claim your free account upgrade",
             "date": "3 weeks ago",
             "fullDate": "Sep 28, 2023, 11:00:00 AM",
@@ -153,17 +153,8 @@ def get_seed_emails() -> List[Dict]:
 
 
 async def get_user_emails(user_id: str) -> List[Dict]:
-    """Retrieves all emails for the user. Seeds initial emails if empty."""
-    count = await _db()[COLLECTION_EMAILS].count_documents({"user_id": user_id})
-    if count == 0:
-        logger.info(f"Seeding mock emails for user {user_id}")
-        seeds = get_seed_emails()
-        for s in seeds:
-            s["user_id"] = user_id
-            s["created_at"] = datetime.now(timezone.utc)
-        await _db()[COLLECTION_EMAILS].insert_many(seeds)
-
-    docs = await _db()[COLLECTION_EMAILS].find({"user_id": user_id}).to_list(1000)
+    """Retrieves all real persisted emails for the user from MongoDB."""
+    docs = await _db()[COLLECTION_EMAILS].find({"user_id": user_id}).sort("created_at", -1).to_list(1000)
     return [clean_email(d) for d in docs]
 
 
@@ -190,20 +181,20 @@ async def create_email(user_id: str, email_data: Dict) -> Dict:
 
 
 async def update_email_db(user_id: str, email_id: str, updates: Dict) -> Optional[Dict]:
-    """Updates an email's properties (folder, favorite, unread, etc.)."""
-    allowed_keys = ["folder", "favorite", "unread", "category", "tags"]
+    """Updates an email's properties (folder, favorite, unread, draft content, etc.)."""
+    allowed_keys = ["folder", "favorite", "unread", "category", "tags", "subject", "body", "snippet", "name", "email"]
     query = {
         "user_id": user_id
     }
     try:
         query["_id"] = ObjectId(email_id)
     except Exception:
-        # Fallback if id is string-based from legacy/seeding
         query["id"] = email_id
 
     update_payload = {k: v for k, v in updates.items() if k in allowed_keys}
     if not update_payload:
         return None
+    update_payload["updated_at"] = datetime.now(timezone.utc)
 
     result = await _db()[COLLECTION_EMAILS].find_one_and_update(
         query,

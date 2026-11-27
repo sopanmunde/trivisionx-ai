@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: "/",
             disallow: ["/api/", "/_next/", "/public/"],
         },
-        sitemap: "https://trivisionx-ai.vercel.app",
+        sitemap: "https://trivisionx-ai.vercel.app/sitemap.xml",
     }
 }

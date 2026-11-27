@@ -8,6 +8,7 @@ Provides LangChain @tool functions for interacting with GitHub:
 
 Requires GITHUB_TOKEN in .env (Personal Access Token with repo scope).
 """
+import re
 import httpx
 from typing import Optional
 from langchain_core.tools import tool
@@ -17,6 +18,13 @@ from core.logger import get_logger
 logger = get_logger(__name__)
 
 GITHUB_API = "https://api.github.com"
+_GITHUB_SLUG_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$")
+
+
+def _validate_github_slug(owner: str, repo: str) -> Optional[str]:
+    if not _GITHUB_SLUG_RE.match(owner or "") or not _GITHUB_SLUG_RE.match(repo or ""):
+        return f"Error: Invalid GitHub repository identifier '{owner}/{repo}'."
+    return None
 
 
 def _get_token() -> Optional[str]:
@@ -54,6 +62,9 @@ async def get_repo_context(owner: str, repo: str, include_tree: bool = True) -> 
     Returns:
         Formatted string with repository README preview, file structure, and recent commits.
     """
+    slug_err = _validate_github_slug(owner, repo)
+    if slug_err:
+        return slug_err
     token = _get_token()
     if not token:
         return "Error: GITHUB_TOKEN is not configured. Add it to your .env file to use GitHub tools."
@@ -155,6 +166,9 @@ async def create_github_issue(
     Returns:
         Success message with the issue number and URL, or an error message.
     """
+    slug_err = _validate_github_slug(owner, repo)
+    if slug_err:
+        return slug_err
     token = _get_token()
     if not token:
         return "Error: GITHUB_TOKEN is not configured. Add it to your .env file to use GitHub tools."
@@ -214,6 +228,9 @@ async def post_pr_comment(
     Returns:
         Success message with the comment URL, or an error message.
     """
+    slug_err = _validate_github_slug(owner, repo)
+    if slug_err:
+        return slug_err
     token = _get_token()
     if not token:
         return "Error: GITHUB_TOKEN is not configured. Add it to your .env file to use GitHub tools."

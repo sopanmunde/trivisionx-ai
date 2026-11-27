@@ -50,11 +50,7 @@ function AttachedFilePill({ file, uploading, onRemove }) {
   const Icon = info.icon;
   const shortName = file.name.length > 28 ? file.name.slice(0, 26) + "..." : file.name;
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.92, y: 4 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.88, y: 4 }} transition={{ duration: 0.18 }}
-      className="flex items-center gap-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 shadow-sm max-w-[280px] relative"
-    >
+    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/50 px-3 py-2 shadow-xs max-w-[280px] relative">
       <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", info.bg)}>
         <Icon className="h-4 w-4 text-white" />
       </div>
@@ -73,7 +69,7 @@ function AttachedFilePill({ file, uploading, onRemove }) {
           <X className="h-2.5 w-2.5 text-zinc-700 dark:text-zinc-300" />
         </button>
       )}
-    </motion.div>
+    </div>
   );
 }
 
@@ -116,6 +112,8 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     const fetchList = async () => {
       try {
         const token = localStorage.getItem("token");
+        const isDemo = localStorage.getItem("is_demo") === "true" || !token || token === "demo_guest_token";
+        if (isDemo) return;
         const res = await fetch(`${API_BASE_URL}/integrations`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -241,11 +239,8 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
             setSubMenuData(prev => ({ ...prev, notes: data }));
           }
         } else if (slashMode === "templates" && subMenuData.templates.length === 0) {
-          const res = await fetch(`${API_BASE_URL}/templates`, { headers: { Authorization: `Bearer ${token}` } });
-          if (res.ok) {
-            const data = await res.json();
-            setSubMenuData(prev => ({ ...prev, templates: data }));
-          }
+          // Prompt templates are persisted locally in INITIAL_TEMPLATES / workspace state
+          setSubMenuData(prev => ({ ...prev, templates: [] }));
         }
       } catch (err) {
         console.error(`Failed to load ${slashMode} data for sub-menu`, err);
@@ -628,6 +623,10 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
       mediaRecorder.start();
       setIsListening(true);
     } catch (err) {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
       console.error("Error accessing microphone:", err);
       toast.error("Failed to access microphone. Please check permissions.");
     }
@@ -708,7 +707,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
             initial={{ opacity: 0, y: 8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
-            className="absolute bottom-full mb-3 left-4 right-4 sm:right-auto sm:left-4 sm:w-[320px] bg-white/95 dark:bg-[#0C0C0D]/95 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl backdrop-blur-md z-50 p-2 max-h-[300px] overflow-y-auto scrollbar-thin flex flex-col gap-1.5"
+            className="absolute bottom-full mb-2 left-4 right-4 sm:right-auto sm:left-4 sm:w-[320px] bg-popover text-popover-foreground border border-border rounded-lg shadow-md z-50 p-1.5 max-h-[300px] overflow-y-auto scrollbar-thin flex flex-col gap-1"
           >
             {loadingSubMenu && (
               <div className="flex items-center justify-center py-6 gap-2 text-zinc-400">
@@ -781,10 +780,10 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
       </AnimatePresence>
 
       <div className={cn(
-        "dashboard-3d-container mx-auto max-w-4xl w-full transition-all duration-300",
+        "mx-auto max-w-4xl w-full rounded-xl border border-input bg-background shadow-sm transition-colors duration-150",
         isFocused
-          ? "border-primary/50 ring-4 ring-primary/10 shadow-[0_12px_40px_rgba(0,0,0,0.08),0_0_30px_rgba(59,130,246,0.15)] dark:shadow-[0_0_40px_rgba(59,130,246,0.22),inset_0_1px_2px_rgba(255,255,255,0.15)]"
-          : "hover:border-primary/40"
+          ? "border-ring ring-1 ring-ring"
+          : "hover:border-ring/50"
       )}>
         {/* Selected Command Features Row */}
         {selectedFeatures.length > 0 && (
@@ -896,7 +895,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
                     : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
                 )}>Agent</button>
               <button type="button"
-                onClick={() => { setActiveAction(null); setMode(defaultMode); }}
+                onClick={() => { setActiveAction(null); setMode("quick"); }}
                 className={cn(
                   "px-2 sm:px-2.5 py-1 text-[10.5px] sm:text-[11px] font-semibold rounded-lg transition-all cursor-pointer select-none leading-none",
                   !activeAction || activeAction !== "agent"
@@ -908,19 +907,13 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="relative flex items-center justify-center">
-                  {isListening && (
-                    <>
-                      <span className="absolute inset-0 rounded-xl animate-ping bg-red-500/40" />
-                      <span className="absolute -inset-1 rounded-xl animate-pulse bg-red-500/20" />
-                    </>
-                  )}
-                  <Button variant="ghost" size="icon"
+                  <Button variant={isListening ? "destructive" : "ghost"} size="icon"
                     onClick={() => isListening ? stopRecording() : startRecording()}
                     className={cn(
-                      "relative h-8 w-8 rounded-xl transition-all duration-300",
-                      isListening ? "bg-red-500 text-white hover:bg-red-600 shadow-md" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/80"
+                      "relative h-8 w-8 rounded-lg transition-colors",
+                      !isListening && "text-muted-foreground hover:text-foreground"
                     )}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4", isListening && "animate-pulse")}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                       <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                       <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                       <line x1="12" x2="12" y1="19" y2="22" />

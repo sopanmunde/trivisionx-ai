@@ -393,9 +393,9 @@ function CompactCanvasNode({
 }) {
   const statusDot = {
     idle: "bg-muted-foreground",
-    running: "bg-primary animate-ping",
-    success: "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]",
-    error: "bg-destructive animate-bounce",
+    running: "bg-primary",
+    success: "bg-emerald-500",
+    error: "bg-destructive",
   };
 
   const Icon = node.icon;
@@ -559,15 +559,12 @@ export function AutomationCanvas() {
   };
 
   return (
-    <section id="automation-graph" className="relative py-28 px-4 sm:px-6 lg:px-8 bg-background text-foreground transition-colors overflow-hidden select-none">
-      {/* 3D Ambient Backdrop Spotlight */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
-
+    <section id="automation-graph" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-background text-foreground transition-colors overflow-hidden select-none">
       <div className="max-w-6xl mx-auto relative z-10">
-        {/* Unified 3D Section Header */}
+        {/* Unified Section Header */}
         <div className="text-center mb-14 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-muted/50 text-foreground text-xs font-medium tracking-wide shadow-xs mb-4">
-            <Activity className="w-3.5 h-3.5 text-primary animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-secondary text-secondary-foreground text-xs font-medium tracking-wide shadow-xs mb-4">
+            <Activity className="w-3.5 h-3.5 text-primary" />
             <span>INTERACTIVE WORKFLOW SIMULATOR</span>
           </div>
           
@@ -605,16 +602,16 @@ export function AutomationCanvas() {
           </div>
         </div>
 
-        {/* Compact Canvas & Telemetry Suite Container with 3D Depth Glass Effect */}
-        <div className="p-0 rounded-3xl overflow-hidden border border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-2xl [box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_20px_50px_rgba(0,0,0,.12),0_40px_80px_rgba(0,0,0,.08)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff10_inset,0_0_0_1px_rgba(255,255,255,.06),0_20px_60px_rgba(0,0,0,.8)] relative">
+        {/* Clean shadcn Canvas & Telemetry Suite Container */}
+        <div className="p-0 rounded-xl overflow-hidden border border-border bg-card text-card-foreground shadow-sm relative">
           {/* Key Commands Modal Panel Overlay */}
           <AnimatePresence>
             {isShortcutsPanelOpen && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.96 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                className="absolute inset-0 bg-background/95 backdrop-blur-md z-50 p-6 flex flex-col justify-between font-mono"
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="absolute inset-0 bg-background/95 z-50 p-6 flex flex-col justify-between font-mono"
               >
                 <div className="space-y-4 max-w-2xl mx-auto w-full">
                   <div className="flex items-center justify-between border-b border-border pb-3">
@@ -806,7 +803,7 @@ export function AutomationCanvas() {
 
               {/* Live Status Badge */}
               <Badge variant="outline" className="hidden md:flex gap-1 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold text-[9px] h-6">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 LIVE CANVAS
               </Badge>
             </div>

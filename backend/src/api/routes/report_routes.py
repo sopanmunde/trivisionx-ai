@@ -1,4 +1,5 @@
 """Report routes — generate, retrieve, export, and publish research reports."""
+import asyncio
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
@@ -6,7 +7,7 @@ from typing import Optional, Dict, Any
 from bson import ObjectId
 
 from core.limiter import limiter
-from core.constants import RATE_LIMIT_REPORT, COLLECTION_REPORTS
+from core.constants import RATE_LIMIT_DEFAULT, RATE_LIMIT_REPORT, COLLECTION_REPORTS
 from core.security import get_current_user
 from database.mongodb.connection import get_database
 from services.report_service import create_report
@@ -22,8 +23,12 @@ from services.third_party_integrations import (
     send_teams_webhook,
     publish_to_notion,
     publish_to_confluence,
+    create_jira_issue,
 )
-from database.mongodb.repositories.integrations_repository import get_integrations
+from database.mongodb.repositories.integrations_repository import (
+    get_integrations,
+    get_decrypted_integrations,
+)
 
 router = APIRouter()
 
@@ -67,14 +72,17 @@ async def generate_report_endpoint(
 
 
 @router.get("/history")
-async def get_report_history(current_user=Depends(get_current_user)):
+@limiter.limit(RATE_LIMIT_DEFAULT)
+async def get_report_history(request: Request, current_user=Depends(get_current_user)):
     user_id = str(current_user["_id"])
     db = get_database()
     return await get_research_sessions(db[COLLECTION_REPORTS], user_id)
 
 
 @router.get("/{report_id}/export")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def export_report_markdown(
+    request: Request,
     report_id: str,
     current_user=Depends(get_current_user),
 ):
@@ -95,7 +103,9 @@ async def export_report_markdown(
 
 
 @router.get("/{report_id}/export/pdf")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def export_report_pdf(
+    request: Request,
     report_id: str,
     current_user=Depends(get_current_user),
 ):
@@ -105,7 +115,8 @@ async def export_report_pdf(
     integrations = await get_integrations(user_id)
     export_cfg = integrations.get("export", {})
 
-    pdf_bytes = generate_pdf_report(
+    pdf_bytes = await asyncio.to_thread(
+        generate_pdf_report,
         query=doc.get("query", ""),
         report_text=doc.get("final_output", ""),
         citations=doc.get("citations", []),
@@ -121,7 +132,9 @@ async def export_report_pdf(
 
 
 @router.get("/{report_id}/export/docx")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def export_report_docx(
+    request: Request,
     report_id: str,
     current_user=Depends(get_current_user),
 ):
@@ -131,7 +144,8 @@ async def export_report_docx(
     integrations = await get_integrations(user_id)
     export_cfg = integrations.get("export", {})
 
-    docx_bytes = generate_docx_report(
+    docx_bytes = await asyncio.to_thread(
+        generate_docx_report,
         query=doc.get("query", ""),
         report_text=doc.get("final_output", ""),
         citations=doc.get("citations", []),
@@ -146,7 +160,9 @@ async def export_report_docx(
 
 
 @router.get("/{report_id}/export/xlsx")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def export_report_xlsx(
+    request: Request,
     report_id: str,
     current_user=Depends(get_current_user),
 ):
@@ -154,7 +170,8 @@ async def export_report_xlsx(
     user_id = str(current_user["_id"])
     doc = await _get_report_or_404(report_id, user_id)
 
-    xlsx_bytes = generate_xlsx_report(
+    xlsx_bytes = await asyncio.to_thread(
+        generate_xlsx_report,
         query=doc.get("query", ""),
         report_text=doc.get("final_output", ""),
         citations=doc.get("citations", []),
@@ -167,14 +184,16 @@ async def export_report_xlsx(
 
 
 @router.post("/{report_id}/publish/slack")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def publish_report_slack(
+    request: Request,
     report_id: str,
     current_user=Depends(get_current_user),
 ):
     """Push report summary to Slack channel via configured webhook."""
     user_id = str(current_user["_id"])
     doc = await _get_report_or_404(report_id, user_id)
-    integrations = await get_integrations(user_id)
+    integrations = await get_decrypted_integrations(user_id)
     slack_cfg = integrations.get("slack", {})
 
     if not slack_cfg.get("webhookUrl"):
@@ -193,14 +212,16 @@ async def publish_report_slack(
 
 
 @router.post("/{report_id}/publish/teams")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def publish_report_teams(
+    request: Request,
     report_id: str,
     current_user=Depends(get_current_user),
 ):
     """Push report summary to Microsoft Teams channel via webhook."""
     user_id = str(current_user["_id"])
     doc = await _get_report_or_404(report_id, user_id)
-    integrations = await get_integrations(user_id)
+    integrations = await get_decrypted_integrations(user_id)
     teams_cfg = integrations.get("teams", {})
 
     if not teams_cfg.get("webhookUrl"):
@@ -218,14 +239,16 @@ async def publish_report_teams(
 
 
 @router.post("/{report_id}/publish/notion")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def publish_report_notion(
+    request: Request,
     report_id: str,
     current_user=Depends(get_current_user),
 ):
     """Publish report to Notion workspace page."""
     user_id = str(current_user["_id"])
     doc = await _get_report_or_404(report_id, user_id)
-    integrations = await get_integrations(user_id)
+    integrations = await get_decrypted_integrations(user_id)
     notion_cfg = integrations.get("notion", {})
 
     if not notion_cfg.get("apiKey"):
@@ -245,14 +268,16 @@ async def publish_report_notion(
 
 
 @router.post("/{report_id}/publish/confluence")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def publish_report_confluence(
+    request: Request,
     report_id: str,
     current_user=Depends(get_current_user),
 ):
     """Publish report as a Confluence page."""
     user_id = str(current_user["_id"])
     doc = await _get_report_or_404(report_id, user_id)
-    integrations = await get_integrations(user_id)
+    integrations = await get_decrypted_integrations(user_id)
     conf_cfg = integrations.get("confluence", {})
 
     if not conf_cfg.get("domain") or not conf_cfg.get("apiToken"):
@@ -269,4 +294,36 @@ async def publish_report_confluence(
     )
     if not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to publish to Confluence"))
+    return res
+
+
+@router.post("/{report_id}/publish/jira")
+@limiter.limit(RATE_LIMIT_DEFAULT)
+async def publish_report_jira(
+    request: Request,
+    report_id: str,
+    current_user=Depends(get_current_user),
+):
+    """Create a Jira issue from a research report."""
+    user_id = str(current_user["_id"])
+    doc = await _get_report_or_404(report_id, user_id)
+    integrations = await get_decrypted_integrations(user_id)
+    jira_cfg = integrations.get("jira", {})
+
+    if not jira_cfg.get("domain") or not jira_cfg.get("apiToken"):
+        raise HTTPException(status_code=400, detail="Jira credentials missing in Integrations Hub")
+
+    output_text = doc.get("final_output", "")
+    description = output_text[:3000] + ("\n\n...(truncated)" if len(output_text) > 3000 else "")
+    res = await create_jira_issue(
+        domain=jira_cfg["domain"],
+        email=jira_cfg.get("email", ""),
+        api_token=jira_cfg["apiToken"],
+        project_key=jira_cfg.get("projectKey", "AI"),
+        summary=f"Research Report: {doc.get('query', 'Report')[:200]}",
+        description=description,
+        issue_type=jira_cfg.get("defaultIssueType", "Task"),
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=500, detail=res.get("error", "Failed to create Jira issue"))
     return res

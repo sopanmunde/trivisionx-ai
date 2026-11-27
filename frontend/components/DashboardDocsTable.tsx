@@ -361,6 +361,7 @@ function DocVisualPreview({ doc }: { doc: Document }) {
   React.useEffect(() => {
     if (!doc.id || !isImage) return
     let isMounted = true
+    let objectUrl: string | null = null
 
     const fetchImage = async () => {
       try {
@@ -370,8 +371,9 @@ function DocVisualPreview({ doc }: { doc: Document }) {
         if (res.ok) {
           const blob = await res.blob()
           if (blob.size > 0) {
-            const url = URL.createObjectURL(blob)
-            if (isMounted) setImageBlobUrl(url)
+            objectUrl = URL.createObjectURL(blob)
+            if (isMounted) setImageBlobUrl(objectUrl)
+            else URL.revokeObjectURL(objectUrl)
           }
         }
       } catch (e) {
@@ -379,7 +381,10 @@ function DocVisualPreview({ doc }: { doc: Document }) {
       }
     }
     fetchImage()
-    return () => { isMounted = false }
+    return () => {
+      isMounted = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
   }, [doc.id, isImage, token])
 
   if (isImage) {
@@ -1291,16 +1296,33 @@ function DocumentDataTable({
                           <Eye className="size-3 text-primary" /> View
                         </button>
 
-                        <a
-                          href={`${API_BASE_URL}/documents/${doc.id}/download`}
-                          target="_blank"
-                          rel="noreferrer"
-                          download={doc.filename}
-                          className="h-6 px-2.5 rounded-md bg-zinc-900/90 hover:bg-zinc-800 text-zinc-100 border border-zinc-700/70 shadow-md backdrop-blur-md flex items-center gap-1 text-[10px] font-medium transition-transform hover:scale-105"
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const tkn = localStorage.getItem("token")
+                              const res = await fetch(`${API_BASE_URL}/documents/${doc.id}/download`, {
+                                headers: tkn ? { Authorization: `Bearer ${tkn}` } : {},
+                              })
+                              if (!res.ok) throw new Error(`HTTP ${res.status}`)
+                              const blob = await res.blob()
+                              const blobUrl = URL.createObjectURL(blob)
+                              const a = document.createElement("a")
+                              a.href = blobUrl
+                              a.download = doc.filename
+                              document.body.appendChild(a)
+                              a.click()
+                              a.remove()
+                              URL.revokeObjectURL(blobUrl)
+                            } catch (err) {
+                              console.error("Failed to download document", err)
+                            }
+                          }}
+                          className="h-6 px-2.5 rounded-md bg-zinc-900/90 hover:bg-zinc-800 text-zinc-100 border border-zinc-700/70 shadow-md backdrop-blur-md flex items-center gap-1 text-[10px] font-medium transition-transform hover:scale-105 cursor-pointer"
                           title="Download File"
                         >
                           <Download className="size-3 text-emerald-400" /> Save
-                        </a>
+                        </button>
 
                         <button
                           type="button"

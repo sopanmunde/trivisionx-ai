@@ -24,7 +24,7 @@ MISTRAL_FALLBACK_MODELS = [
 ]
 
 SUPPORTED_PROVIDERS = [
-    "anthropic", "google", "groq", "mistral",
+    "anthropic", "google", "groq", "mistral", "openai", "cohere",
 ]
 
 DEFAULT_MODEL_MAP = {
@@ -32,6 +32,12 @@ DEFAULT_MODEL_MAP = {
     "google":    "gemini-2.5-flash",
     "groq":      "llama-3.3-70b-versatile",
     "mistral":   "mistral-large-latest",
+    "openai":    "gpt-4o",
+    "cohere":    "command-r-plus",
+    "ollama":    "llama3.2",
+    "lmstudio":  "local-model",
+    "vllm":      "local-model",
+    "custom":    "custom",
 }
 
 
@@ -57,14 +63,13 @@ MMR_LAMBDA = 0.6
 
 ALLOWED_EXTENSIONS = {
     ".pdf", ".docx", ".doc", ".txt", ".rtf", ".odt",
-    ".xlsx", ".xls", ".csv",
-    ".pptx", ".ppt",
+    ".xlsx", ".csv",
+    ".pptx",
     ".html", ".htm", ".md", ".mdx", ".rst",
     ".json", ".jsonl", ".xml", ".yaml", ".yml",
     ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".cpp", ".c", ".cs",
     ".go", ".rs", ".rb", ".php", ".sh", ".sql",
     ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff", ".svg",
-    ".zip",
 }
 MAX_FILE_SIZE_MB = 5
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
@@ -95,6 +100,8 @@ COLLECTION_AUDIT_LOGS = "audit_logs"
 COLLECTION_WORKFLOWS = "workflows"
 COLLECTION_WORKFLOW_LOGS = "workflow_logs"
 COLLECTION_TELEMETRY = "telemetry_logs"
+COLLECTION_OAUTH_STATES = "oauth_states"
+COLLECTION_COMPETITIVE_REPORTS = "competitive_reports"
 
 REDIS_TTL_SECONDS = 3600          # 1 hour default TTL for RAG query cache
 CACHE_RAG_PREFIX = "rag:query:"

@@ -10,15 +10,20 @@ Exposes REST endpoints so the frontend can:
 
 All endpoints require a valid JWT token (current_user dependency).
 """
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional
+import os
+import re
 from core.security import get_current_user
+from core.limiter import limiter
 from core.logger import get_logger
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/tools", tags=["tools"])
+router = APIRouter(tags=["tools"])
+
+_SLUG_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$")
 
 
 # ---------------------------------------------------------------------------
@@ -65,13 +70,35 @@ class GitHubRepoRequest(BaseModel):
     repo: str
     include_tree: bool = True
 
+    @field_validator("owner", "repo")
+    @classmethod
+    def validate_slug(cls, v: str) -> str:
+        if not _SLUG_RE.match(v):
+            raise ValueError("Invalid GitHub owner or repository name")
+        return v
+
 
 class GitHubIssueRequest(BaseModel):
     owner: str
     repo: str
-    title: str
-    body: str
+    title: str = Field(..., min_length=1, max_length=256)
+    body: str = Field(..., max_length=20000)
     labels: str = ""
+
+    @field_validator("owner", "repo")
+    @classmethod
+    def validate_slug(cls, v: str) -> str:
+        if not _SLUG_RE.match(v):
+            raise ValueError("Invalid GitHub owner or repository name")
+        return v
+
+
+def _safe_subprocess_env(tmpdir: str) -> dict[str, str]:
+    env = {"PYTHONPATH": "", "HOME": tmpdir, "TMP": tmpdir, "TEMP": tmpdir}
+    for key in ("PATH", "SYSTEMROOT", "WINDIR"):
+        if os.environ.get(key):
+            env[key] = os.environ[key]
+    return env
 
 
 # ---------------------------------------------------------------------------
@@ -79,32 +106,34 @@ class GitHubIssueRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.post("/execute", response_model=CodeExecuteResponse)
+@limiter.limit("10/minute")
 async def execute_code(
-    request: CodeExecuteRequest,
+    request: Request,
+    payload: CodeExecuteRequest,
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Execute Python code in a secure sandboxed subprocess.
+    Execute Python code in a restricted subprocess.
     Returns stdout, stderr, exit_code, and execution_time_ms.
     """
     import asyncio
     import sys
     import tempfile
-    import os
 
     from tools.code_tools import _is_safe_code
 
+    user_id = str(current_user.get("_id", ""))
     logger.info(
-        f"[tools/execute] user={current_user.get('user_id')}, "
-        f"code_len={len(request.code)}, timeout={request.timeout}"
+        f"[tools/execute] user={user_id}, "
+        f"code_len={len(payload.code)}, timeout={payload.timeout}"
     )
 
-    is_safe, reason = _is_safe_code(request.code)
+    is_safe, reason = _is_safe_code(payload.code)
     if not is_safe:
         raise HTTPException(status_code=400, detail=f"Blocked: {reason}")
 
-    code_to_run = request.code
-    timeout = request.timeout
+    code_to_run = payload.code
+    timeout = min(30, payload.timeout)
 
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".py", delete=False, encoding="utf-8"
@@ -115,14 +144,14 @@ async def execute_code(
     stdout_output = ""
     stderr_output = ""
     exit_code = -1
-    start = asyncio.get_event_loop().time()
+    start = asyncio.get_running_loop().time()
 
     try:
         proc = await asyncio.create_subprocess_exec(
             sys.executable, tmp_path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env={"PYTHONPATH": "", "HOME": tempfile.gettempdir()},
+            env=_safe_subprocess_env(tempfile.gettempdir()),
         )
         try:
             raw_out, raw_err = await asyncio.wait_for(proc.communicate(), timeout=float(timeout))
@@ -143,7 +172,7 @@ async def execute_code(
         except Exception:
             pass
 
-    elapsed_ms = int((asyncio.get_event_loop().time() - start) * 1000)
+    elapsed_ms = int((asyncio.get_running_loop().time() - start) * 1000)
 
     return CodeExecuteResponse(
         stdout=stdout_output,
@@ -159,8 +188,10 @@ async def execute_code(
 # ---------------------------------------------------------------------------
 
 @router.post("/fetch-url", response_model=FetchUrlResponse)
+@limiter.limit("20/minute")
 async def fetch_url(
-    request: FetchUrlRequest,
+    request: Request,
+    payload: FetchUrlRequest,
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -168,21 +199,22 @@ async def fetch_url(
     """
     from tools.web_tools import fetch_webpage_content
 
-    logger.info(f"[tools/fetch-url] user={current_user.get('user_id')}, url={request.url[:80]}")
+    user_id = str(current_user.get("_id", ""))
+    logger.info(f"[tools/fetch-url] user={user_id}, url={payload.url[:80]}")
 
-    if not request.url.startswith(("http://", "https://")):
+    if not payload.url.startswith(("http://", "https://")):
         raise HTTPException(status_code=400, detail="Invalid URL — must start with http:// or https://")
 
     try:
-        content = await fetch_webpage_content.ainvoke({"url": request.url})
+        content = await fetch_webpage_content.ainvoke({"url": payload.url})
         return FetchUrlResponse(
-            url=request.url,
+            url=payload.url,
             content=content,
-            success=not content.startswith("Failed to fetch"),
+            success=not content.startswith(("Failed to fetch", "Blocked")),
         )
     except Exception as e:
         logger.error(f"[tools/fetch-url] Error: {e}")
-        return FetchUrlResponse(url=request.url, content="", success=False, error=str(e)[:200])
+        return FetchUrlResponse(url=payload.url, content="", success=False, error=str(e)[:200])
 
 
 # ---------------------------------------------------------------------------
@@ -190,8 +222,10 @@ async def fetch_url(
 # ---------------------------------------------------------------------------
 
 @router.post("/search", response_model=WebSearchResponse)
+@limiter.limit("20/minute")
 async def web_search_endpoint(
-    request: WebSearchRequest,
+    request: Request,
+    payload: WebSearchRequest,
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -200,14 +234,15 @@ async def web_search_endpoint(
     """
     from tools.web_tools import web_search
 
-    logger.info(f"[tools/search] user={current_user.get('user_id')}, query='{request.query[:60]}'")
+    user_id = str(current_user.get("_id", ""))
+    logger.info(f"[tools/search] user={user_id}, query='{payload.query[:60]}'")
 
     try:
-        results = await web_search.ainvoke({"query": request.query, "max_results": request.max_results})
-        return WebSearchResponse(query=request.query, results=results, success=True)
+        results = await web_search.ainvoke({"query": payload.query, "max_results": payload.max_results})
+        return WebSearchResponse(query=payload.query, results=results, success=True)
     except Exception as e:
         logger.error(f"[tools/search] Error: {e}")
-        return WebSearchResponse(query=request.query, results="", success=False)
+        return WebSearchResponse(query=payload.query, results="", success=False)
 
 
 # ---------------------------------------------------------------------------
@@ -215,8 +250,10 @@ async def web_search_endpoint(
 # ---------------------------------------------------------------------------
 
 @router.post("/github/repo")
+@limiter.limit("20/minute")
 async def github_repo_context(
-    request: GitHubRepoRequest,
+    request: Request,
+    payload: GitHubRepoRequest,
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -224,15 +261,15 @@ async def github_repo_context(
     """
     from tools.github_tools import get_repo_context
 
-    logger.info(f"[tools/github/repo] {request.owner}/{request.repo}")
+    logger.info(f"[tools/github/repo] {payload.owner}/{payload.repo}")
 
     try:
         result = await get_repo_context.ainvoke({
-            "owner": request.owner,
-            "repo": request.repo,
-            "include_tree": request.include_tree,
+            "owner": payload.owner,
+            "repo": payload.repo,
+            "include_tree": payload.include_tree,
         })
-        return {"owner": request.owner, "repo": request.repo, "context": result, "success": True}
+        return {"owner": payload.owner, "repo": payload.repo, "context": result, "success": True}
     except Exception as e:
         logger.error(f"[tools/github/repo] Error: {e}")
         raise HTTPException(status_code=500, detail=str(e)[:200])
@@ -243,8 +280,10 @@ async def github_repo_context(
 # ---------------------------------------------------------------------------
 
 @router.post("/github/issue")
+@limiter.limit("10/minute")
 async def create_issue(
-    request: GitHubIssueRequest,
+    request: Request,
+    payload: GitHubIssueRequest,
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -252,15 +291,15 @@ async def create_issue(
     """
     from tools.github_tools import create_github_issue
 
-    logger.info(f"[tools/github/issue] {request.owner}/{request.repo}: '{request.title[:60]}'")
+    logger.info(f"[tools/github/issue] {payload.owner}/{payload.repo}: '{payload.title[:60]}'")
 
     try:
         result = await create_github_issue.ainvoke({
-            "owner": request.owner,
-            "repo": request.repo,
-            "title": request.title,
-            "body": request.body,
-            "labels": request.labels,
+            "owner": payload.owner,
+            "repo": payload.repo,
+            "title": payload.title,
+            "body": payload.body,
+            "labels": payload.labels,
         })
         success = result.startswith("✅")
         return {"message": result, "success": success}

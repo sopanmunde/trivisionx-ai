@@ -36,8 +36,8 @@ async def testing_node(state: AgentState) -> dict:
     logger.info(f"[Testing] provider={provider}, code={len(generated_code)} chars")
 
     llm = get_llm(
-        provider=provider or "google",
-        model_name=model_name or "gemini-2.5-flash",
+        provider=provider or "",
+        model_name=model_name or "",
         temperature=0.2,
     )
 

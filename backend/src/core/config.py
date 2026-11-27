@@ -4,8 +4,14 @@ src/core/config.py — Centralised application settings
 Uses pydantic-settings for env-var validation and type coercion.
 All configuration is read from the environment / .env file.
 """
+import os
+import secrets
 from functools import lru_cache
+from pathlib import Path
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
+
+_BACKEND_ENV_FILE = str(Path(__file__).resolve().parents[2] / ".env")
 
 
 class Settings(BaseSettings):
@@ -25,9 +31,42 @@ class Settings(BaseSettings):
     def MONGO_DB_NAME(self) -> str:
         return self.DATABASE_NAME
 
-    SECRET_KEY: str = "fallback-secret-change-in-production"
+    SECRET_KEY: str = ""
+    ENCRYPTION_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
+
+    @model_validator(mode="after")
+    def _validate_and_populate_secrets(self) -> "Settings":
+        import sys
+
+        insecure_literals = {
+            "fallback-secret-change-in-production",
+            "secret",
+            "changeme",
+            "change-me",
+        }
+        secret = self.SECRET_KEY.strip()
+        if secret.lower() in insecure_literals:
+            raise ValueError("SECRET_KEY uses a known insecure placeholder value.")
+
+        is_test = bool(os.getenv("PYTEST_CURRENT_TEST") or "pytest" in sys.modules)
+        if not secret:
+            if self.DEBUG or is_test:
+                self.SECRET_KEY = secrets.token_urlsafe(48)
+                self._ephemeral_secret_generated = True  # type: ignore[attr-defined]
+            else:
+                raise ValueError(
+                    "SECRET_KEY must be set to a strong non-empty value (>= 32 chars) when DEBUG=False."
+                )
+        elif not (self.DEBUG or is_test) and len(secret) < 32:
+            raise ValueError(
+                "SECRET_KEY must be at least 32 characters long when DEBUG=False."
+            )
+        else:
+            self.SECRET_KEY = secret
+            self._ephemeral_secret_generated = False  # type: ignore[attr-defined]
+        return self
 
     PINECONE_API_KEY: str = ""
     PINECONE_INDEX_NAME: str = "trivisionx-ui"
@@ -68,10 +107,10 @@ class Settings(BaseSettings):
     COHERE_API_KEY: str = ""
     COHERE_CHAT_MODEL: str = "command-r-plus"
 
-    OLLAMA_ENDPOINT: str = "http://localhost:11434"
-    LMSTUDIO_ENDPOINT: str = "http://localhost:1234/v1"
-    VLLM_ENDPOINT: str = "http://localhost:8000/v1"
-    CUSTOM_ENDPOINT: str = "https://your-api.example.com/v1"
+    OLLAMA_ENDPOINT: str = ""
+    LMSTUDIO_ENDPOINT: str = ""
+    VLLM_ENDPOINT: str = ""
+    CUSTOM_ENDPOINT: str = ""
 
     EMBEDDING_PROVIDER: str = "google"
     EMBEDDING_MODEL: str = "models/gemini-embedding-001"
@@ -95,7 +134,7 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = ""
 
     model_config = {
-        "env_file": ".env",
+        "env_file": _BACKEND_ENV_FILE,
         "env_file_encoding": "utf-8",
         "extra": "ignore",
         "case_sensitive": False,

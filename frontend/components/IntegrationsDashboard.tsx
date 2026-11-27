@@ -37,6 +37,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
+import { Switch } from "./ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "@/lib/api";
@@ -46,9 +47,31 @@ interface IntegrationsDashboardProps {
   onNavigateToChat?: () => void;
 }
 
+const DEFAULT_INTEGRATION_CONFIG = {
+  apps: {
+    tasks: { enabled: true, autoSync: true, defaultList: "Inbox" },
+    calendar: { enabled: true, syncInterval: 30, activeCalendars: ["Personal", "Work"] },
+    email: { enabled: true, autoDraft: false, syncLabels: ["Inbox", "Sent"] },
+    gallery: { enabled: true, syncFolders: ["Documents", "Images"], maxFileSize: 5 },
+    notes: { enabled: true, notionSync: false, keepSync: true },
+  },
+  slack: { enabled: false, webhookUrl: "", channelName: "#research-reports" },
+  teams: { enabled: false, webhookUrl: "" },
+  notion: { enabled: false, apiKey: "", parentPageId: "", databaseId: "" },
+  confluence: { enabled: false, domain: "", email: "", apiToken: "", spaceKey: "RESEARCH" },
+  jira: { enabled: false, domain: "", email: "", apiToken: "", projectKey: "AI", defaultIssueType: "Task" },
+  skills: [],
+  mcp_plugins: [],
+};
+
 export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboardProps) {
   const [activeTab, setActiveTab] = useState<"agents" | "providers" | "vectordb" | "search" | "mcp" | "apps">("agents");
   const [config, setConfig] = useState<any>(null);
+  const [brainKeys, setBrainKeys] = useState<any[]>([]);
+  const [ollamaEndpoint, setOllamaEndpoint] = useState("http://localhost:11434");
+  const [healthData, setHealthData] = useState<any>(null);
+  const [providerInputs, setProviderInputs] = useState<Record<string, string>>({});
+  const [savingProviderId, setSavingProviderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -70,17 +93,47 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
     try {
       setIsLoading(true);
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/integrations`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setConfig(data);
+      const isDemo = localStorage.getItem("is_demo") === "true";
+
+      if (!token || token === "demo_guest_token" || isDemo) {
+        setConfig(DEFAULT_INTEGRATION_CONFIG);
+        setBrainKeys([]);
+        setHealthData(null);
+        return;
+      }
+
+      const [intRes, keysRes, provRes, healthRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/integrations`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/brain/keys`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/brain/providers`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/health/`).catch(() => null),
+      ]);
+
+      if (intRes.ok) {
+        setConfig(await intRes.json());
       } else {
+        setConfig(DEFAULT_INTEGRATION_CONFIG);
         toast.error("Failed to load integration configurations");
+      }
+
+      if (keysRes.ok) {
+        setBrainKeys(await keysRes.json());
+      }
+
+      if (provRes.ok) {
+        const providers = await provRes.json();
+        const ollama = Array.isArray(providers)
+          ? providers.find((p: any) => p.id === "ollama" || p.providerId === "ollama")
+          : null;
+        if (ollama?.endpoint) setOllamaEndpoint(ollama.endpoint);
+      }
+
+      if (healthRes && healthRes.ok) {
+        setHealthData(await healthRes.json());
       }
     } catch (e) {
       console.error(e);
+      setConfig(DEFAULT_INTEGRATION_CONFIG);
       toast.error("Error connecting to integrations API");
     } finally {
       setIsLoading(false);
@@ -88,9 +141,14 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
   };
 
   const saveConfig = async (updatedConfig = config) => {
+    const token = localStorage.getItem("token");
+    const isDemo = localStorage.getItem("is_demo") === "true";
+    if (!token || token === "demo_guest_token" || isDemo) {
+      toast.error("Sign in with an account to persist integration changes.");
+      return;
+    }
     try {
       setIsSaving(true);
-      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE_URL}/integrations`, {
         method: "PUT",
         headers: {
@@ -114,18 +172,91 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
     }
   };
 
+  const handleSaveProviderKey = async (providerId: string, label: string) => {
+    const apiKeyVal = (providerInputs[providerId] || "").trim();
+    if (!apiKeyVal) return;
+    const token = localStorage.getItem("token");
+    const isDemo = localStorage.getItem("is_demo") === "true";
+    if (!token || token === "demo_guest_token" || isDemo) {
+      toast.error("Sign in with an account to store API keys.");
+      return;
+    }
+    try {
+      setSavingProviderId(providerId);
+      const res = await fetch(`${API_BASE_URL}/brain/keys`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ providerId, label, key: apiKeyVal, isActive: true }),
+      });
+      if (!res.ok) throw new Error("Failed to save API key");
+      const created = await res.json();
+      setBrainKeys((prev) => [created, ...prev]);
+      setProviderInputs((prev) => ({ ...prev, [providerId]: "" }));
+      toast.success(`${label} encrypted & saved`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save key");
+    } finally {
+      setSavingProviderId(null);
+    }
+  };
+
+  const handleDeleteProviderKey = async (keyId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/brain/keys/${keyId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to delete API key");
+      setBrainKeys((prev) => prev.filter((k) => k.id !== keyId));
+      toast.success("API key removed");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove key");
+    }
+  };
+
+  const handleSaveOllamaEndpoint = async () => {
+    const token = localStorage.getItem("token");
+    const isDemo = localStorage.getItem("is_demo") === "true";
+    if (!token || token === "demo_guest_token" || isDemo) {
+      toast.error("Sign in to update provider endpoints.");
+      return;
+    }
+    try {
+      setSavingProviderId("ollama");
+      const res = await fetch(`${API_BASE_URL}/brain/providers/ollama`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ endpoint: ollamaEndpoint.trim(), isActive: true }),
+      });
+      if (!res.ok) throw new Error("Failed to update Ollama endpoint");
+      toast.success("Ollama endpoint saved");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update Ollama endpoint");
+    } finally {
+      setSavingProviderId(null);
+    }
+  };
+
   const handleAddSkill = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSkillName.trim()) return;
     const newSkill = {
-      id: `custom-${Date.now()}`,
+      id: `skill-${Date.now()}`,
       name: newSkillName.trim(),
       description: newSkillDesc.trim(),
-      prompt_injection: newSkillPrompt.trim(),
-      enabled: true
+      systemPrompt: newSkillPrompt.trim(),
+      isActive: true
     };
-    const nextSkills = [...(config?.custom_skills || []), newSkill];
-    const updated = { ...config, custom_skills: nextSkills };
+    const nextSkills = [...(config?.skills || []), newSkill];
+    const updated = { ...config, skills: nextSkills };
     setConfig(updated);
     saveConfig(updated);
     setNewSkillName("");
@@ -133,9 +264,18 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
     setNewSkillPrompt("");
   };
 
+  const handleToggleSkill = (id: string) => {
+    const nextSkills = (config?.skills || []).map((s: any) =>
+      s.id === id ? { ...s, isActive: !s.isActive } : s
+    );
+    const updated = { ...config, skills: nextSkills };
+    setConfig(updated);
+    saveConfig(updated);
+  };
+
   const handleDeleteSkill = (id: string) => {
-    const nextSkills = (config?.custom_skills || []).filter((s: any) => s.id !== id);
-    const updated = { ...config, custom_skills: nextSkills };
+    const nextSkills = (config?.skills || []).filter((s: any) => s.id !== id);
+    const updated = { ...config, skills: nextSkills };
     setConfig(updated);
     saveConfig(updated);
   };
@@ -146,12 +286,12 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
     const newMcp = {
       id: `mcp-${Date.now()}`,
       name: newMcpName.trim(),
-      url: newMcpUrl.trim(),
-      bearer_token: newMcpToken.trim(),
-      status: "connected"
+      endpoint: newMcpUrl.trim(),
+      token: newMcpToken.trim(),
+      status: "configured"
     };
-    const nextMcp = [...(config?.mcp_servers || []), newMcp];
-    const updated = { ...config, mcp_servers: nextMcp };
+    const nextMcp = [...(config?.mcp_plugins || []), newMcp];
+    const updated = { ...config, mcp_plugins: nextMcp };
     setConfig(updated);
     saveConfig(updated);
     setNewMcpName("");
@@ -160,8 +300,24 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
   };
 
   const handleDeleteMcp = (id: string) => {
-    const nextMcp = (config?.mcp_servers || []).filter((m: any) => m.id !== id);
-    const updated = { ...config, mcp_servers: nextMcp };
+    const nextMcp = (config?.mcp_plugins || []).filter((m: any) => m.id !== id);
+    const updated = { ...config, mcp_plugins: nextMcp };
+    setConfig(updated);
+    saveConfig(updated);
+  };
+
+  const handleToggleAppEnabled = (appKey: "tasks" | "calendar" | "email" | "notes" | "gallery") => {
+    const currentApp = config?.apps?.[appKey] || {};
+    const updated = {
+      ...config,
+      apps: {
+        ...(config?.apps || {}),
+        [appKey]: {
+          ...currentApp,
+          enabled: !(currentApp.enabled ?? true),
+        },
+      },
+    };
     setConfig(updated);
     saveConfig(updated);
   };
@@ -175,9 +331,10 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
     );
   }
 
-  const connectedProvidersCount = Object.values(config?.llm_keys || {}).filter((k: any) => Boolean(k?.api_key)).length;
-  const activeSkillsCount = (config?.custom_skills || []).filter((s: any) => s.enabled).length + 4;
-  const mcpCount = (config?.mcp_servers || []).length;
+  const connectedProvidersCount = brainKeys.filter((k: any) => k?.isActive).length;
+  const activeSkillsCount = (config?.skills || []).filter((s: any) => s.isActive).length;
+  const mcpCount = (config?.mcp_plugins || []).length;
+  const pineconeHealth = healthData?.dependencies?.pinecone;
 
   return (
     <div className="flex-1 overflow-y-auto bg-background text-foreground min-h-screen pb-16">
@@ -244,8 +401,8 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
           <Card className="dashboard-3d-card dashboard-3d-card-interactive">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Agent Swarm Skills</p>
-                <h3 className="text-2xl font-extrabold mt-1 text-foreground">{activeSkillsCount} Enabled</h3>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Custom Agent Skills</p>
+                <h3 className="text-2xl font-extrabold mt-1 text-foreground">{activeSkillsCount} Active</h3>
               </div>
               <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                 <Bot className="size-5" />
@@ -257,11 +414,15 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Vector Store RAG</p>
-                <h3 className="text-2xl font-extrabold mt-1 text-foreground">
-                  {config?.vector_db?.pinecone_api_key ? "Pinecone Active" : "Local FAISS"}
+                <h3 className="text-xl font-extrabold mt-1 text-foreground truncate">
+                  {pineconeHealth?.status === "healthy"
+                    ? `Pinecone (${pineconeHealth.index || "Ready"})`
+                    : pineconeHealth?.status === "unhealthy"
+                    ? "Unavailable"
+                    : "Server Configured"}
                 </h3>
               </div>
-              <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+              <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
                 <Database className="size-5" />
               </div>
             </CardContent>
@@ -293,7 +454,7 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
               <Database className="size-4" /> Vector DB & RAG
             </TabsTrigger>
             <TabsTrigger value="search" className="gap-2 px-4 py-2 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs rounded-lg transition-all cursor-pointer">
-              <Search className="size-4" /> Search & Web Tools
+              <Search className="size-4" /> Publish Channels & Web
             </TabsTrigger>
             <TabsTrigger value="mcp" className="gap-2 px-4 py-2 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs rounded-lg transition-all cursor-pointer">
               <Server className="size-4" /> MCP Protocol Servers
@@ -312,15 +473,15 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
                   <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                     <Sparkles className="size-4" /> Multi-Agent Persona Orchestra
                   </h3>
-                  <Badge variant="outline" className="text-[10px] font-mono">5 Core Personas</Badge>
+                  <Badge variant="outline" className="text-[10px] font-mono">4 Core Agents</Badge>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { id: "planner", name: "Research Planner Agent", desc: "Decomposes complex requests into research pathways.", model: "Auto Selected", icon: Sliders },
-                    { id: "retriever", name: "Document RAG Analyst", desc: "Queries Pinecone/FAISS vectors for citation facts.", model: "LangChain Retriever", icon: Database },
-                    { id: "web_search", name: "Web Query Analyst", desc: "Scrapes & queries Tavily and live search APIs.", model: "Tavily Search", icon: Globe },
-                    { id: "code_gen", name: "Code Engineer & Critic", desc: "Generates code structures and runs syntax reviews.", model: "DeepSeek / GPT-4o", icon: Code2 },
+                    { id: "planner", name: "Research Planner Agent", desc: "Decomposes complex requests into research pathways.", model: "Supervisor Node", icon: Sliders },
+                    { id: "retriever", name: "Document RAG Analyst", desc: "Queries Pinecone MMR vectors for grounded citation facts.", model: "Pinecone Namespace RAG", icon: Database },
+                    { id: "web_search", name: "Web Query Analyst", desc: "Queries live web search providers and SSRF-guarded pages.", model: "Web Search Tool", icon: Globe },
+                    { id: "code_gen", name: "Technical & Code Analyst", desc: "Synthesizes technical explanations, code blocks, and reports.", model: "Active BYOK LLM", icon: Code2 },
                   ].map((agent) => (
                     <Card key={agent.id} className="border-border bg-card shadow-2xs hover:border-primary/40 transition-all">
                       <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
@@ -334,7 +495,7 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
                           </div>
                         </div>
                         <Badge variant="outline" className="text-[9px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
-                          Active
+                          Ready
                         </Badge>
                       </CardHeader>
                       <CardContent className="p-4 pt-2">
@@ -347,32 +508,40 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
                 {/* Custom Agent Skills Section */}
                 <div className="pt-4 border-t border-border space-y-4">
                   <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                    <Terminal className="size-4" /> Registered Custom Agent Skills ({config?.custom_skills?.length || 0})
+                    <Terminal className="size-4" /> Registered Custom Agent Skills ({config?.skills?.length || 0})
                   </h3>
 
                   <div className="space-y-3">
-                    {(config?.custom_skills || []).map((skill: any) => (
+                    {(config?.skills || []).map((skill: any) => (
                       <div key={skill.id} className="rounded-xl border border-border bg-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
                         <div className="space-y-1 min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <h4 className="text-xs font-bold text-foreground">{skill.name}</h4>
-                            <Badge variant="outline" className="text-[9px] font-mono">Custom Skill</Badge>
+                            <Badge variant="outline" className="text-[9px] font-mono">
+                              {skill.isActive ? "Active" : "Inactive"}
+                            </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">{skill.description}</p>
-                          {skill.prompt_injection && (
+                          {skill.systemPrompt && (
                             <code className="block text-[10px] font-mono p-2 rounded bg-muted text-foreground border border-border truncate mt-1">
-                              {skill.prompt_injection}
+                              {skill.systemPrompt}
                             </code>
                           )}
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => handleDeleteSkill(skill.id)}
-                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Switch
+                            checked={Boolean(skill.isActive)}
+                            onCheckedChange={() => handleToggleSkill(skill.id)}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => handleDeleteSkill(skill.id)}
+                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -428,213 +597,270 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
             </div>
           </TabsContent>
 
-          {/* TAB 2: LLM MODEL PROVIDER KEYS */}
+          {/* TAB 2: LLM MODEL PROVIDER KEYS (Persisted encrypted in /api/brain/keys) */}
           <TabsContent value="providers" className="space-y-6">
             <div className="space-y-4">
               <div>
                 <h3 className="text-base font-bold text-foreground">LLM Provider API Credentials</h3>
-                <p className="text-xs text-muted-foreground">Provide API keys for OpenAI, Anthropic, Gemini, DeepSeek, and Groq to activate custom model selection.</p>
+                <p className="text-xs text-muted-foreground">
+                  Save encrypted BYOK keys for OpenAI, Gemini, Anthropic, DeepSeek, Groq, and Cohere directly to your Brain Vault.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { key: "openai_api_key", name: "OpenAI API Key", placeholder: "sk-proj-...", docs: "https://platform.openai.com/api-keys" },
-                  { key: "gemini_api_key", name: "Google Gemini API Key", placeholder: "AIzaSy...", docs: "https://aistudio.google.com/app/apikey" },
-                  { key: "anthropic_api_key", name: "Anthropic Claude Key", placeholder: "sk-ant-...", docs: "https://console.anthropic.com/" },
-                  { key: "deepseek_api_key", name: "DeepSeek API Key", placeholder: "sk-...", docs: "https://platform.deepseek.com/" },
-                  { key: "groq_api_key", name: "Groq LPU Key", placeholder: "gsk_...", docs: "https://console.groq.com/keys" },
-                  { key: "cohere_api_key", name: "Cohere API Key", placeholder: "co-...", docs: "https://dashboard.cohere.com/" },
-                ].map((item) => (
-                  <Card key={item.key} className="border-border bg-card p-4 space-y-3 shadow-2xs">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                        <Key className="size-3.5 text-muted-foreground" /> {item.name}
-                      </label>
-                      <a
-                        href={item.docs}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                      >
-                        Get Key <ExternalLink className="size-2.5" />
-                      </a>
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        type="password"
-                        placeholder={item.placeholder}
-                        value={config?.llm_keys?.[item.key] || ""}
-                        onChange={(e) => setConfig({
-                          ...config,
-                          llm_keys: { ...config?.llm_keys, [item.key]: e.target.value }
-                        })}
-                        className="h-8.5 text-xs bg-muted/30 font-mono flex-1"
-                      />
-                      {config?.llm_keys?.[item.key] ? (
-                        <Badge variant="outline" className="text-[9px] font-mono border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 shrink-0 px-2">
-                          Saved
-                        </Badge>
+                  { id: "openai", name: "OpenAI API Key", placeholder: "sk-proj-...", docs: "https://platform.openai.com/api-keys" },
+                  { id: "gemini", name: "Google Gemini API Key", placeholder: "AIzaSy...", docs: "https://aistudio.google.com/app/apikey" },
+                  { id: "anthropic", name: "Anthropic Claude Key", placeholder: "sk-ant-...", docs: "https://console.anthropic.com/" },
+                  { id: "deepseek", name: "DeepSeek API Key", placeholder: "sk-...", docs: "https://platform.deepseek.com/" },
+                  { id: "groq", name: "Groq LPU Key", placeholder: "gsk_...", docs: "https://console.groq.com/keys" },
+                  { id: "cohere", name: "Cohere API Key", placeholder: "co-...", docs: "https://dashboard.cohere.com/" },
+                ].map((item) => {
+                  const savedKeys = brainKeys.filter((k) => k.providerId === item.id);
+                  return (
+                    <Card key={item.id} className="border-border bg-card p-4 space-y-3 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                          <Key className="size-3.5 text-muted-foreground" /> {item.name}
+                        </label>
+                        <a
+                          href={item.docs}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                        >
+                          Get Key <ExternalLink className="size-2.5" />
+                        </a>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          type="password"
+                          placeholder={item.placeholder}
+                          value={providerInputs[item.id] || ""}
+                          onChange={(e) => setProviderInputs((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                          className="h-8.5 text-xs bg-muted/30 font-mono flex-1"
+                        />
+                        <Button
+                          size="sm"
+                          disabled={!providerInputs[item.id]?.trim() || savingProviderId === item.id}
+                          onClick={() => handleSaveProviderKey(item.id, item.name)}
+                          className="h-8.5 px-3 text-xs font-semibold shrink-0"
+                        >
+                          {savingProviderId === item.id ? "Saving..." : "Save"}
+                        </Button>
+                      </div>
+                      {savedKeys.length > 0 ? (
+                        <div className="space-y-1 pt-1">
+                          {savedKeys.map((sk) => (
+                            <div key={sk.id} className="flex items-center justify-between text-[11px] bg-muted/30 border border-border/60 rounded-lg px-2.5 py-1">
+                              <span className="font-mono text-emerald-600 dark:text-emerald-400 truncate">
+                                {sk.key}
+                              </span>
+                              <button
+                                onClick={() => handleDeleteProviderKey(sk.id)}
+                                className="text-muted-foreground hover:text-destructive ml-2"
+                                title="Delete key"
+                              >
+                                <Trash2 className="size-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       ) : (
-                        <Badge variant="outline" className="text-[9px] font-mono text-muted-foreground shrink-0 px-2">
-                          Unset
-                        </Badge>
+                        <p className="text-[10px] text-muted-foreground font-mono">No personal key stored</p>
                       )}
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
               </div>
 
-              {/* Local Ollama / vLLM Endpoint Card */}
+              {/* Local Ollama Endpoint Card */}
               <Card className="border-border bg-card p-5 space-y-3 shadow-2xs">
                 <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
-                  <Cpu className="size-4 text-foreground" /> Local Ollama / vLLM Endpoint Host
+                  <Cpu className="size-4 text-foreground" /> Local Ollama Endpoint Host
                 </h4>
-                <p className="text-xs text-muted-foreground">Host URL for local open-weight LLMs running via Ollama or vLLM server.</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Host URL for local open-weight LLMs running via Ollama (persisted in Brain Providers).</p>
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+                  <div className="space-y-1 flex-1">
                     <label className="text-[11px] font-semibold text-muted-foreground">Ollama Base URL</label>
                     <Input
                       type="text"
                       placeholder="http://localhost:11434"
-                      value={config?.llm_keys?.ollama_base_url || "http://localhost:11434"}
-                      onChange={(e) => setConfig({
-                        ...config,
-                        llm_keys: { ...config?.llm_keys, ollama_base_url: e.target.value }
-                      })}
+                      value={ollamaEndpoint}
+                      onChange={(e) => setOllamaEndpoint(e.target.value)}
                       className="h-8.5 text-xs bg-muted/30 font-mono"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-muted-foreground">Default Local Model</label>
-                    <Input
-                      type="text"
-                      placeholder="llama3:latest"
-                      value={config?.llm_keys?.ollama_model || "llama3:latest"}
-                      onChange={(e) => setConfig({
-                        ...config,
-                        llm_keys: { ...config?.llm_keys, ollama_model: e.target.value }
-                      })}
-                      className="h-8.5 text-xs bg-muted/30 font-mono"
-                    />
-                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveOllamaEndpoint}
+                    disabled={savingProviderId === "ollama"}
+                    className="h-8.5 px-4 text-xs font-semibold shrink-0"
+                  >
+                    {savingProviderId === "ollama" ? "Saving..." : "Save Endpoint"}
+                  </Button>
                 </div>
               </Card>
             </div>
           </TabsContent>
 
-          {/* TAB 3: VECTOR DB & RAG */}
+          {/* TAB 3: VECTOR DB & RAG (Live Health Inspection) */}
           <TabsContent value="vectordb" className="space-y-6">
             <div className="space-y-4">
               <div>
-                <h3 className="text-base font-bold text-foreground">Vector Store & Embedding RAG Engine</h3>
-                <p className="text-xs text-muted-foreground">Configure Pinecone or FAISS index properties for fast semantic document search and grounded citations.</p>
-              </div>
-
-              <Card className="border-border bg-card p-5 space-y-4 shadow-2xs">
-                <div className="flex items-center justify-between pb-3 border-b border-border">
-                  <div className="flex items-center gap-2.5">
-                    <div className="size-8 rounded-lg bg-muted border border-border flex items-center justify-center text-foreground">
-                      <Database className="size-4" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-foreground">Pinecone Cloud Vector Index</h4>
-                      <p className="text-[10px] text-muted-foreground font-mono">Serverless / Standard Index</p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="text-[9px] font-mono border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
-                    Active RAG Engine
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-foreground">Pinecone API Key</label>
-                    <Input
-                      type="password"
-                      placeholder="pcsk_..."
-                      value={config?.vector_db?.pinecone_api_key || ""}
-                      onChange={(e) => setConfig({
-                        ...config,
-                        vector_db: { ...config?.vector_db, pinecone_api_key: e.target.value }
-                      })}
-                      className="h-8.5 text-xs bg-muted/30 font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-foreground">Index Name</label>
-                    <Input
-                      type="text"
-                      placeholder="trivisionx-index"
-                      value={config?.vector_db?.pinecone_index_name || "trivisionx-index"}
-                      onChange={(e) => setConfig({
-                        ...config,
-                        vector_db: { ...config?.vector_db, pinecone_index_name: e.target.value }
-                      })}
-                      className="h-8.5 text-xs bg-muted/30 font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-foreground">Embedding Dimension</label>
-                    <Input
-                      type="number"
-                      placeholder="1536"
-                      value={config?.vector_db?.embedding_dimension || 1536}
-                      onChange={(e) => setConfig({
-                        ...config,
-                        vector_db: { ...config?.vector_db, embedding_dimension: parseInt(e.target.value) || 1536 }
-                      })}
-                      className="h-8.5 text-xs bg-muted/30 font-mono"
-                    />
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* TAB 4: SEARCH & WEB TOOLS */}
-          <TabsContent value="search" className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base font-bold text-foreground">Search & Live Web Crawling Tools</h3>
-                <p className="text-xs text-muted-foreground">Configure web search provider keys for live Internet data retrieval during agent research runs.</p>
+                <h3 className="text-base font-bold text-foreground">Vector Store &amp; Backend Dependencies</h3>
+                <p className="text-xs text-muted-foreground">
+                  Live health telemetry from <code>/api/health</code>. Documents are isolated per account using Pinecone namespaces.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { key: "pinecone", name: "Pinecone Cloud Vector Index", desc: pineconeHealth?.index ? `Index: ${pineconeHealth.index}` : "Serverless vector store", icon: Database },
+                  { key: "mongodb", name: "MongoDB Primary Database", desc: "Users, conversations, notes, tasks, events, telemetry", icon: Server },
+                  { key: "langgraph", name: "LangGraph Pipeline Engine", desc: Array.isArray(healthData?.dependencies?.langgraph?.nodes) ? `Nodes: ${healthData.dependencies.langgraph.nodes.join(", ")}` : "Compiled multi-agent state graph", icon: Cpu },
+                  { key: "redis", name: "Redis Semantic & API Cache", desc: healthData?.dependencies?.redis?.note || "Optional caching layer", icon: Zap },
+                ].map((dep) => {
+                  const statusObj = healthData?.dependencies?.[dep.key];
+                  const statusLabel = statusObj?.status || "unknown";
+                  const isHealthy = statusLabel === "healthy";
+                  return (
+                    <Card key={dep.key} className="border-border bg-card p-5 space-y-3 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="size-8 rounded-lg bg-muted border border-border flex items-center justify-center text-foreground">
+                            <dep.icon className="size-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-foreground">{dep.name}</h4>
+                            <p className="text-[10px] text-muted-foreground font-mono">{dep.desc}</p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[9px] font-mono capitalize",
+                            isHealthy
+                              ? "border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5"
+                              : "border-border text-muted-foreground"
+                          )}
+                        >
+                          {statusLabel}
+                          {typeof statusObj?.latency_ms === "number" ? ` • ${statusObj.latency_ms}ms` : ""}
+                        </Badge>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* TAB 4: PUBLISH CHANNELS & WEB TOOLS (Persisted in /api/integrations) */}
+          <TabsContent value="search" className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Publish Channels &amp; Web Research Tools</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Configure Slack, Teams, Notion, Confluence, and Jira publishing connectors (encrypted at rest in MongoDB).
+                  </p>
+                </div>
+                <Button size="sm" onClick={() => saveConfig()} disabled={isSaving} className="h-8 text-xs font-semibold gap-1.5">
+                  <Save className="size-3.5" /> {isSaving ? "Saving..." : "Save Channels"}
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Slack */}
                 <Card className="border-border bg-card p-4 space-y-3 shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                      <Globe className="size-3.5 text-muted-foreground" /> Tavily Search API
-                    </label>
-                    <Badge variant="outline" className="text-[9px] font-mono">Recommended</Badge>
+                    <label className="text-xs font-bold text-foreground"># Slack Webhook</label>
+                    <Switch
+                      checked={Boolean(config?.slack?.enabled)}
+                      onCheckedChange={(checked) => {
+                        const updated = { ...config, slack: { ...(config?.slack || {}), enabled: checked } };
+                        setConfig(updated);
+                        saveConfig(updated);
+                      }}
+                    />
                   </div>
                   <Input
                     type="password"
-                    placeholder="tvly-..."
-                    value={config?.web_search?.tavily_api_key || ""}
-                    onChange={(e) => setConfig({
-                      ...config,
-                      web_search: { ...config?.web_search, tavily_api_key: e.target.value }
-                    })}
+                    placeholder="https://hooks.slack.com/services/..."
+                    value={config?.slack?.webhookUrl || ""}
+                    onChange={(e) => setConfig({ ...config, slack: { ...(config?.slack || {}), webhookUrl: e.target.value } })}
+                    className="h-8.5 text-xs bg-muted/30 font-mono"
+                  />
+                  <Input
+                    placeholder="#research-reports"
+                    value={config?.slack?.channelName || ""}
+                    onChange={(e) => setConfig({ ...config, slack: { ...(config?.slack || {}), channelName: e.target.value } })}
+                    className="h-8.5 text-xs bg-muted/30"
+                  />
+                </Card>
+
+                {/* Teams */}
+                <Card className="border-border bg-card p-4 space-y-3 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground">Microsoft Teams Webhook</label>
+                    <Switch
+                      checked={Boolean(config?.teams?.enabled)}
+                      onCheckedChange={(checked) => {
+                        const updated = { ...config, teams: { ...(config?.teams || {}), enabled: checked } };
+                        setConfig(updated);
+                        saveConfig(updated);
+                      }}
+                    />
+                  </div>
+                  <Input
+                    type="password"
+                    placeholder="https://outlook.office.com/webhook/..."
+                    value={config?.teams?.webhookUrl || ""}
+                    onChange={(e) => setConfig({ ...config, teams: { ...(config?.teams || {}), webhookUrl: e.target.value } })}
                     className="h-8.5 text-xs bg-muted/30 font-mono"
                   />
                 </Card>
 
+                {/* Notion */}
                 <Card className="border-border bg-card p-4 space-y-3 shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                      <Search className="size-3.5 text-muted-foreground" /> Serper Google Search Key
-                    </label>
+                    <label className="text-xs font-bold text-foreground">Notion Workspace</label>
+                    <Switch
+                      checked={Boolean(config?.notion?.enabled)}
+                      onCheckedChange={(checked) => {
+                        const updated = { ...config, notion: { ...(config?.notion || {}), enabled: checked } };
+                        setConfig(updated);
+                        saveConfig(updated);
+                      }}
+                    />
                   </div>
                   <Input
                     type="password"
-                    placeholder="serper_..."
-                    value={config?.web_search?.serper_api_key || ""}
-                    onChange={(e) => setConfig({
-                      ...config,
-                      web_search: { ...config?.web_search, serper_api_key: e.target.value }
-                    })}
+                    placeholder="Notion Integration Token (secret_...)"
+                    value={config?.notion?.apiKey || ""}
+                    onChange={(e) => setConfig({ ...config, notion: { ...(config?.notion || {}), apiKey: e.target.value } })}
                     className="h-8.5 text-xs bg-muted/30 font-mono"
                   />
+                  <Input
+                    placeholder="Parent Page ID"
+                    value={config?.notion?.parentPageId || ""}
+                    onChange={(e) => setConfig({ ...config, notion: { ...(config?.notion || {}), parentPageId: e.target.value } })}
+                    className="h-8.5 text-xs bg-muted/30 font-mono"
+                  />
+                </Card>
+
+                {/* Server Search Capabilities Info */}
+                <Card className="border-border bg-card p-4 space-y-2.5 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <Globe className="size-3.5 text-muted-foreground" /> Server Live Web Search
+                    </label>
+                    <Badge variant="outline" className="text-[9px] font-mono">Backend Env</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Autonomous web search uses server-configured Tavily, SerpAPI, or Brave keys with DuckDuckGo fallback and SSRF protection on webpage extraction.
+                  </p>
                 </Card>
               </div>
             </div>
@@ -646,23 +872,23 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
               <div className="lg:col-span-2 space-y-4">
                 <div>
                   <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                    <Server className="size-4" /> Registered MCP Protocol Servers ({config?.mcp_servers?.length || 0})
+                    <Server className="size-4" /> Registered MCP Protocol Servers ({config?.mcp_plugins?.length || 0})
                   </h3>
                   <p className="text-xs text-muted-foreground">Model Context Protocol (MCP) endpoints connecting external databases, tools, and execution runtimes.</p>
                 </div>
 
                 <div className="space-y-3">
-                  {(config?.mcp_servers || []).map((mcp: any) => (
+                  {(config?.mcp_plugins || []).map((mcp: any) => (
                     <Card key={mcp.id} className="border-border bg-card p-4 shadow-2xs">
                       <div className="flex items-center justify-between gap-4">
                         <div className="space-y-1 min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <h4 className="text-xs font-bold text-foreground">{mcp.name}</h4>
-                            <Badge variant="outline" className="text-[9px] font-mono border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
-                              Connected
+                            <Badge variant="outline" className="text-[9px] font-mono capitalize">
+                              {mcp.status || "configured"}
                             </Badge>
                           </div>
-                          <p className="text-xs font-mono text-muted-foreground truncate">{mcp.url}</p>
+                          <p className="text-xs font-mono text-muted-foreground truncate">{mcp.endpoint}</p>
                         </div>
                         <Button
                           variant="ghost"
@@ -718,7 +944,7 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
                       />
                     </div>
                     <Button type="submit" size="sm" className="w-full h-9 text-xs font-semibold gap-1.5">
-                      <Plus className="size-3.5" /> Connect MCP Server
+                      <Plus className="size-3.5" /> Register MCP Server
                     </Button>
                   </form>
                 </CardContent>
@@ -731,31 +957,37 @@ export function IntegrationsDashboard({ onNavigateToChat }: IntegrationsDashboar
             <div className="space-y-4">
               <div>
                 <h3 className="text-base font-bold text-foreground">Workspace Application Connectors</h3>
-                <p className="text-xs text-muted-foreground">Toggle built-in task management, calendar, inbox email, and documentation apps.</p>
+                <p className="text-xs text-muted-foreground">Toggle built-in task management, calendar, inbox email, and documentation apps (persisted in MongoDB).</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { id: "task_management", name: "Task Management Engine", desc: "Automated Kanban board and subtask execution.", icon: CheckSquare },
-                  { id: "smart_calendar", name: "Smart Calendar & Scheduling", desc: "Event scheduling and time slot optimization.", icon: Calendar },
-                  { id: "inbox_assistant", name: "Inbox & Email Assistant", desc: "Draft email replies and classify messages.", icon: Mail },
-                  { id: "notes_documentation", name: "Notes & Docs Knowledge", desc: "Document editing and automated markdown summaries.", icon: FileText },
-                ].map((app) => (
-                  <Card key={app.id} className="border-border bg-card p-4 flex items-center justify-between shadow-2xs">
-                    <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-lg bg-muted border border-border flex items-center justify-center text-foreground">
-                        <app.icon className="size-4.5" />
+                {(
+                  [
+                    { key: "tasks", name: "Task Management Engine", desc: "Automated Kanban board and subtask execution.", icon: CheckSquare },
+                    { key: "calendar", name: "Smart Calendar & Scheduling", desc: "Event scheduling and email notification reminders.", icon: Calendar },
+                    { key: "email", name: "Inbox & Email Assistant", desc: "Draft email replies and SMTP delivery.", icon: Mail },
+                    { key: "notes", name: "Notes & Docs Knowledge", desc: "Document editing and AI markdown assistance.", icon: FileText },
+                  ] as const
+                ).map((app) => {
+                  const isEnabled = config?.apps?.[app.key]?.enabled ?? true;
+                  return (
+                    <Card key={app.key} className="border-border bg-card p-4 flex items-center justify-between shadow-2xs">
+                      <div className="flex items-center gap-3">
+                        <div className="size-9 rounded-lg bg-muted border border-border flex items-center justify-center text-foreground">
+                          <app.icon className="size-4.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-foreground">{app.name}</h4>
+                          <p className="text-[11px] text-muted-foreground">{app.desc}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-foreground">{app.name}</h4>
-                        <p className="text-[11px] text-muted-foreground">{app.desc}</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="text-[9px] font-mono border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
-                      Enabled
-                    </Badge>
-                  </Card>
-                ))}
+                      <Switch
+                        checked={Boolean(isEnabled)}
+                        onCheckedChange={() => handleToggleAppEnabled(app.key)}
+                      />
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           </TabsContent>

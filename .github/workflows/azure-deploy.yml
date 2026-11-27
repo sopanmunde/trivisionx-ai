@@ -3,9 +3,10 @@ name: Deploy Backend to Azure Container Apps
 on:
   push:
     branches:
+      - main
       - master
     paths:
-      - "api/**"
+      - "backend/**"
       - ".github/workflows/azure-deploy.yml"
 
 jobs:
@@ -25,7 +26,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }} -f api/Dockerfile api/
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }} -f backend/Dockerfile backend/
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }}
 
       - name: Log in to Azure CLI

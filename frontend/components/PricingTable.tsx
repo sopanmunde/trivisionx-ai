@@ -2,27 +2,18 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Check,
   Zap,
   Building2,
   ArrowRight,
   Info,
-  CreditCard,
-  Lock,
-  Sparkles,
-  X,
-  ShieldCheck,
-  CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
 import { MacBadge } from "@/components/page-shell";
-import { toast } from "sonner";
 
 interface Feature {
   text: string;
@@ -39,24 +30,6 @@ interface PricingTableProps {
 
 export function PricingTable({ pricingFeatures }: PricingTableProps) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [selectedPlan, setSelectedPlan] = useState<"Starter" | "Pro" | "Enterprise" | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const handleCheckout = (plan: "Starter" | "Pro" | "Enterprise") => {
-    setSelectedPlan(plan);
-  };
-
-  const handleConfirmSubscription = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      try {
-        localStorage.setItem("user_tier", selectedPlan || "Pro");
-      } catch {}
-      toast.success(`Successfully upgraded to TriVisionX ${selectedPlan}! 14-day trial active.`);
-      setSelectedPlan(null);
-    }, 1100);
-  };
 
   return (
     <>
@@ -117,12 +90,10 @@ export function PricingTable({ pricingFeatures }: PricingTableProps) {
               </TooltipProvider>
             </CardContent>
             <CardFooter>
-              <Button
-                onClick={() => handleCheckout("Starter")}
-                className="w-full rounded-lg"
-                variant="outline"
-              >
-                Get Started Free <ArrowRight className="w-4 h-4 ml-2" />
+              <Button asChild className="w-full rounded-lg" variant="outline">
+                <Link href="/signup?plan=starter" className="flex items-center justify-center gap-2">
+                  Get Started Free <ArrowRight className="w-4 h-4" />
+                </Link>
               </Button>
             </CardFooter>
           </Card>
@@ -151,7 +122,7 @@ export function PricingTable({ pricingFeatures }: PricingTableProps) {
                 <span className="text-muted-foreground text-sm mb-1 font-medium">/mo</span>
               </div>
               <p className="text-[11px] text-primary font-mono mb-6 bg-primary/5 px-2.5 py-1.5 rounded-md border border-primary/20 self-start">
-                100,000 execution cycles/month
+                Preview pricing • Free BYOK workspace available
               </p>
               <TooltipProvider>
                 <ul className="space-y-3 flex-1 mb-6">
@@ -173,11 +144,10 @@ export function PricingTable({ pricingFeatures }: PricingTableProps) {
               </TooltipProvider>
             </CardContent>
             <CardFooter>
-              <Button
-                onClick={() => handleCheckout("Pro")}
-                className="w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                Start 14-Day Free Trial <ArrowRight className="w-4 h-4 ml-2" />
+              <Button asChild className="w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
+                <Link href="/signup?plan=pro" className="flex items-center justify-center gap-2">
+                  Start Free with BYOK <ArrowRight className="w-4 h-4" />
+                </Link>
               </Button>
             </CardFooter>
           </Card>
@@ -231,89 +201,6 @@ export function PricingTable({ pricingFeatures }: PricingTableProps) {
           </Card>
         </div>
       </Tabs>
-
-      {/* Interactive Stripe Checkout Simulation Modal */}
-      <AnimatePresence>
-        {selectedPlan && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-border/80 bg-muted/30">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
-                    <CreditCard className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground">TriVisionX Checkout</h3>
-                    <p className="text-[11px] text-muted-foreground">Powered by Stripe Connect</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedPlan(null)}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Body */}
-              <div className="p-6 space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-xl bg-muted/40 border border-border/80">
-                  <div>
-                    <span className="text-xs font-semibold text-foreground">TriVisionX {selectedPlan} Tier</span>
-                    <p className="text-[11px] text-muted-foreground">
-                      Billed {billingCycle} • 14-day full access trial included
-                    </p>
-                  </div>
-                  <span className="text-lg font-extrabold text-foreground">
-                    {selectedPlan === "Starter" ? "Free" : billingCycle === "yearly" ? "$39/mo" : "$49/mo"}
-                  </span>
-                </div>
-
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Concurrent Agent Threads:</span>
-                    <span className="font-medium text-foreground">{selectedPlan === "Starter" ? "5" : "20"}</span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Vector Storage Quota:</span>
-                    <span className="font-medium text-foreground">{selectedPlan === "Starter" ? "1 GB" : "10 GB"}</span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Due Today:</span>
-                    <span className="font-bold text-emerald-500">$0.00 (Trial)</span>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-lg border border-border/60 bg-muted/20 flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <Lock className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span>256-bit encrypted checkout. You can cancel or change tiers anytime.</span>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="px-6 py-4 border-t border-border/80 bg-muted/20 flex items-center justify-end gap-2.5">
-                <Button variant="ghost" size="sm" onClick={() => setSelectedPlan(null)} className="text-xs">
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleConfirmSubscription}
-                  disabled={isProcessing}
-                  className="text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  {isProcessing ? "Activating..." : "Confirm & Activate Subscription"}
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </>
   );
 }

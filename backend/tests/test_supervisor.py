@@ -89,7 +89,8 @@ async def test_supervisor_node_fallback_on_error():
         "filename": "",
     }
 
-    with patch("agents.langgraph.nodes.supervisor_node.get_llm", side_effect=RuntimeError("Provider unavailable")):
+    with patch("agents.langgraph.nodes.supervisor_node.get_fallback_providers", return_value=["google"]), \
+         patch("agents.langgraph.nodes.supervisor_node.get_llm", side_effect=RuntimeError("Provider unavailable")):
         res = await supervisor_node(state)
 
     assert res["workflow_type"] == "research"

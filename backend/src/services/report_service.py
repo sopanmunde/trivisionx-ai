@@ -21,25 +21,33 @@ async def create_report(
     Generates a research report and saves it to MongoDB.
     Returns the full report dict.
     """
-    from core.llm_factory import current_user_keys
-    from database.mongodb.repositories.brain_repository import get_user_keys
+    from core.llm_factory import current_user_keys, current_user_id
+    from database.mongodb.repositories.brain_repository import get_user_decrypted_keys
+    from rag.vectorstores.pinecone_store import user_namespace
 
+    keys_dict: Dict[str, str] = {}
     try:
-        user_keys_list = await get_user_keys(user_id)
-        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive")}
-        current_user_keys.set(keys_dict)
+        user_keys_list = await get_user_decrypted_keys(user_id)
+        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive") and k.get("key")}
     except Exception as e:
         logger.warning(f"Could not load custom API keys for user {user_id}: {e}")
 
-    llm = get_llm(provider=model_provider, model_name=model_name)
-    user_filter = {"user_id": user_id}
+    keys_token = current_user_keys.set(keys_dict)
+    uid_token = current_user_id.set(user_id)
+    try:
+        llm = get_llm(provider=model_provider, model_name=model_name)
+        user_filter = {"user_id": user_id}
 
-    result = await generate_report(
-        query=query,
-        llm=llm,
-        top_k=top_k,
-        user_filter=user_filter,
-    )
+        result = await generate_report(
+            query=query,
+            llm=llm,
+            top_k=top_k,
+            user_filter=user_filter,
+            namespace=user_namespace(user_id),
+        )
+    finally:
+        current_user_keys.reset(keys_token)
+        current_user_id.reset(uid_token)
 
     report_id = await save_research_session(
         reports_collection=reports_collection,

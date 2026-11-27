@@ -35,8 +35,12 @@ def _to_id(conversation_id: str) -> ObjectId:
 
 
 def _serialize(doc: dict) -> dict:
-    """Replace MongoDB _id with string id field."""
+    """Replace MongoDB _id with string id field and ISO-encode timestamps."""
     doc["id"] = str(doc.pop("_id"))
+    for key in ("created_at", "updated_at"):
+        val = doc.get(key)
+        if isinstance(val, datetime):
+            doc[key] = val.isoformat()
     return doc
 
 
@@ -44,20 +48,32 @@ def _serialize(doc: dict) -> dict:
 async def get_conversations(current_user=Depends(get_current_user)):
     user_id = str(current_user["_id"])
     convs = await _convs().find({"user_id": user_id}).sort("updated_at", -1).to_list(200)
+    if not convs:
+        return []
+
+    conv_ids = [str(c["_id"]) for c in convs]
+    stats_pipeline = [
+        {"$match": {"conversation_id": {"$in": conv_ids}, "user_id": user_id}},
+        {"$sort": {"created_at": 1}},
+        {
+            "$group": {
+                "_id": "$conversation_id",
+                "messageCount": {"$sum": 1},
+                "lastContent": {"$last": "$content"},
+            }
+        },
+    ]
+    stats_docs = await _msgs().aggregate(stats_pipeline).to_list(len(conv_ids))
+    stats_by_conv = {d["_id"]: d for d in stats_docs}
 
     result = []
     for c in convs:
         conv_id = str(c["_id"])
-        c = _serialize(c)
-
-        c["messageCount"] = await _msgs().count_documents({"conversation_id": conv_id})
-
-        last = await _msgs().find(
-            {"conversation_id": conv_id}
-        ).sort("created_at", -1).limit(1).to_list(1)
-        c["preview"] = last[0].get("content", "")[:120] if last else ""
-
-        result.append(c)
+        serialized = _serialize(c)
+        stat = stats_by_conv.get(conv_id)
+        serialized["messageCount"] = stat["messageCount"] if stat else 0
+        serialized["preview"] = (stat.get("lastContent") or "")[:120] if stat else ""
+        result.append(serialized)
 
     return result
 
@@ -116,7 +132,7 @@ async def delete_conversation(
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    deleted_msgs = await _msgs().delete_many({"conversation_id": conversation_id})
+    deleted_msgs = await _msgs().delete_many({"conversation_id": conversation_id, "user_id": user_id})
     return {
         "message": "Conversation deleted",
         "messages_deleted": deleted_msgs.deleted_count,
@@ -136,7 +152,7 @@ async def get_conversation_messages(
         raise HTTPException(status_code=404, detail="Conversation not found")
 
     messages = await _msgs().find(
-        {"conversation_id": conversation_id}
+        {"conversation_id": conversation_id, "user_id": user_id}
     ).sort("created_at", 1).to_list(500)
 
     for m in messages:

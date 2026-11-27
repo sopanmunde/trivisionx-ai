@@ -39,18 +39,27 @@ async def search_knowledge_base(query: str, user_id: str = "", top_k: int = 6) -
     Returns:
         Formatted string of the most relevant document chunks with source citations.
     """
-    top_k = min(top_k, 20)
-    logger.info(f"[search_knowledge_base] query='{query[:80]}', user_id={user_id or 'all'}, top_k={top_k}")
+    top_k = max(1, min(top_k, 20))
+    from core.llm_factory import current_user_id
+    bound_uid = current_user_id.get()
+    effective_user_id = bound_uid or user_id.strip()
+    if not effective_user_id:
+        return "Error: Authenticated user context is required to search the knowledge base."
+
+    logger.info(f"[search_knowledge_base] query='{query[:80]}', user_id={effective_user_id}, top_k={top_k}")
 
     try:
-        from rag.vectorstores.pinecone_store import get_mmr_retriever
-        import hashlib
+        from rag.vectorstores.pinecone_store import get_mmr_retriever, user_namespace
 
-        filter_dict = {"user_id": user_id} if user_id else None
-        retriever = get_mmr_retriever(top_k=top_k, filter=filter_dict)
+        filter_dict = {"user_id": effective_user_id}
+        ns = user_namespace(effective_user_id)
+        retriever = get_mmr_retriever(top_k=top_k, filter=filter_dict, namespace=ns)
 
         try:
             docs = await asyncio.wait_for(retriever.ainvoke(query), timeout=15.0)
+            if not docs and ns:
+                legacy_retriever = get_mmr_retriever(top_k=top_k, filter=filter_dict)
+                docs = await asyncio.wait_for(legacy_retriever.ainvoke(query), timeout=15.0)
         except asyncio.TimeoutError:
             logger.warning("[search_knowledge_base] Pinecone retrieval timed out")
             return "Knowledge base search timed out. Please try again."
@@ -107,21 +116,23 @@ async def query_user_workspace(
     Returns:
         Formatted string listing workspace items with their details.
     """
-    if not user_id:
+    from core.llm_factory import current_user_id
+    effective_user_id = current_user_id.get() or (user_id or "").strip()
+    if not effective_user_id:
         return "Error: user_id is required to query workspace data."
 
-    limit = min(limit, 100)
+    limit = max(1, min(limit, 100))
     valid_collections = ("tasks", "notes", "documents")
     if collection not in valid_collections:
         return f"Error: Invalid collection '{collection}'. Choose from: {', '.join(valid_collections)}"
 
-    logger.info(f"[query_user_workspace] user={user_id}, collection={collection}, limit={limit}")
+    logger.info(f"[query_user_workspace] user={effective_user_id}, collection={collection}, limit={limit}")
 
     try:
         from database.mongodb.connection import get_database
         db = get_database()
 
-        query_filter: dict = {"user_id": user_id}
+        query_filter: dict = {"user_id": effective_user_id}
         if filter_status and collection == "tasks":
             query_filter["status"] = filter_status
 
@@ -142,7 +153,7 @@ async def query_user_workspace(
                 title = r.get("title", r.get("name", "Untitled Task"))
                 status = r.get("status", "unknown")
                 priority = r.get("priority", "")
-                due = r.get("due_date", "")
+                due = r.get("dueDate") or r.get("due_date") or ""
                 lines.append(f"\n• [{status.upper()}] {title}")
                 if priority:
                     lines.append(f"  Priority: {priority}")

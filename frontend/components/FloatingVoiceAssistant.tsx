@@ -34,6 +34,7 @@ export function FloatingVoiceAssistant({
 
   const recognitionRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
@@ -68,6 +69,19 @@ export function FloatingVoiceAssistant({
         recognitionRef.current = recognition;
       }
     }
+
+    return () => {
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch {}
+      }
+      mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
+    };
   }, []);
 
   // Simulate audio visualizer pulsing when recording
@@ -106,8 +120,17 @@ export function FloatingVoiceAssistant({
     }
 
     // Fallback: MediaRecorder sending to backend /audio/transcribe
+    const token = localStorage.getItem("token");
+    const isDemo = localStorage.getItem("is_demo") === "true";
+    if (!token || token === "demo_guest_token" || isDemo) {
+      setIsRecording(false);
+      toast.error("Sign in or use a browser supporting Web Speech Recognition.");
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
       const mediaRecorder = new MediaRecorder(stream);
       audioChunksRef.current = [];
 
@@ -118,30 +141,35 @@ export function FloatingVoiceAssistant({
       };
 
       mediaRecorder.onstop = async () => {
+        mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+        mediaStreamRef.current = null;
+
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        if (audioBlob.size === 0) return;
+
         setIsProcessing(true);
         try {
           const formData = new FormData();
           formData.append("file", audioBlob, "recording.webm");
-          const token = localStorage.getItem("token");
 
           const response = await fetch(`${API_BASE_URL}/audio/transcribe`, {
             method: "POST",
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            headers: { Authorization: `Bearer ${token}` },
             body: formData
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.text) {
-              setTranscript(data.text);
-            }
-          } else {
-            // Simulated fallback transcription if backend is offline
-            setTranscript("Synthesize recent breakthroughs in multi-agent LangGraph systems.");
+          if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.detail || `Transcription failed (HTTP ${response.status})`);
           }
-        } catch {
-          setTranscript("Synthesize recent breakthroughs in multi-agent LangGraph systems.");
+          const data = await response.json();
+          if (data.text) {
+            setTranscript(data.text);
+          } else {
+            toast.info("No speech detected in audio recording.");
+          }
+        } catch (err: any) {
+          toast.error(err.message || "Audio transcription service is unavailable.");
         } finally {
           setIsProcessing(false);
         }
@@ -150,6 +178,8 @@ export function FloatingVoiceAssistant({
       mediaRecorder.start();
       mediaRecorderRef.current = mediaRecorder;
     } catch {
+      mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
       setIsRecording(false);
       toast.error("Microphone access was denied or is unavailable.");
     }
@@ -282,11 +312,11 @@ export function FloatingVoiceAssistant({
               {isProcessing ? (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                  Transcribing audio with Whisper / Gemini multimodal...
+                  Transcribing audio via Gemini transcription API...
                 </div>
               ) : transcript ? (
                 <p className="text-xs text-foreground font-medium leading-relaxed">
-                  "{transcript}"
+                  &ldquo;{transcript}&rdquo;
                 </p>
               ) : (
                 <p className="text-xs italic text-muted-foreground/70">

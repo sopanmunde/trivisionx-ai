@@ -64,7 +64,7 @@ export function FinalCTA() {
               size="lg"
               className="w-full sm:w-auto rounded-xl px-8 h-12 text-sm font-semibold border-border/80 text-foreground hover:bg-accent hover:text-accent-foreground bg-card/60 backdrop-blur-md flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
             >
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/sopanmunde/trivisionx-ai" target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-4 h-4" />
                 View on GitHub
               </a>
@@ -72,11 +72,11 @@ export function FinalCTA() {
           </div>
 
           <p className="mt-8 text-[11px] font-mono text-muted-foreground">
-            Free tier includes 10k execution cycles/month. Enterprise SLAs and SSO available.
+            Open BYOK workspace with Docker self-hosting support and per-user Pinecone namespaces.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            {["SOC 2 Compliant", "GDPR Ready", "99.9% Uptime SLA"].map((badge) => (
+            {["LangGraph 5-Node Pipeline", "Encrypted BYOK Vault", "Pinecone Namespace Isolation"].map((badge) => (
               <span key={badge} className="text-[10px] font-mono text-muted-foreground px-2.5 py-1 rounded-full border border-border/60 bg-muted/40">
                 ✓ {badge}
               </span>

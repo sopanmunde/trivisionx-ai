@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import AuthPage from '../app/(root)/(auth)/login/[[...sign-in]]/page'
+import AuthPage from '../app/login/page'
 import React from 'react'
 
 vi.mock('next/navigation', () => ({
@@ -42,50 +42,55 @@ vi.mock('@/components/TriVisionXLogo', () => ({
 }))
 
 describe('Login Page', () => {
-  it('should render the login form with email and password fields', () => {
+  it('should render Google and GitHub OAuth sign-in buttons', () => {
     render(<AuthPage />)
-    
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+
+    expect(screen.getByText(/sign in to trivisionx/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /continue with github/i })).toBeInTheDocument()
   })
 
-  it('should toggle password visibility on clicking eye icon', () => {
-    render(<AuthPage />)
-    
-    const passwordInput = screen.getByLabelText(/password/i) as HTMLInputElement
-    expect(passwordInput.type).toBe('password')
-
-    const eyeButton = screen.getByRole('button', { name: '' }) // eye button has no text content
-    fireEvent.click(eyeButton)
-
-    expect(passwordInput.type).toBe('text')
-  })
-
-  it('should show loading spinner and disable sign in button during submission', async () => {
-    const mockFetch = vi.fn().mockImplementation(() => 
+  it('should disable OAuth buttons while initiating Google sign-in and surface API errors', async () => {
+    const mockFetch = vi.fn().mockImplementation(() =>
       new Promise((resolve) => setTimeout(() => resolve({
-        ok: true,
-        json: () => Promise.resolve({ access_token: 'fake-token' }),
+        ok: false,
+        json: () => Promise.resolve({ detail: 'OAuth provider disabled' }),
       }), 50))
     )
     vi.stubGlobal('fetch', mockFetch)
 
     render(<AuthPage />)
 
-    const emailInput = screen.getByLabelText(/email/i)
-    const passwordInput = screen.getByLabelText(/password/i)
-    const submitBtn = screen.getByRole('button', { name: /sign in/i })
+    const googleBtn = screen.getByRole('button', { name: /continue with google/i })
+    const githubBtn = screen.getByRole('button', { name: /continue with github/i })
 
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
-    fireEvent.change(passwordInput, { target: { value: 'password123' } })
+    fireEvent.click(googleBtn)
 
-    fireEvent.click(submitBtn)
+    expect(googleBtn).toBeDisabled()
+    expect(githubBtn).toBeDisabled()
 
-    expect(submitBtn).toBeDisabled()
-    
     await waitFor(() => {
-      expect(submitBtn).not.toBeDisabled()
+      expect(screen.getByText(/oauth provider disabled/i)).toBeInTheDocument()
+    })
+    expect(googleBtn).not.toBeDisabled()
+
+    vi.unstubAllGlobals()
+  })
+
+  it('should request /auth/github/login when clicking Continue with GitHub', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      json: () => Promise.resolve({ detail: 'GitHub OAuth not configured' }),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    render(<AuthPage />)
+
+    const githubBtn = screen.getByRole('button', { name: /continue with github/i })
+    fireEvent.click(githubBtn)
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/auth/github/login'))
     })
 
     vi.unstubAllGlobals()

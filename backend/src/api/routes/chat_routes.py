@@ -11,6 +11,8 @@ Supports two modes:
 Supports multiple model providers (anthropic, google, groq, mistral, etc.)
 and multiple workflow types (research, coding, data_analysis, etc.)
 """
+from bson import ObjectId
+from bson.errors import InvalidId
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import StreamingResponse
 from core.security import get_current_user
@@ -73,6 +75,21 @@ async def chat(
 
     if query_req.conversation_id:
         try:
+            conv_oid = ObjectId(query_req.conversation_id)
+        except InvalidId:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid conversation_id format.",
+            )
+        owned_conv = await db[COLLECTION_CONVERSATIONS].find_one(
+            {"_id": conv_oid, "user_id": user_id}
+        )
+        if not owned_conv:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found.",
+            )
+        try:
             await insert_message(
                 conversation_id=query_req.conversation_id,
                 user_id=user_id,
@@ -103,7 +120,8 @@ async def chat(
             model_name=query_req.model_name,
             http_request=request,
             filename=query_req.filename,
-            is_voice=query_req.is_voice,
+            active_features=query_req.active_features,
+            is_voice=bool(query_req.is_voice),
         ),
         media_type="text/event-stream",
         headers={

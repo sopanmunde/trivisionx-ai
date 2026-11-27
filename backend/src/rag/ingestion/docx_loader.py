@@ -1,4 +1,5 @@
 """DOCX document loader with metadata extraction."""
+import asyncio
 import os
 import tempfile
 from typing import List
@@ -21,7 +22,7 @@ async def load_docx(file_bytes: bytes, filename: str) -> List[Document]:
             tmp_path = tmp.name
 
         loader = Docx2txtLoader(tmp_path)
-        docs = loader.load()
+        docs = await asyncio.to_thread(loader.load)
 
         for doc in docs:
             doc.metadata.update({

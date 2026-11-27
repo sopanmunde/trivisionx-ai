@@ -59,29 +59,13 @@ export function TriVisionXLogo({
   const logoInner = (
     <>
       <div className="relative flex-shrink-0">
-        {/* Subtle glow ring — only when glow prop is true */}
-        {glow && (
-          <div
-            className="absolute inset-0 rounded-[inherit] animate-pulse-glow blur-xl opacity-80"
-            style={{
-              background:
-                "radial-gradient(circle, rgba(139,92,246,0.4) 0%, rgba(59,130,246,0.2) 50%, transparent 80%)",
-              transform: "scale(1.8)",
-            }}
-          />
-        )}
-
-        {/* Premium solid icon box */}
+        {/* Clean shadcn icon box */}
         <div
           className={`relative flex items-center justify-center overflow-hidden select-none z-10 ${cfg.box}
-            bg-white dark:bg-zinc-900
-            border border-zinc-200 dark:border-zinc-700
-            shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-black/40 transition-colors duration-300`}
+            bg-card text-foreground
+            border border-border
+            shadow-xs transition-colors duration-200`}
         >
-          {/* Subtle inner shine */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black/5 via-transparent to-black/5 dark:from-white/10 dark:via-transparent dark:to-black/10 pointer-events-none" />
-          {/* Animated sweeping shine */}
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-black/5 dark:via-white/10 to-transparent pointer-events-none" />
 
           {/* Trident / fork SVG */}
           <svg

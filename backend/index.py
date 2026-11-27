@@ -61,8 +61,8 @@ def _free_port(port: int) -> None:
                 capture_output=True, text=True
             )
             for line in result.stdout.splitlines():
-                if f":{port}" in line and "LISTENING" in line:
-                    parts = line.split()
+                parts = line.split()
+                if len(parts) >= 5 and parts[3] == "LISTENING" and parts[1].endswith(f":{port}"):
                     pid = int(parts[-1])
                     if pid != os.getpid():
                         subprocess.run(["taskkill", "/F", "/PID", str(pid)],

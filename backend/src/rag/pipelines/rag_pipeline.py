@@ -10,6 +10,7 @@ Pipeline steps (matching image workflow):
 from typing import List, Dict, Any, Optional
 from langchain_core.documents import Document
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from agents.langgraph.nodes.utils import extract_text
 from rag.retrieval.citation_retriever import retrieve_with_citations
 from core.logger import get_logger
 
@@ -56,6 +57,7 @@ async def run_rag_pipeline(
     top_k: int = 6,
     history: Optional[List[Dict]] = None,
     user_filter: Optional[Dict] = None,
+    namespace: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Direct RAG pipeline (bypasses LangGraph agents):
@@ -68,8 +70,11 @@ async def run_rag_pipeline(
     Returns:
         {"answer": str, "citations": List[Dict], "docs": List[Document]}
     """
+    from rag.vectorstores.pinecone_store import user_namespace
+
+    ns = namespace or (user_namespace(user_filter.get("user_id")) if user_filter else None)
     docs, citations = await retrieve_with_citations(
-        query=query, top_k=top_k, filter=user_filter
+        query=query, top_k=top_k, filter=user_filter, namespace=ns
     )
     context_str = build_context_string(docs)
 
@@ -86,13 +91,14 @@ async def run_rag_pipeline(
     messages.append(HumanMessage(content=query))
 
     response = await llm.ainvoke(messages)
+    answer_text = extract_text(response.content)
     logger.info(
         f"RAG pipeline complete: '{query[:60]}' → "
         f"{len(docs)} docs, {len(citations)} citations"
     )
 
     return {
-        "answer": response.content,
+        "answer": answer_text,
         "citations": citations,
         "docs": docs,
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Brain,
@@ -11,81 +11,129 @@ import {
   Clock,
   Sparkles,
   Database,
-  Tag,
   CheckCircle2,
-  FileText,
-  Filter,
-  Layers,
-  ArrowUpRight,
+  RefreshCw,
   ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/api";
 
 interface MemoryItem {
   id: string;
   category: "fact" | "document" | "preference" | "session";
   content: string;
   source: string;
-  confidence: number;
+  confidence?: number;
   timestamp: string;
   pinned?: boolean;
+  deletable?: boolean;
 }
 
-const INITIAL_MEMORIES: MemoryItem[] = [
-  {
-    id: "mem-1",
-    category: "preference",
-    content: "User prioritizes LangGraph multi-agent cyclic graphs with verified source citations over single-turn answers.",
-    source: "Learned from Chat Session #4",
-    confidence: 0.98,
-    timestamp: "2 hours ago",
-    pinned: true
-  },
-  {
-    id: "mem-2",
-    category: "fact",
-    content: "Primary deployment target is Next.js 15 App Router frontend paired with FastAPI backend and Pinecone vector index.",
-    source: "Repo Configuration Ingestion",
-    confidence: 0.95,
-    timestamp: "Yesterday",
-    pinned: true
-  },
-  {
-    id: "mem-3",
-    category: "document",
-    content: "Multi-Agent LangGraph Architecture & StateGraph Nodes: 18 chunks embedded via text-embedding-3-small.",
-    source: "Uploaded PDF: architecture_design.md",
-    confidence: 0.92,
-    timestamp: "Nov 21, 2024"
-  },
-  {
-    id: "mem-4",
-    category: "preference",
-    content: "When generating comparative intelligence matrices, always evaluate against OpenAI, Perplexity, and Anthropic.",
-    source: "Direct User Prompt Directive",
-    confidence: 0.99,
-    timestamp: "Nov 20, 2024"
-  },
-  {
-    id: "mem-5",
-    category: "session",
-    content: "Completed full competitive audit of Perplexity AI Enterprise spaces vs TriVisionX hybrid RAG.",
-    source: "Agent Graph: competitive_graph",
-    confidence: 0.89,
-    timestamp: "Nov 19, 2024"
-  }
-];
-
 export function MemoryTimeline() {
-  const [memories, setMemories] = useState<MemoryItem[]>(INITIAL_MEMORIES);
+  const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [filter, setFilter] = useState<"all" | "fact" | "document" | "preference" | "session">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [newMemoryText, setNewMemoryText] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [totalChunks, setTotalChunks] = useState(0);
+  const [pineconeIndex, setPineconeIndex] = useState<string>("Server Configured");
+  const [avgLatencyMs, setAvgLatencyMs] = useState<number | null>(null);
+
+  const loadMemories = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem("token");
+      const isDemo = localStorage.getItem("is_demo") === "true";
+      if (!token || token === "demo_guest_token" || isDemo) {
+        setMemories([]);
+        setTotalChunks(0);
+        setAvgLatencyMs(null);
+        return;
+      }
+
+      const [memRes, docsRes, statsRes, healthRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/brain/memories?limit=100`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API_BASE_URL}/documents`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => null),
+        fetch(`${API_BASE_URL}/brain/telemetry/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => null),
+        fetch(`${API_BASE_URL}/health/`).catch(() => null),
+      ]);
+
+      const items: MemoryItem[] = [];
+
+      if (memRes.ok) {
+        const facts = await memRes.json();
+        if (Array.isArray(facts)) {
+          for (const f of facts) {
+            items.push({
+              id: f.id,
+              category: "fact",
+              content: f.fact,
+              source: "MongoDB User Memory Vault",
+              timestamp: f.created_at ? new Date(f.created_at).toLocaleString() : "Saved",
+              pinned: false,
+              deletable: true,
+            });
+          }
+        }
+      }
+
+      let chunksSum = 0;
+      if (docsRes && docsRes.ok) {
+        const docs = await docsRes.json();
+        if (Array.isArray(docs)) {
+          for (const d of docs) {
+            const chunks = Number(d.chunk_count || 0);
+            chunksSum += chunks;
+            items.push({
+              id: `doc-${d.id || d._id || d.filename}`,
+              category: "document",
+              content: `${d.filename} (${chunks} indexed chunks, ${String(d.file_type || "file").toUpperCase()})`,
+              source: "Pinecone Document Index",
+              timestamp: d.uploaded_at ? new Date(d.uploaded_at).toLocaleString() : "Indexed",
+              deletable: false,
+            });
+          }
+        }
+      }
+      setTotalChunks(chunksSum);
+
+      if (statsRes && statsRes.ok) {
+        const stats = await statsRes.json();
+        if (typeof stats?.avgLatency === "number" && stats.avgLatency > 0) {
+          setAvgLatencyMs(Math.round(stats.avgLatency));
+        }
+      }
+
+      if (healthRes && healthRes.ok) {
+        const h = await healthRes.json();
+        const idx = h?.dependencies?.pinecone?.index;
+        if (idx) setPineconeIndex(idx);
+      }
+
+      setMemories(items);
+    } catch (err) {
+      console.error("Failed to load memory timeline:", err);
+      toast.error("Failed to load long-term memory timeline");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMemories();
+  }, [loadMemories]);
 
   const filteredMemories = memories.filter((m) => {
     const matchesFilter = filter === "all" || m.category === filter;
@@ -96,30 +144,69 @@ export function MemoryTimeline() {
   });
 
   const handleTogglePin = (id: string) => {
-    setMemories(memories.map(m => m.id === id ? { ...m, pinned: !m.pinned } : m));
-    toast.info("Memory priority updated.");
+    setMemories(prev => prev.map(m => m.id === id ? { ...m, pinned: !m.pinned } : m));
   };
 
-  const handleDelete = (id: string) => {
-    setMemories(memories.filter(m => m.id !== id));
-    toast.success("Memory removed from persistent vector store.");
+  const handleDelete = async (id: string) => {
+    const target = memories.find((m) => m.id === id);
+    if (target && !target.deletable) {
+      toast.info("Manage uploaded document chunks from the Documents panel.");
+      return;
+    }
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/brain/memories/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to remove memory");
+      setMemories(prev => prev.filter(m => m.id !== id));
+      toast.success("Memory removed from persistent vault.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete memory");
+    }
   };
 
-  const handleAddMemory = () => {
-    if (!newMemoryText.trim()) return;
-    const newMem: MemoryItem = {
-      id: `mem-${Date.now()}`,
-      category: "preference",
-      content: newMemoryText.trim(),
-      source: "Manual Knowledge Entry",
-      confidence: 1.0,
-      timestamp: "Just now",
-      pinned: true
-    };
-    setMemories([newMem, ...memories]);
-    setNewMemoryText("");
-    setIsAdding(false);
-    toast.success("New persistent memory encoded into Pinecone vector index!");
+  const handleAddMemory = async () => {
+    const cleanText = newMemoryText.trim();
+    if (!cleanText || isSubmitting) return;
+    const token = localStorage.getItem("token");
+    const isDemo = localStorage.getItem("is_demo") === "true";
+    if (!token || token === "demo_guest_token" || isDemo) {
+      toast.error("Sign in with an account to persist facts.");
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      const res = await fetch(`${API_BASE_URL}/brain/memories`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ fact: cleanText }),
+      });
+      if (!res.ok) throw new Error("Failed to save fact");
+      const created = await res.json();
+      const newMem: MemoryItem = {
+        id: created.id,
+        category: "fact",
+        content: created.fact || cleanText,
+        source: "MongoDB User Memory Vault",
+        timestamp: "Just now",
+        pinned: true,
+        deletable: true,
+      };
+      setMemories(prev => [newMem, ...prev]);
+      setNewMemoryText("");
+      setIsAdding(false);
+      toast.success("Fact saved to persistent memory!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to persist fact");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getCategoryBadge = (category: MemoryItem["category"]) => {
@@ -149,15 +236,24 @@ export function MemoryTimeline() {
             </div>
             <h1 className="text-xl font-bold tracking-tight text-foreground">Long-Term Memory Timeline</h1>
             <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-              Pinecone Live Synced
+              MongoDB + Pinecone
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            Episodic memory store, auto-extracted facts, and cross-session knowledge preserved across agent runs.
+            Persisted user facts and indexed document chunks scoped strictly to your workspace account.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={loadMemories}
+            disabled={isLoading}
+            className="text-xs gap-1.5"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} /> Refresh
+          </Button>
           <Button
             size="sm"
             onClick={() => setIsAdding(!isAdding)}
@@ -175,28 +271,30 @@ export function MemoryTimeline() {
             <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1.5">
               <Database className="size-3 text-primary" /> Indexed Chunks
             </span>
-            <p className="text-xl font-extrabold text-foreground tracking-tight">142 vectors</p>
+            <p className="text-xl font-extrabold text-foreground tracking-tight">{totalChunks} chunks</p>
             <span className="text-[10px] font-mono text-emerald-500 flex items-center gap-1">
-              <CheckCircle2 className="size-2.5" /> 100% active retention
+              <CheckCircle2 className="size-2.5" /> {memories.filter(m => m.category === "fact").length} saved facts
             </span>
           </CardContent>
         </Card>
         <Card className="dashboard-3d-card dashboard-3d-card-interactive">
           <CardContent className="p-4 space-y-1">
             <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1.5">
-              <Sparkles className="size-3 text-purple-500" /> Vector Backbone
+              <Sparkles className="size-3 text-purple-500" /> Vector Index
             </span>
-            <p className="text-sm font-bold text-foreground truncate">text-embedding-3</p>
-            <span className="text-[10px] font-mono text-muted-foreground">1536-dim Pinecone</span>
+            <p className="text-sm font-bold text-foreground truncate">{pineconeIndex}</p>
+            <span className="text-[10px] font-mono text-muted-foreground">HuggingFace / Google Embeddings</span>
           </CardContent>
         </Card>
         <Card className="dashboard-3d-card dashboard-3d-card-interactive">
           <CardContent className="p-4 space-y-1">
             <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1.5">
-              <Clock className="size-3 text-cyan-500" /> Mean Retrieval
+              <Clock className="size-3 text-cyan-500" /> Mean LLM Latency
             </span>
-            <p className="text-xl font-extrabold text-foreground tracking-tight">14.2 ms</p>
-            <span className="text-[10px] font-mono text-primary">Sub-20ms P95 latency</span>
+            <p className="text-xl font-extrabold text-foreground tracking-tight">
+              {avgLatencyMs !== null ? `${avgLatencyMs} ms` : "No runs yet"}
+            </p>
+            <span className="text-[10px] font-mono text-primary">Measured from telemetry logs</span>
           </CardContent>
         </Card>
         <Card className="dashboard-3d-card dashboard-3d-card-interactive">
@@ -205,9 +303,9 @@ export function MemoryTimeline() {
               <ShieldCheck className="size-3 text-emerald-500" /> Tenant Isolation
             </span>
             <p className="text-sm font-bold text-foreground flex items-center gap-1.5">
-              Zero-Trust Namespace
+              Per-User Namespace
             </p>
-            <span className="text-[10px] font-mono text-muted-foreground">SOC2 AES-256 Vault</span>
+            <span className="text-[10px] font-mono text-muted-foreground">Scoped user_id partition</span>
           </CardContent>
         </Card>
       </div>
@@ -303,9 +401,11 @@ export function MemoryTimeline() {
                     </div>
 
                     <div className="flex items-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                      <span className="text-[10px] font-mono font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                        {(mem.confidence * 100).toFixed(0)}% match
-                      </span>
+                      {typeof mem.confidence === "number" && (
+                        <span className="text-[10px] font-mono font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                          {(mem.confidence * 100).toFixed(0)}% match
+                        </span>
+                      )}
                       <button
                         onClick={() => handleTogglePin(mem.id)}
                         className={`p-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer ${mem.pinned ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
@@ -313,13 +413,15 @@ export function MemoryTimeline() {
                       >
                         <Pin className="h-3.5 w-3.5" />
                       </button>
-                      <button
-                        onClick={() => handleDelete(mem.id)}
-                        className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
-                        title="Delete memory"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {mem.deletable && (
+                        <button
+                          onClick={() => handleDelete(mem.id)}
+                          className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                          title="Delete memory"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
 

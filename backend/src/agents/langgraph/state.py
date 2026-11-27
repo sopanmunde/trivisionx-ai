@@ -68,3 +68,5 @@ class AgentState(TypedDict, total=False):
     errors: List[str]
     current_node: str
     is_voice: bool
+    vector_latency_ms: float
+    active_features: Dict[str, Any]

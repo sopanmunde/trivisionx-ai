@@ -10,12 +10,18 @@ from database.mongodb.repositories.brain_repository import (
     get_user_providers,
     update_provider_db,
     get_user_keys,
+    get_user_decrypted_keys,
     create_key_db,
     update_key_db,
     delete_key_db,
     log_telemetry_event_db,
     get_telemetry_logs_db,
     get_telemetry_stats_db,
+)
+from database.mongodb.repositories.user_memory_repository import (
+    get_user_facts,
+    save_user_fact,
+    delete_user_fact,
 )
 from core.logger import get_logger
 
@@ -181,17 +187,17 @@ async def ping_provider(
     current_user=Depends(get_current_user),
 ):
     """Real connection ping. Instantiates the LLM, runs a probe, and logs telemetry."""
+    import asyncio
     import time
-    from core.llm_factory import get_llm, current_user_keys
-    from database.mongodb.repositories.brain_repository import get_user_keys
+    from core.llm_factory import get_llm, current_user_keys, current_user_id
 
     user_id = str(current_user["_id"])
+    user_keys_list = await get_user_decrypted_keys(user_id)
+    keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive") and k.get("key")}
+    keys_token = current_user_keys.set(keys_dict)
+    uid_token = current_user_id.set(user_id)
 
     try:
-        user_keys_list = await get_user_keys(user_id)
-        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive")}
-        current_user_keys.set(keys_dict)
-
         llm = get_llm(
             provider=provider_id,
             temperature=0.0,
@@ -205,7 +211,7 @@ async def ping_provider(
                 pass
 
         start_time = time.monotonic()
-        await llm.ainvoke("say ping")
+        await asyncio.wait_for(llm.ainvoke("say ping"), timeout=15.0)
         latency_ms = int((time.monotonic() - start_time) * 1000)
 
         await log_telemetry_event_db(user_id, {
@@ -238,6 +244,9 @@ async def ping_provider(
             "cost": 0.0
         })
         return {"status": "error", "detail": detail_msg}
+    finally:
+        current_user_keys.reset(keys_token)
+        current_user_id.reset(uid_token)
 
 
 @router.post("/providers/{provider_id}/benchmark")
@@ -248,17 +257,19 @@ async def benchmark_provider(
     current_user=Depends(get_current_user),
 ):
     """Runs a real latency and throughput speed test using a sample prompt."""
+    import asyncio
     import time
-    from core.llm_factory import get_llm, current_user_keys
-    from database.mongodb.repositories.brain_repository import get_user_keys, update_provider_db
+    from agents.langgraph.nodes.utils import extract_text
+    from core.llm_factory import get_llm, current_user_keys, current_user_id
+    from database.mongodb.repositories.brain_repository import update_provider_db
 
     user_id = str(current_user["_id"])
+    user_keys_list = await get_user_decrypted_keys(user_id)
+    keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive") and k.get("key")}
+    keys_token = current_user_keys.set(keys_dict)
+    uid_token = current_user_id.set(user_id)
 
     try:
-        user_keys_list = await get_user_keys(user_id)
-        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive")}
-        current_user_keys.set(keys_dict)
-
         llm = get_llm(
             provider=provider_id,
             temperature=0.2,
@@ -268,15 +279,20 @@ async def benchmark_provider(
         prompt = "Write a 3-sentence description of the solar system."
 
         start_time = time.monotonic()
-        ttft = None
-        token_count = 0
 
-        async for chunk in llm.astream(prompt):
-            if ttft is None:
-                ttft = int((time.monotonic() - start_time) * 1000)
-            if hasattr(chunk, "content") and chunk.content:
-                txt = str(chunk.content)
-                token_count += len(txt.split()) + 1
+        async def _stream_benchmark():
+            first_ttft = None
+            count = 0
+            async for chunk in llm.astream(prompt):
+                if first_ttft is None:
+                    first_ttft = int((time.monotonic() - start_time) * 1000)
+                if hasattr(chunk, "content") and chunk.content:
+                    txt = extract_text(chunk.content)
+                    if txt:
+                        count += len(txt.split()) + 1
+            return first_ttft, count
+
+        ttft, token_count = await asyncio.wait_for(_stream_benchmark(), timeout=30.0)
 
         total_time = time.monotonic() - start_time
         if total_time <= 0:
@@ -324,3 +340,53 @@ async def benchmark_provider(
             status_code=400,
             detail=detail_msg
         )
+    finally:
+        current_user_keys.reset(keys_token)
+        current_user_id.reset(uid_token)
+
+
+class MemoryCreateModel(BaseModel):
+    fact: str = Field(..., min_length=1, max_length=2000)
+
+
+@router.get("/memories")
+@limiter.limit(RATE_LIMIT_DEFAULT)
+async def list_memories(
+    request: Request,
+    limit: int = 50,
+    current_user=Depends(get_current_user),
+):
+    """Retrieve persisted long-term memory facts for the current user."""
+    user_id = str(current_user["_id"])
+    return await get_user_facts(user_id, limit=min(max(1, limit), 200))
+
+
+@router.post("/memories")
+@limiter.limit(RATE_LIMIT_DEFAULT)
+async def create_memory(
+    request: Request,
+    payload: MemoryCreateModel,
+    current_user=Depends(get_current_user),
+):
+    """Persist a user memory fact in MongoDB."""
+    user_id = str(current_user["_id"])
+    clean_fact = payload.fact.strip()
+    if not clean_fact:
+        raise HTTPException(status_code=400, detail="Fact cannot be empty")
+    fact_id = await save_user_fact(user_id, clean_fact)
+    return {"id": fact_id, "fact": clean_fact}
+
+
+@router.delete("/memories/{fact_id}")
+@limiter.limit(RATE_LIMIT_DEFAULT)
+async def remove_memory(
+    request: Request,
+    fact_id: str,
+    current_user=Depends(get_current_user),
+):
+    """Delete a user memory fact by ID."""
+    user_id = str(current_user["_id"])
+    deleted = await delete_user_fact(user_id, fact_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Memory fact not found")
+    return {"deleted": True, "id": fact_id}

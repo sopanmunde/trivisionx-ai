@@ -13,14 +13,15 @@ SSE event protocol:
   {"done": true, "sources": [...]}               — stream complete
   {"error": "<message>"}                         — error
 """
+import asyncio
 import json
+import time
+from typing import AsyncGenerator, Optional, Set
 from fastapi import Request
-from typing import AsyncGenerator, Optional
 from datetime import datetime, timezone
-from bson import ObjectId
 from langgraph.graph import StateGraph
 from agents.langgraph.graph import get_graph
-from core.llm_factory import get_llm
+from core.llm_factory import get_llm, current_user_keys, current_user_id
 from agents.langgraph.nodes.utils import extract_text
 from agents.langgraph.nodes.supervisor_node import supervisor_node
 from rag.memory.conversation_memory import get_conversation_history
@@ -43,11 +44,16 @@ from streaming import (
 
 logger = get_logger(__name__)
 
-import asyncio
-from typing import Set
-
 active_queues: Set[asyncio.Queue] = set()
+_background_tasks: Set[asyncio.Task] = set()
 shutdown_event = asyncio.Event()
+
+
+def _track_background_task(coro) -> asyncio.Task:
+    task = asyncio.create_task(coro)
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+    return task
 
 def get_node_summary(name: str, output: dict) -> str:
     """Generates a user-friendly summary of what each agent node found/accomplished."""
@@ -107,6 +113,11 @@ def get_node_summary(name: str, output: dict) -> str:
         return "Completed review of generated code for logic and edge-cases."
     elif name == "testing":
         return "Completed testing verification suite."
+    elif name == "execution":
+        errs = output.get("execution_errors", "")
+        if errs:
+            return f"Code execution failed: {errs[:120]}"
+        return "Executed generated code in sandbox."
     elif name == "data_analysis":
         return "Data analysis completed."
     return "Step execution completed."
@@ -116,11 +127,21 @@ async def signal_sse_shutdown():
     logger.info(f"Signaling {len(active_queues)} active SSE streams of shutdown...")
     for q in list(active_queues):
         await q.put("server_shutdown")
-async def record_token_usage(user_id: str, provider_id: str, prompt: str, completion: str):
+
+
+async def record_token_usage(
+    user_id: str,
+    provider_id: str,
+    prompt: str,
+    completion: str,
+    model_name: str = "",
+    latency_ms: int = 0,
+    vector_latency_ms: float = 0.0,
+):
     try:
         prompt_tokens = max(1, int(len(prompt) / 4))
         completion_tokens = max(1, int(len(completion) / 4))
-        
+
         pricing = {
             "openai": (2.50, 10.00),
             "anthropic": (3.00, 15.00),
@@ -129,27 +150,28 @@ async def record_token_usage(user_id: str, provider_id: str, prompt: str, comple
             "groq": (0.0, 0.0),
             "cohere": (2.50, 10.00)
         }
-        
-        rates = pricing.get(provider_id.lower().strip(), (0.0, 0.0))
+
+        prov_clean = (provider_id or settings.DEFAULT_LLM_PROVIDER).lower().strip()
+        rates = pricing.get(prov_clean, (0.0, 0.0))
         prompt_cost = (prompt_tokens / 1_000_000) * rates[0]
         completion_cost = (completion_tokens / 1_000_000) * rates[1]
         total_cost = prompt_cost + completion_cost
-        
+
         from database.mongodb.repositories.brain_repository import log_telemetry_event_db
-        
+
         await log_telemetry_event_db(user_id, {
-            "model": provider_id,
-            "provider": provider_id,
+            "model": model_name or prov_clean,
+            "provider": prov_clean,
             "tokensIn": prompt_tokens,
             "tokensOut": completion_tokens,
-            "latency": 220,
+            "latency": max(0, int(latency_ms)),
+            "vectorLatency": max(0.0, float(vector_latency_ms)),
             "status": 200,
             "cost": total_cost,
             "cacheHit": False
         })
     except Exception as e:
         logger.warning(f"Failed to record token usage in DB: {e}")
-
 
 
 async def _stream_chat_response_impl(
@@ -163,6 +185,7 @@ async def _stream_chat_response_impl(
     model_provider: Optional[str] = None,
     model_name: Optional[str] = None,
     filename: Optional[str] = None,
+    active_features: Optional[dict] = None,
     is_voice: bool = False,
 ) -> AsyncGenerator[str, None]:
     """
@@ -171,202 +194,550 @@ async def _stream_chat_response_impl(
     Args:
         mode: "quick" (direct LLM) or "agent" (LangGraph)
         workflow_type: research | summary | technical | competitive | coding | data_analysis
-        model_provider: anthropic | google | groq | mistral
+        model_provider: anthropic | google | groq | mistral | openai | cohere
     """
-    from core.llm_factory import current_user_keys
-    from database.mongodb.repositories.brain_repository import get_user_keys
+    from database.mongodb.repositories.brain_repository import get_user_decrypted_keys
+
+    keys_token = None
+    uid_token = None
+    req_start = time.monotonic()
 
     try:
-        user_keys_list = await get_user_keys(user_id)
-        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive")}
-        current_user_keys.set(keys_dict)
-    except Exception as e:
-        logger.warning(f"Could not load custom API keys for user {user_id}: {e}")
-
-    history = []
-    if conversation_id:
+        uid_token = current_user_id.set(user_id)
         try:
-            history = await get_conversation_history(
-                messages_collection, conversation_id, limit=6,
-            )
-            if history and history[-1].get("role") == "user" and history[-1].get("content") == query:
-                history.pop()
-        except Exception as e:
-            logger.warning(f"Could not load history for {conversation_id}: {e}")
-
-    final_text = ""
-    streamed_text = ""
-    final_citations = []
-    active_node = ""
-
-    provider = model_provider or ""
-    model = model_name or ""
-
-    run_steps = {}
-
-    if mode == "quick":
-        try:
-            from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-            from core.llm_factory import get_fallback_providers, is_quota_error
-            from core.logger import get_logger as _get_logger
-
-            qlog = _get_logger("chat_service.quick")
-
-            system_prompts = {
-                "research": "You are a helpful, fast AI research assistant. Answer concisely and accurately.",
-                "coding": "You are an expert software engineer. Provide clean, working code with explanations.",
-                "data_analysis": "You are an expert data analyst. Provide clear analysis and insights.",
-                "summary": "Provide a concise, well-structured summary.",
-                "technical": "Provide detailed technical analysis with depth.",
-                "competitive": "Provide comparative analysis of options.",
-                "system": "System prompt provided.",
+            user_keys_list = await get_user_decrypted_keys(user_id)
+            keys_dict = {
+                k["providerId"]: k["key"]
+                for k in user_keys_list
+                if k.get("isActive") and k.get("key")
             }
-            system_msg = system_prompts.get(workflow_type, system_prompts["research"])
-            langchain_messages: list[BaseMessage] = [SystemMessage(content=system_msg)]
+            keys_token = current_user_keys.set(keys_dict)
+        except Exception as e:
+            logger.warning(f"Could not load custom API keys for user {user_id}: {e}")
 
-            for msg in history:
-                if msg.get("role") == "user":
-                    langchain_messages.append(HumanMessage(content=msg.get("content", "")))
-                else:
-                    langchain_messages.append(AIMessage(content=msg.get("content", "")))
-            langchain_messages.append(HumanMessage(content=query))
+        history = []
+        if conversation_id:
+            try:
+                history = await get_conversation_history(
+                    messages_collection, conversation_id, limit=6, user_id=user_id,
+                )
+                if history and history[-1].get("role") == "user" and history[-1].get("content") == query:
+                    history.pop()
+            except Exception as e:
+                logger.warning(f"Could not load history for {conversation_id}: {e}")
 
-            run_steps = {
-                "direct_llm": {
-                    "node": "direct_llm",
+        final_text = ""
+        streamed_text = ""
+        final_citations = []
+        active_node = ""
+        vector_latency_ms = 0.0
+
+        provider = model_provider or ""
+        model = model_name or ""
+
+        run_steps = {}
+
+        if mode == "quick":
+            try:
+                from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+                from core.llm_factory import get_fallback_providers, is_quota_error
+                from core.logger import get_logger as _get_logger
+
+                qlog = _get_logger("chat_service.quick")
+
+                system_prompts = {
+                    "research": "You are a helpful, fast AI research assistant. Answer concisely and accurately.",
+                    "coding": "You are an expert software engineer. Provide clean, working code with explanations.",
+                    "data_analysis": "You are an expert data analyst. Provide clear analysis and insights.",
+                    "summary": "Provide a concise, well-structured summary.",
+                    "technical": "Provide detailed technical analysis with depth.",
+                    "competitive": "Provide comparative analysis of options.",
+                    "system": "System prompt provided.",
+                }
+                system_msg = system_prompts.get(workflow_type, system_prompts["research"])
+                langchain_messages: list[BaseMessage] = [SystemMessage(content=system_msg)]
+
+                for msg in history:
+                    if msg.get("role") == "user":
+                        langchain_messages.append(HumanMessage(content=msg.get("content", "")))
+                    else:
+                        langchain_messages.append(AIMessage(content=msg.get("content", "")))
+                langchain_messages.append(HumanMessage(content=query))
+
+                run_steps = {
+                    "direct_llm": {
+                        "node": "direct_llm",
+                        "status": "running",
+                        "started_at": datetime.now(timezone.utc).isoformat(),
+                        "output": "Running direct fast LLM query."
+                    }
+                }
+
+                yield sse_node_event("direct_llm", "running")
+
+                fallback_providers = get_fallback_providers(provider)
+                qlog.info(f"Quick mode fallback chain: {fallback_providers}")
+
+                attempt_provider = provider or settings.DEFAULT_LLM_PROVIDER
+                attempt_model = model
+                if not fallback_providers:
+                    raise RuntimeError("No LLM provider or API key is configured.")
+
+                streamed_text = ""
+                had_provider_error = False
+                err_msg = ""
+
+                for attempt_idx, attempt_provider in enumerate(fallback_providers):
+                    try:
+                        if attempt_idx > 0:
+                            prev = fallback_providers[attempt_idx - 1]
+                            qlog.warning(f"Failing over from {prev} to {attempt_provider}")
+                            yield sse_provider_switch_event(prev, attempt_provider, "quota_exhausted")
+
+                        attempt_model = model if attempt_idx == 0 else ""
+                        llm = get_llm(provider=attempt_provider, model_name=attempt_model, temperature=0.3)
+
+                        async for chunk in llm.astream(langchain_messages):
+                            if hasattr(chunk, "content") and chunk.content:
+                                token = extract_text(chunk.content)
+                                if not token:
+                                    continue
+                                streamed_text += token
+                                yield sse_token_event(token)
+
+                        break
+
+                    except Exception as e:
+                        qlog.error(f"Quick mode provider '{attempt_provider}' error: {e}")
+                        has_more = attempt_idx < len(fallback_providers) - 1
+
+                        if has_more:
+                            qlog.warning(f"{attempt_provider} failed, trying next provider")
+                            continue
+
+                        had_provider_error = True
+                        if is_quota_error(e):
+                            err_msg = "AI quota exhausted on all available providers. Please check your billing plans."
+                        elif "503" in str(e) or "unavailable" in str(e).lower():
+                            err_msg = "AI provider experiencing high demand. Please try again."
+                        else:
+                            err_msg = f"AI provider error: {str(e)[:160]}"
+                        break
+
+                if had_provider_error:
+                    run_steps["direct_llm"]["status"] = "failed"
+                    run_steps["direct_llm"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                    run_steps["direct_llm"]["error"] = err_msg
+                    yield sse_error_event(err_msg)
+                    try:
+                        from database.mongodb.repositories.audit_log_repository import insert_audit_log
+                        await insert_audit_log({
+                            "user_id": user_id,
+                            "conversation_id": conversation_id,
+                            "query": query,
+                            "mode": "quick",
+                            "workflow_type": workflow_type,
+                            "provider": attempt_provider,
+                            "model": attempt_model or "default",
+                            "steps": list(run_steps.values()),
+                            "citations": [],
+                            "source_heatmap": [],
+                            "response_length": 0,
+                            "status": "failed",
+                            "error": err_msg,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        })
+                    except Exception as audit_err:
+                        logger.error(f"Failed to write failed quick mode audit log: {audit_err}")
+                    return
+
+                run_steps["direct_llm"]["status"] = "completed"
+                run_steps["direct_llm"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                run_steps["direct_llm"]["output"] = "Generated response from quick mode model."
+
+                yield sse_node_event("direct_llm", "completed", output="Generated response from quick mode model.")
+                yield sse_done_event([])
+
+                latency_ms = int((time.monotonic() - req_start) * 1000)
+                if streamed_text:
+                    await record_token_usage(
+                        user_id,
+                        attempt_provider,
+                        query,
+                        streamed_text,
+                        model_name=attempt_model or attempt_provider,
+                        latency_ms=latency_ms,
+                    )
+
+                if conversation_id and streamed_text:
+                    try:
+                        await insert_message(
+                            conversation_id=conversation_id,
+                            user_id=user_id,
+                            role="assistant",
+                            content=streamed_text,
+                            sources=[],
+                            agent_steps=list(run_steps.values()),
+                            source_heatmap=[],
+                        )
+                        await touch_conversation(conversation_id, user_id)
+                        _track_background_task(
+                            save_turn_to_long_term_memory(
+                                user_id=user_id,
+                                conversation_id=conversation_id,
+                                user_query=query,
+                                ai_response=streamed_text,
+                                provider=attempt_provider,
+                                model_name=attempt_model,
+                            )
+                        )
+                    except Exception as e:
+                        logger.error(f"Failed to persist assistant message: {e}")
+
+                try:
+                    from database.mongodb.repositories.audit_log_repository import insert_audit_log
+                    audit_data = {
+                        "user_id": user_id,
+                        "conversation_id": conversation_id,
+                        "query": query,
+                        "mode": "quick",
+                        "workflow_type": workflow_type,
+                        "provider": attempt_provider,
+                        "model": attempt_model or "default",
+                        "steps": list(run_steps.values()),
+                        "citations": [],
+                        "source_heatmap": [],
+                        "response_length": len(streamed_text),
+                        "status": "success",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    }
+                    await insert_audit_log(audit_data)
+                except Exception as audit_err:
+                    logger.error(f"Failed to write quick mode audit log: {audit_err}")
+
+                return
+
+            except Exception as e:
+                logger.error(f"Quick mode fatal error: {e}", exc_info=True)
+                yield sse_error_event(str(e))
+                try:
+                    from database.mongodb.repositories.audit_log_repository import insert_audit_log
+                    if "direct_llm" in run_steps:
+                        run_steps["direct_llm"]["status"] = "failed"
+                        run_steps["direct_llm"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                        run_steps["direct_llm"]["error"] = str(e)
+
+                    audit_data = {
+                        "user_id": user_id,
+                        "conversation_id": conversation_id,
+                        "query": query,
+                        "mode": "quick",
+                        "workflow_type": workflow_type,
+                        "provider": provider or settings.DEFAULT_LLM_PROVIDER,
+                        "model": model or "default",
+                        "steps": list(run_steps.values()),
+                        "citations": [],
+                        "source_heatmap": [],
+                        "response_length": 0,
+                        "status": "failed",
+                        "error": str(e),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    }
+                    await insert_audit_log(audit_data)
+                except Exception as audit_err:
+                    logger.error(f"Failed to write failed quick mode audit log: {audit_err}")
+                return
+
+        # --- Supervisor Agent: auto-select workflow when workflow_type is "auto" ---
+        resolved_workflow_type = workflow_type
+        supervisor_decision_data = {}
+
+        if workflow_type == "auto":
+            try:
+                yield sse_node_event("supervisor", "running")
+                run_steps["supervisor"] = {
+                    "node": "supervisor",
                     "status": "running",
                     "started_at": datetime.now(timezone.utc).isoformat(),
-                    "output": "Running direct fast LLM query."
+                    "output": None,
                 }
-            }
 
-            yield sse_node_event("direct_llm", "running")
+                supervisor_state = {
+                    "query": query,
+                    "history": history,
+                    "selected_llm_provider": provider or "",
+                    "selected_llm_model": model or "",
+                    "filename": filename or "",
+                }
+                supervisor_result = await supervisor_node(supervisor_state)
 
-            fallback_providers = get_fallback_providers(provider)
-            qlog.info(f"Quick mode fallback chain: {fallback_providers}")
+                resolved_workflow_type = supervisor_result.get("workflow_type", "research")
+                supervisor_decision_data = supervisor_result.get("supervisor_decision", {})
 
-            streamed_text = ""
-            succeeded = False
+                summary = get_node_summary("supervisor", supervisor_result)
+                run_steps["supervisor"]["status"] = "completed"
+                run_steps["supervisor"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                run_steps["supervisor"]["output"] = summary
 
-            for attempt_idx, attempt_provider in enumerate(fallback_providers):
-                try:
-                    if attempt_idx > 0:
-                        prev = fallback_providers[attempt_idx - 1]
-                        qlog.warning(f"Failing over from {prev} to {attempt_provider}")
-                        yield sse_provider_switch_event(prev, attempt_provider, "quota_exhausted")
+                yield sse_node_event("supervisor", "completed", output=summary)
+                yield sse_supervisor_decision_event(supervisor_decision_data)
 
-                    attempt_model = model if attempt_idx == 0 else ""
-                    llm = get_llm(provider=attempt_provider, model_name=attempt_model, temperature=0.3)
+                logger.info(
+                    f"[Chat] Supervisor routed to '{resolved_workflow_type}': "
+                    f"{supervisor_decision_data.get('reasoning', '')[:100]}"
+                )
 
-                    async for chunk in llm.astream(langchain_messages):
-                        if hasattr(chunk, "content") and chunk.content:
-                            token = extract_text(chunk.content)
-                            if not token:
-                                continue
-                            streamed_text += token
-                            yield sse_token_event(token)
+            except Exception as e:
+                logger.error(f"[Chat] Supervisor failed, defaulting to research: {e}")
+                resolved_workflow_type = "research"
+                supervisor_decision_data = {
+                    "selected_agent": "research",
+                    "trip_constraint": "supervisor_error",
+                    "tripconstraint": "supervisor_error",
+                    "reasoning": "Supervisor error — defaulting to research pipeline.",
+                }
+                if "supervisor" in run_steps:
+                    run_steps["supervisor"]["status"] = "completed"
+                    run_steps["supervisor"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                    run_steps["supervisor"]["output"] = "Supervisor failed — defaulting to research."
+                yield sse_node_event("supervisor", "completed", output="Supervisor failed — defaulting to research.")
+                yield sse_supervisor_decision_event(supervisor_decision_data)
 
-                    succeeded = True
-                    break
+        graph = get_graph(resolved_workflow_type)
+        if isinstance(graph, StateGraph):
+            graph = graph.compile()
 
-                except Exception as e:
-                    qlog.error(f"Quick mode provider '{attempt_provider}' error: {e}")
-                    has_more = attempt_idx < len(fallback_providers) - 1
+        initial_state = {
+            "query": query,
+            "conversation_id": conversation_id,
+            "user_id": user_id,
+            "filename": filename,
+            "report_mode": False,
+            "mode": mode,
+            "workflow_type": resolved_workflow_type,
+            "selected_llm_provider": provider or "",
+            "selected_llm_model": model or "",
+            "requires_context": True,
+            "is_voice": is_voice,
+            "active_features": active_features or {},
+            "history": history,
+            "messages": [],
+            "plan": [],
+            "retrieved_docs": [],
+            "citations": [],
+            "summary": "",
+            "final_output": "",
+            "generated_code": "",
+            "code_review": "",
+            "test_results": "",
+            "analysis_results": "",
+            "visualization_data": {},
+            "supervisor_decision": supervisor_decision_data,
+            "errors": [],
+            "current_node": "",
+        }
 
-                    if has_more:
-                        qlog.warning(f"{attempt_provider} failed, trying next provider")
+        _TRACKED_NODES = (
+            "supervisor", "voice_preprocessor", "planner", "memory_retriever",
+            "vision_extractor", "retriever", "web_researcher", "citation",
+            "summarizer", "reporter", "code_generation", "code_review",
+            "testing", "data_analysis", "execution",
+        )
+
+        try:
+            async for event in graph.astream_events(initial_state, version="v2"):
+                kind = event.get("event", "")
+                name = event.get("name", "")
+                data = event.get("data", {})
+
+                if kind == "on_chain_start" and name in _TRACKED_NODES:
+                    active_node = name
+                    run_steps[name] = {
+                        "node": name,
+                        "status": "running",
+                        "started_at": datetime.now(timezone.utc).isoformat(),
+                        "output": None,
+                    }
+                    yield sse_node_event(name, "running")
+
+                elif kind == "on_chain_end" and name in _TRACKED_NODES:
+                    output = data.get("output", {}) or {}
+                    summary = get_node_summary(name, output)
+
+                    if name in run_steps:
+                        run_steps[name]["status"] = "completed"
+                        run_steps[name]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                        run_steps[name]["output"] = summary
+                    else:
+                        run_steps[name] = {
+                            "node": name,
+                            "status": "completed",
+                            "started_at": datetime.now(timezone.utc).isoformat(),
+                            "completed_at": datetime.now(timezone.utc).isoformat(),
+                            "output": summary
+                        }
+
+                    yield sse_node_event(name, "completed", output=summary)
+
+                    if name == "planner":
+                        if output.get("terminate") and output.get("final_output"):
+                            final_text = output.get("final_output")
+                            yield sse_token_event(final_text)
+
+                    elif name == "retriever":
+                        vector_latency_ms = float(output.get("vector_latency_ms") or vector_latency_ms)
+                        cits = output.get("citations", [])
+                        if cits:
+                            final_citations = cits
+                            yield sse_citations_event(cits)
+
+                    elif name == "web_researcher":
+                        cits = output.get("citations", [])
+                        if cits:
+                            final_citations = cits
+                            yield sse_citations_event(cits)
+
+                    elif name == "citation":
+                        cits = output.get("citations", [])
+                        if cits:
+                            final_citations = cits
+                            yield sse_citations_event(cits)
+
+                    elif name == "reporter":
+                        final_text = output.get("final_output", streamed_text)
+                        final_citations = output.get("citations", final_citations)
+
+                        if not streamed_text and final_text:
+                            yield sse_token_event(final_text)
+                        elif streamed_text and final_text.startswith(streamed_text) and len(final_text) > len(streamed_text):
+                            yield sse_token_event(final_text[len(streamed_text):])
+
+                        quality_score = output.get("quality_score")
+                        if quality_score:
+                            yield sse_quality_score_event(quality_score)
+
+                elif kind == "on_chat_model_stream":
+                    langgraph_node = event.get("metadata", {}).get("langgraph_node", active_node)
+                    if langgraph_node in (
+                        "planner", "retriever", "citation",
+                        "supervisor", "voice_preprocessor", "vision_extractor",
+                    ):
+                        continue
+                    if resolved_workflow_type == "coding" and langgraph_node in ("code_generation", "code_review", "testing"):
                         continue
 
-                    if is_quota_error(e):
-                        err_msg = "AI quota exhausted on all available providers. Please check your billing plans."
-                    elif "503" in str(e) or "unavailable" in str(e).lower():
-                        err_msg = "AI provider experiencing high demand. Please try again."
-                    else:
-                        err_msg = f"AI provider error: {str(e)[:100]}"
-                    streamed_text = err_msg
-                    yield sse_token_event(err_msg)
-                    succeeded = True
-                    break
+                    chunk = data.get("chunk")
+                    if chunk and hasattr(chunk, "content") and chunk.content:
+                        token = extract_text(chunk.content)
+                        if not token:
+                            continue
+                        streamed_text += token
+                        yield sse_token_event(token)
 
-            run_steps["direct_llm"]["status"] = "completed"
-            run_steps["direct_llm"]["completed_at"] = datetime.now(timezone.utc).isoformat()
-            run_steps["direct_llm"]["output"] = "Generated response from quick mode model."
+                elif kind == "on_custom_event":
+                    if name == "provider_switch":
+                        yield sse_provider_switch_event(
+                            str(data.get("from", "")),
+                            str(data.get("to", "")),
+                            str(data.get("reason", "")),
+                        )
 
-            yield sse_node_event("direct_llm", "completed", output="Generated response from quick mode model.")
-            yield sse_done_event([])
+            source_counts = {}
+            for cit in final_citations:
+                src = cit.get("filename", cit.get("source", "Unknown"))
+                source_counts[src] = source_counts.get(src, 0) + 1
+            source_heatmap = [{"source": k, "count": v} for k, v in source_counts.items()]
 
-            if streamed_text:
-                await record_token_usage(user_id, attempt_provider, query, streamed_text)
+            yield sse_done_event(final_citations, source_heatmap)
 
-            if conversation_id and streamed_text:
+            persist_text = final_text or streamed_text
+            latency_ms = int((time.monotonic() - req_start) * 1000)
+            active_p = model_provider or settings.DEFAULT_LLM_PROVIDER
+            if persist_text:
+                await record_token_usage(
+                    user_id,
+                    active_p,
+                    query,
+                    persist_text,
+                    model_name=model or active_p,
+                    latency_ms=latency_ms,
+                    vector_latency_ms=vector_latency_ms,
+                )
+            if conversation_id and persist_text:
                 try:
                     await insert_message(
                         conversation_id=conversation_id,
                         user_id=user_id,
                         role="assistant",
-                        content=streamed_text,
-                        sources=[],
+                        content=persist_text,
+                        sources=final_citations,
                         agent_steps=list(run_steps.values()),
-                        source_heatmap=[],
+                        source_heatmap=source_heatmap,
                     )
-                    await touch_conversation(conversation_id)
-                    asyncio.create_task(
+                    await touch_conversation(conversation_id, user_id)
+                    _track_background_task(
                         save_turn_to_long_term_memory(
                             user_id=user_id,
                             conversation_id=conversation_id,
                             user_query=query,
-                            ai_response=streamed_text
+                            ai_response=persist_text,
+                            provider=active_p,
+                            model_name=model or None,
                         )
                     )
                 except Exception as e:
                     logger.error(f"Failed to persist assistant message: {e}")
 
-            # Write successful quick mode audit log
             try:
                 from database.mongodb.repositories.audit_log_repository import insert_audit_log
                 audit_data = {
                     "user_id": user_id,
                     "conversation_id": conversation_id,
                     "query": query,
-                    "mode": "quick",
-                    "workflow_type": workflow_type,
-                    "provider": attempt_provider,
-                    "model": model or "default",
+                    "mode": mode,
+                    "workflow_type": resolved_workflow_type,
+                    "provider": active_p,
+                    "model": model_name or "default",
                     "steps": list(run_steps.values()),
-                    "citations": [],
-                    "source_heatmap": [],
-                    "response_length": len(streamed_text),
+                    "citations": final_citations,
+                    "source_heatmap": source_heatmap,
+                    "response_length": len(persist_text),
                     "status": "success",
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
                 await insert_audit_log(audit_data)
             except Exception as audit_err:
-                logger.error(f"Failed to write quick mode audit log: {audit_err}")
-
-            return
+                logger.error(f"Failed to write agent mode audit log: {audit_err}")
 
         except Exception as e:
-            logger.error(f"Quick mode fatal error: {e}", exc_info=True)
+            logger.error(f"Agent mode error: {e}", exc_info=True)
+
+            if active_node and active_node in run_steps:
+                run_steps[active_node]["status"] = "failed"
+                run_steps[active_node]["error"] = str(e)
+                run_steps[active_node]["completed_at"] = datetime.now(timezone.utc).isoformat()
+
             yield sse_error_event(str(e))
-            # Write failed quick mode audit log
+
             try:
                 from database.mongodb.repositories.audit_log_repository import insert_audit_log
-                if "direct_llm" in run_steps:
-                    run_steps["direct_llm"]["status"] = "failed"
-                    run_steps["direct_llm"]["completed_at"] = datetime.now(timezone.utc).isoformat()
-                    run_steps["direct_llm"]["error"] = str(e)
-                
+                source_counts = {}
+                for cit in final_citations:
+                    src = cit.get("filename", cit.get("source", "Unknown"))
+                    source_counts[src] = source_counts.get(src, 0) + 1
+                source_heatmap = [{"source": k, "count": v} for k, v in source_counts.items()]
+
                 audit_data = {
                     "user_id": user_id,
                     "conversation_id": conversation_id,
                     "query": query,
-                    "mode": "quick",
-                    "workflow_type": workflow_type,
-                    "provider": provider or settings.DEFAULT_LLM_PROVIDER,
-                    "model": model or "default",
+                    "mode": mode,
+                    "workflow_type": resolved_workflow_type,
+                    "provider": model_provider or settings.DEFAULT_LLM_PROVIDER,
+                    "model": model_name or "default",
                     "steps": list(run_steps.values()),
-                    "citations": [],
-                    "source_heatmap": [],
+                    "citations": final_citations,
+                    "source_heatmap": source_heatmap,
                     "response_length": 0,
                     "status": "failed",
                     "error": str(e),
@@ -374,290 +745,12 @@ async def _stream_chat_response_impl(
                 }
                 await insert_audit_log(audit_data)
             except Exception as audit_err:
-                logger.error(f"Failed to write failed quick mode audit log: {audit_err}")
-            return
-
-    # --- Supervisor Agent: auto-select workflow when workflow_type is "auto" ---
-    resolved_workflow_type = workflow_type
-    supervisor_decision_data = {}
-
-    if workflow_type == "auto":
-        try:
-            yield sse_node_event("supervisor", "running")
-            run_steps["supervisor"] = {
-                "node": "supervisor",
-                "status": "running",
-                "started_at": datetime.now(timezone.utc).isoformat(),
-                "output": None,
-            }
-
-            supervisor_state = {
-                "query": query,
-                "history": history,
-                "selected_llm_provider": provider or "",
-                "selected_llm_model": model or "",
-                "filename": filename or "",
-            }
-            supervisor_result = await supervisor_node(supervisor_state)
-
-            resolved_workflow_type = supervisor_result.get("workflow_type", "research")
-            supervisor_decision_data = supervisor_result.get("supervisor_decision", {})
-
-            summary = get_node_summary("supervisor", supervisor_result)
-            run_steps["supervisor"]["status"] = "completed"
-            run_steps["supervisor"]["completed_at"] = datetime.now(timezone.utc).isoformat()
-            run_steps["supervisor"]["output"] = summary
-
-            yield sse_node_event("supervisor", "completed", output=summary)
-            yield sse_supervisor_decision_event(supervisor_decision_data)
-
-            logger.info(
-                f"[Chat] Supervisor routed to '{resolved_workflow_type}': "
-                f"{supervisor_decision_data.get('reasoning', '')[:100]}"
-            )
-
-        except Exception as e:
-            logger.error(f"[Chat] Supervisor failed, defaulting to research: {e}")
-            resolved_workflow_type = "research"
-            supervisor_decision_data = {
-                "selected_agent": "research",
-                "trip_constraint": "supervisor_error",
-                "tripconstraint": "supervisor_error",
-                "reasoning": f"Supervisor error — defaulting to research pipeline.",
-            }
-            if "supervisor" in run_steps:
-                run_steps["supervisor"]["status"] = "completed"
-                run_steps["supervisor"]["completed_at"] = datetime.now(timezone.utc).isoformat()
-                run_steps["supervisor"]["output"] = "Supervisor failed — defaulting to research."
-            yield sse_node_event("supervisor", "completed", output="Supervisor failed — defaulting to research.")
-            yield sse_supervisor_decision_event(supervisor_decision_data)
-
-    graph = get_graph(resolved_workflow_type)
-    if isinstance(graph, StateGraph):
-        graph = graph.compile()
-
-    initial_state = {
-        "query": query,
-        "conversation_id": conversation_id,
-        "user_id": user_id,
-        "filename": filename,
-        "report_mode": False,
-        "mode": mode,
-        "workflow_type": resolved_workflow_type,
-        "selected_llm_provider": provider or "",
-        "selected_llm_model": model or "",
-        "requires_context": True,
-        "is_voice": is_voice,
-        "history": history,
-        "messages": [],
-        "plan": [],
-        "retrieved_docs": [],
-        "citations": [],
-        "summary": "",
-        "final_output": "",
-        "generated_code": "",
-        "code_review": "",
-        "test_results": "",
-        "analysis_results": "",
-        "visualization_data": {},
-        "supervisor_decision": supervisor_decision_data,
-        "errors": [],
-        "current_node": "",
-    }
-
-    try:
-        async for event in graph.astream_events(initial_state, version="v2"):
-            kind = event.get("event", "")
-            name = event.get("name", "")
-            data = event.get("data", {})
-
-            if kind == "on_chain_start" and name in (
-                "supervisor", "voice_preprocessor", "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
-                "code_generation", "code_review", "testing", "data_analysis",
-            ):
-                active_node = name
-                run_steps[name] = {
-                    "node": name,
-                    "status": "running",
-                    "started_at": datetime.now(timezone.utc).isoformat(),
-                    "output": None,
-                }
-                yield sse_node_event(name, "running")
-
-            elif kind == "on_chain_end" and name in (
-                "supervisor", "voice_preprocessor", "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
-                "code_generation", "code_review", "testing", "data_analysis",
-            ):
-                output = data.get("output", {}) or {}
-                summary = get_node_summary(name, output)
-
-                if name in run_steps:
-                    run_steps[name]["status"] = "completed"
-                    run_steps[name]["completed_at"] = datetime.now(timezone.utc).isoformat()
-                    run_steps[name]["output"] = summary
-                else:
-                    run_steps[name] = {
-                        "node": name,
-                        "status": "completed",
-                        "started_at": datetime.now(timezone.utc).isoformat(),
-                        "completed_at": datetime.now(timezone.utc).isoformat(),
-                        "output": summary
-                    }
-
-                yield sse_node_event(name, "completed", output=summary)
-
-                if name == "planner":
-                    if output.get("terminate") and output.get("final_output"):
-                        final_text = output.get("final_output")
-                        yield sse_token_event(final_text)
-
-                elif name == "retriever":
-                    cits = output.get("citations", [])
-                    if cits:
-                        final_citations = cits
-                        yield sse_citations_event(cits)
-
-                elif name == "web_researcher":
-                    cits = output.get("citations", [])
-                    if cits:
-                        final_citations = cits
-                        yield sse_citations_event(cits)
-
-                elif name == "citation":
-                    cits = output.get("citations", [])
-                    if cits:
-                        final_citations = cits
-
-                elif name == "reporter":
-                    final_text = output.get("final_output", streamed_text)
-                    final_citations = output.get("citations", final_citations)
-
-                    if not streamed_text and final_text:
-                        yield sse_token_event(final_text)
-
-                    quality_score = output.get("quality_score")
-                    if quality_score:
-                        yield sse_quality_score_event(quality_score)
-
-            elif kind == "on_chat_model_stream":
-                langgraph_node = event.get("metadata", {}).get("langgraph_node", active_node)
-                if langgraph_node in ("planner", "retriever", "citation"):
-                    continue
-
-                chunk = data.get("chunk")
-                if chunk and hasattr(chunk, "content") and chunk.content:
-                    token = extract_text(chunk.content)
-                    if not token:
-                        continue
-                    streamed_text += token
-                    yield sse_token_event(token)
-
-            elif kind == "on_custom_event":
-                if name == "provider_switch":
-                    yield sse_provider_switch_event(
-                        str(data.get("from", "")),
-                        str(data.get("to", "")),
-                        str(data.get("reason", "")),
-                    )
-
-        # Compile source heatmap
-        source_counts = {}
-        for cit in final_citations:
-            src = cit.get("filename", cit.get("source", "Unknown"))
-            source_counts[src] = source_counts.get(src, 0) + 1
-        source_heatmap = [{"source": k, "count": v} for k, v in source_counts.items()]
-
-        yield sse_done_event(final_citations, source_heatmap)
-
-        persist_text = final_text or streamed_text
-        if persist_text:
-            active_p = model_provider or settings.DEFAULT_LLM_PROVIDER
-            await record_token_usage(user_id, active_p, query, persist_text)
-        if conversation_id and persist_text:
-            try:
-                await insert_message(
-                    conversation_id=conversation_id,
-                    user_id=user_id,
-                    role="assistant",
-                    content=persist_text,
-                    sources=final_citations,
-                    agent_steps=list(run_steps.values()),
-                    source_heatmap=source_heatmap,
-                )
-                await touch_conversation(conversation_id)
-                asyncio.create_task(
-                    save_turn_to_long_term_memory(
-                        user_id=user_id,
-                        conversation_id=conversation_id,
-                        user_query=query,
-                        ai_response=persist_text
-                    )
-                )
-            except Exception as e:
-                logger.error(f"Failed to persist assistant message: {e}")
-
-        # Write successful agent mode audit log
-        try:
-            from database.mongodb.repositories.audit_log_repository import insert_audit_log
-            audit_data = {
-                "user_id": user_id,
-                "conversation_id": conversation_id,
-                "query": query,
-                "mode": mode,
-                "workflow_type": workflow_type,
-                "provider": model_provider or settings.DEFAULT_LLM_PROVIDER,
-                "model": model_name or "default",
-                "steps": list(run_steps.values()),
-                "citations": final_citations,
-                "source_heatmap": source_heatmap,
-                "response_length": len(persist_text),
-                "status": "success",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-            await insert_audit_log(audit_data)
-        except Exception as audit_err:
-            logger.error(f"Failed to write agent mode audit log: {audit_err}")
-
-    except Exception as e:
-        logger.error(f"Agent mode error: {e}", exc_info=True)
-        
-        # Update current active step to failed if any
-        if active_node and active_node in run_steps:
-            run_steps[active_node]["status"] = "failed"
-            run_steps[active_node]["error"] = str(e)
-            run_steps[active_node]["completed_at"] = datetime.now(timezone.utc).isoformat()
-            
-        yield sse_error_event(str(e))
-        
-        # Write failed agent mode audit log
-        try:
-            from database.mongodb.repositories.audit_log_repository import insert_audit_log
-            # compile source heatmap if empty
-            source_counts = {}
-            for cit in final_citations:
-                src = cit.get("filename", cit.get("source", "Unknown"))
-                source_counts[src] = source_counts.get(src, 0) + 1
-            source_heatmap = [{"source": k, "count": v} for k, v in source_counts.items()]
-            
-            audit_data = {
-                "user_id": user_id,
-                "conversation_id": conversation_id,
-                "query": query,
-                "mode": mode,
-                "workflow_type": workflow_type,
-                "provider": model_provider or settings.DEFAULT_LLM_PROVIDER,
-                "model": model_name or "default",
-                "steps": list(run_steps.values()),
-                "citations": final_citations,
-                "source_heatmap": source_heatmap,
-                "response_length": 0,
-                "status": "failed",
-                "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-            await insert_audit_log(audit_data)
-        except Exception as audit_err:
-            logger.error(f"Failed to write failed agent mode audit log: {audit_err}")
+                logger.error(f"Failed to write failed agent mode audit log: {audit_err}")
+    finally:
+        if keys_token is not None:
+            current_user_keys.reset(keys_token)
+        if uid_token is not None:
+            current_user_id.reset(uid_token)
 
 
 async def stream_chat_response(
@@ -672,6 +765,7 @@ async def stream_chat_response(
     model_name: Optional[str] = None,
     http_request: Optional[Request] = None,
     filename: Optional[str] = None,
+    active_features: Optional[dict] = None,
     is_voice: bool = False,
 ) -> AsyncGenerator[str, None]:
     """
@@ -694,23 +788,27 @@ async def stream_chat_response(
                 model_provider=model_provider,
                 model_name=model_name,
                 filename=filename,
+                active_features=active_features,
                 is_voice=is_voice,
             ):
                 await queue.put(chunk)
-            await queue.put(None)  # Sentinel for success
+            await queue.put(None)
         except Exception as e:
-            await queue.put(e)  # Sentinel for exception
+            await queue.put(e)
 
     producer_task = asyncio.create_task(producer())
 
     try:
         while True:
+            if shutdown_event.is_set():
+                yield f"data: {json.dumps({'type': 'server_shutdown', 'message': 'Server shutting down. Please try again later.'})}\n\n"
+                break
             if http_request and await http_request.is_disconnected():
                 logger.info("[Chat] Client disconnected. Cleaning up SSE stream.")
                 break
 
             try:
-                item = await asyncio.wait_for(queue.get(), timeout=0.05)
+                item = await asyncio.wait_for(queue.get(), timeout=0.5)
             except asyncio.TimeoutError:
                 continue
 
@@ -732,27 +830,25 @@ async def stream_chat_response(
                 pass
 
 
-
-
-
 async def save_turn_to_long_term_memory(
     user_id: str,
     conversation_id: str,
     user_query: str,
-    ai_response: str
+    ai_response: str,
+    provider: Optional[str] = None,
+    model_name: Optional[str] = None,
 ) -> None:
     """
     Background Task:
-    1. Indexes the Q&A exchange into Pinecone as a chat memory.
+    1. Indexes the Q&A exchange into Pinecone as a user-isolated chat memory.
     2. Calls fact extraction and saves new user facts to MongoDB.
     """
     try:
         from langchain_core.documents import Document
-        from rag.vectorstores.pinecone_store import get_vector_store
-        
+        from rag.vectorstores.pinecone_store import get_vector_store, memory_namespace
+
         logger.info(f"[Long-term Memory] Archiving exchange for user={user_id}")
-        
-        # 1. Index in Pinecone for semantic memory retrieval
+
         doc = Document(
             page_content=f"User Query: {user_query}\nAI Response: {ai_response}",
             metadata={
@@ -763,19 +859,30 @@ async def save_turn_to_long_term_memory(
                 "uploaded_at": datetime.now(timezone.utc).isoformat()
             }
         )
-        
+
         store = get_vector_store()
-        await asyncio.to_thread(store.add_documents, [doc])
-        logger.info(f"[Long-term Memory] Exchange indexed in Pinecone successfully")
-        
-        # 2. Extract and save user facts to MongoDB
-        await extract_and_save_user_facts(user_id, user_query, ai_response)
-        
+        await asyncio.to_thread(store.add_documents, [doc], namespace=memory_namespace(user_id))
+        logger.info("[Long-term Memory] Exchange indexed in Pinecone successfully")
+
+        await extract_and_save_user_facts(
+            user_id,
+            user_query,
+            ai_response,
+            provider=provider,
+            model_name=model_name,
+        )
+
     except Exception as e:
         logger.error(f"[Long-term Memory] Failed to archive exchange: {e}", exc_info=True)
 
 
-async def extract_and_save_user_facts(user_id: str, query: str, response: str) -> None:
+async def extract_and_save_user_facts(
+    user_id: str,
+    query: str,
+    response: str,
+    provider: Optional[str] = None,
+    model_name: Optional[str] = None,
+) -> None:
     """
     Extracts persistent user profile facts or preferences from a Q&A turn using an LLM.
     Upserts findings to MongoDB user_memory collection.
@@ -783,7 +890,7 @@ async def extract_and_save_user_facts(user_id: str, query: str, response: str) -
     try:
         from langchain_core.messages import HumanMessage
         from database.mongodb.repositories.user_memory_repository import save_user_fact
-        
+
         FACT_EXTRACTION_PROMPT = """You are a Memory Extractor Agent inside a research platform.
 Analyze the user's chat exchange below.
 Identify any persistent facts, research topics, preferences, goals, settings, or professional facts the user shares about themselves or their work.
@@ -800,25 +907,25 @@ User Query: {query}
 AI Response: {response}
 
 Extracted Facts:"""
-        
+
         llm = get_llm(
-            provider="google",
-            model_name="gemini-2.5-flash",
+            provider=provider or "",
+            model_name=model_name or "",
             temperature=0.1,
             streaming=False
         )
-        
+
         messages = [HumanMessage(content=FACT_EXTRACTION_PROMPT.format(query=query, response=response))]
         res = await llm.ainvoke(messages)
-        
+
         facts_text = extract_text(res.content).strip()
         if not facts_text or facts_text.upper() == "NONE":
             return
-            
+
         for line in facts_text.splitlines():
             line = line.strip()
             if line and line.startswith("User"):
                 await save_user_fact(user_id, line)
-                
+
     except Exception as e:
         logger.warning(f"[Long-term Memory] Fact extraction failed: {e}")

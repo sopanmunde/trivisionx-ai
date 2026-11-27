@@ -21,7 +21,7 @@ const stats = [
 ];
 
 const team = [
-  { name: "Sopan Munde", role: "CEO & Founder", initials: "SM", color: "bg-grey-500" },
+  { name: "Sopan Munde", role: "CEO & Founder", initials: "SM", color: "bg-zinc-600" },
 ];
 
 export default function AboutPage() {
@@ -43,7 +43,7 @@ export default function AboutPage() {
       <Section title="Our Story">
         <div className="prose prose-zinc dark:prose-invert max-w-none text-muted-foreground leading-loose">
           <p>TriVisionX was founded in 2026 by a team of AI researchers and engineers who believed that the future of knowledge work wasn&apos;t human-only or AI-only — it was deeply collaborative. We saw that existing AI tools were isolated assistants, not true research partners.</p>
-          <p>So we built one. TriVisionX is the first platform to combine multi-agent orchestration, semantic vector retrieval, and real-time synthesis into a single, enterprise-ready product. Today, teams across research, finance, legal, and engineering use TriVisionX to accelerate their most complex thinking.</p>
+          <p>So we built one. TriVisionX combines multi-agent LangGraph orchestration, semantic Pinecone vector retrieval, and BYOK multi-model synthesis into a single open, extensible platform across research, technical synthesis, notes, email, calendar, and task automation.</p>
         </div>
       </Section>
 
@@ -93,7 +93,7 @@ export default function AboutPage() {
           ))}
         </div>
         <div className="mt-12 p-6 rounded-lg bg-card border border-border text-center">
-          <p className="text-sm font-mono">We&apos;re hiring! View open roles at <a href="/careers" className="text-primary hover:underline">careers@trivisionx.ai</a></p>
+          <p className="text-sm font-mono">Interested in contributing? Explore open opportunities on our <a href="/careers" className="text-primary hover:underline">Careers page</a>.</p>
         </div>
       </Section>
     </PageShell>

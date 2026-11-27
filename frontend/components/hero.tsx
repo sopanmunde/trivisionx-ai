@@ -36,7 +36,7 @@ interface AgentNodeState {
 
 const AGENT_NODES: AgentNodeState[] = [
   { id: "planner", label: "Planner", role: "Intent & Task Routing", icon: Brain, color: "text-blue-500", badge: "LangGraph Router" },
-  { id: "retriever", label: "Retriever", role: "Pinecone Hybrid MMR", icon: Search, color: "text-cyan-500", badge: "Sub-20ms Vector" },
+  { id: "retriever", label: "Retriever", role: "Pinecone Hybrid MMR", icon: Search, color: "text-cyan-500", badge: "Hybrid Vector RAG" },
   { id: "verifier", label: "Verifier", role: "Citation Grounding & Audit", icon: ShieldCheck, color: "text-purple-500", badge: "Self-Correction" },
   { id: "synthesizer", label: "Reporter", role: "Executive Synthesis & Export", icon: FileText, color: "text-emerald-500", badge: "Multi-Format" },
 ];
@@ -117,7 +117,7 @@ export function Hero() {
             <span className="relative inline-flex rounded-full size-2 bg-primary" />
           </span>
           <span className="font-mono text-[11px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
-            TriVisionX OS v2.5 · Autonomous Multi-Agent Swarm
+            TriVisionX AI · Autonomous Multi-Agent Swarm
           </span>
           <ChevronRight className="size-3 text-muted-foreground group-hover:text-foreground transition-transform group-hover:translate-x-0.5" />
         </motion.div>
@@ -272,7 +272,7 @@ export function Hero() {
                     <CheckCircle2 className="size-3" /> Grounded
                   </span>
                   <span>•</span>
-                  <span>MMR $\lambda$=0.65</span>
+                  <span>MMR &lambda; = 0.65</span>
                 </div>
               </div>
             </div>
@@ -315,9 +315,9 @@ export function Hero() {
           className="pt-4 w-full max-w-2xl mx-auto grid grid-cols-3 gap-3.5"
         >
           {[
-            { label: "Documents Processed", value: "847K+", icon: "📄" },
-            { label: "Agent Runs / Day", value: "12,400+", icon: "🤖" },
-            { label: "Avg Latency", value: "< 2.1s", icon: "⚡" },
+            { label: "LangGraph Architecture", value: "5 Agent Nodes", icon: "🤖" },
+            { label: "BYOK Routing", value: "7 LLM Providers", icon: "⚡" },
+            { label: "Deliverable Exports", value: "PDF · DOCX · XLSX", icon: "📄" },
           ].map((stat) => (
             <div
               key={stat.label}

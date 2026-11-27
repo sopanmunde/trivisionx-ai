@@ -10,36 +10,36 @@ export const metadata: Metadata = {
 
 const pricingFeatures = {
   Starter: [
-    { text: "5 concurrent agents", tooltip: "Run up to 5 agent tasks simultaneously." },
-    { text: "1 GB vector storage", tooltip: "Store embeddings for your documents." },
-    { text: "Community support", tooltip: "Get help from our Discord community." },
-    { text: "3 LLM providers", tooltip: "Support for OpenAI, Anthropic, and Google." },
-    { text: "Basic report export", tooltip: "Export results as raw markdown." },
+    { text: "LangGraph multi-agent chat & quick mode", tooltip: "Switch between quick synthesis and full multi-agent pipelines." },
+    { text: "Pinecone namespace per account", tooltip: "Uploaded documents are indexed into your own namespace." },
+    { text: "BYOK model keys", tooltip: "Connect your own OpenAI, Google Gemini, Anthropic, DeepSeek, Groq, or Ollama endpoints." },
+    { text: "Integrated workspace tools", tooltip: "Includes Notes, Tasks, Calendar, and Email Gateway." },
+    { text: "Markdown export", tooltip: "Export synthesized research reports cleanly as Markdown." },
   ],
   Pro: [
-    { text: "20 concurrent agents", tooltip: "Great for parallel research pipelines." },
-    { text: "10 GB vector storage", tooltip: "Enough for 10,000+ long documents." },
-    { text: "Priority email support", tooltip: "Response within 24 hours." },
-    { text: "All LLM providers", tooltip: "Includes Groq, Mistral, and local models." },
-    { text: "Advanced reports + PDF export", tooltip: "Formatted reports with citations." },
-    { text: "Custom agent personas", tooltip: "Define specific system instructions." },
+    { text: "All LLM providers + local Ollama", tooltip: "OpenAI, Gemini, Anthropic, DeepSeek, Groq, Cohere, and Ollama." },
+    { text: "Scheduled Cron & event workflows", tooltip: "Automate recurring research and document ingestion triggers." },
+    { text: "PDF, DOCX & XLSX exports", tooltip: "Generate branded multi-format deliverables with citations." },
+    { text: "Channel integrations", tooltip: "Publish reports to Slack, Teams, Notion, Confluence, and Jira." },
+    { text: "Custom agent skills & MCP servers", tooltip: "Attach prompt skills and external MCP endpoints." },
+    { text: "Audio transcription & TTS", tooltip: "Voice input and playback powered by Gemini / Edge-TTS." },
   ],
   Enterprise: [
-    { text: "Unlimited agents", tooltip: "Scale without bottlenecks." },
-    { text: "Unlimited vector storage", tooltip: "Enterprise-grade scalable pinecone index." },
-    { text: "Dedicated SLA & support", tooltip: "99.9% uptime guarantee and Slack connect." },
-    { text: "SSO / SAML integration", tooltip: "Secure login for your whole organization." },
-    { text: "Audit logs & compliance", tooltip: "SOC2 compliance and detailed logging." },
-    { text: "Custom deployment", tooltip: "On-premise or private cloud options." },
+    { text: "Self-hosted Docker Compose stack", tooltip: "Deploy Next.js, FastAPI, MongoDB, and Redis on your own infrastructure." },
+    { text: "Dedicated Pinecone & MongoDB", tooltip: "Run against your organization's managed database clusters." },
+    { text: "Google & GitHub OAuth authentication", tooltip: "Standards-based OAuth login with short-lived JWT sessions." },
+    { text: "Explainable AI audit trail", tooltip: "Inspect per-query execution nodes, steps, and citation metadata." },
+    { text: "Encrypted BYOK & webhook vault", tooltip: "Fernet-encrypted provider keys and SSRF-validated webhook targets." },
+    { text: "Custom deployment support", tooltip: "Contact our team for architecture guidance and custom setups." },
   ]
 };
 
 const faqs = [
-  { q: "What counts as an execution cycle?", a: "One execution cycle is one complete agent pipeline run — from query intake to final synthesized response. A cycle could involve multiple API calls, but it's billed as a single logical task." },
-  { q: "Can I upgrade or downgrade at any time?", a: "Yes, plan changes take effect immediately. Unused cycles are prorated on upgrades, giving you full flexibility to scale." },
-  { q: "Is there a free trial for Pro?", a: "Yes — the Pro plan includes a 14-day free trial. No credit card is required to start the trial." },
-  { q: "What payment methods do you accept?", a: "We accept all major credit cards via Stripe, ACH transfers, and custom invoicing for Enterprise plans." },
-  { q: "How secure is my data?", a: "We are SOC 2 compliant. Your data is encrypted at rest and in transit. We never train our models on your proprietary data." }
+  { q: "How does Bring Your Own Key (BYOK) work?", a: "You can save your own API keys for OpenAI, Gemini, Anthropic, DeepSeek, Groq, Cohere, or point to a local Ollama instance in Brain Settings. Keys are encrypted at rest and never exposed in client logs." },
+  { q: "Can I try TriVisionX before creating an account?", a: "Yes — visit the Live Demo page to explore the interface, or sign up with email or Google/GitHub OAuth to create a persistent workspace." },
+  { q: "How is billing handled right now?", a: "Hosted billing checkout is currently in preview. You can register for free with your own LLM API keys or deploy the open Docker stack directly." },
+  { q: "Can I self-host TriVisionX?", a: "Yes. The repository includes Dockerfiles and Docker Compose configuration for the Next.js frontend, FastAPI backend, MongoDB, and Redis." },
+  { q: "How is my data isolated?", a: "Uploaded document chunks are scoped by per-user Pinecone namespaces, and stored API keys and third-party webhook credentials are encrypted at rest in MongoDB." }
 ];
 
 export default function PricingPage() {

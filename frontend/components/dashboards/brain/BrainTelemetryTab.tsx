@@ -45,7 +45,14 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { TelemetryLog } from "./types";
+import { TelemetryLog, LLMProvider } from "./types";
+
+interface ProviderShareItem {
+  id: string;
+  name: string;
+  tokens: number;
+  percentage: number;
+}
 
 interface BrainTelemetryTabProps {
   telemetryLive: boolean;
@@ -57,13 +64,23 @@ interface BrainTelemetryTabProps {
   liveTtft: number;
   liveP95: number;
   liveTokensPerSec: number;
-  setLiveTokensPerSec: (val: number) => void;
   liveReqPerMin: number;
-  setLiveReqPerMin: (val: number) => void;
   liveVectorLatency: number;
+  totalTokens?: number;
+  successRate?: number;
+  cacheHitRate?: number;
+  providerShare?: ProviderShareItem[];
+  providers?: LLMProvider[];
   throughputGraph: number[];
   telemetryStreamLogs: TelemetryLog[];
   setTelemetryStreamLogs?: React.Dispatch<React.SetStateAction<TelemetryLog[]>>;
+  onRefresh?: () => void;
+}
+
+function formatCompactTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
 }
 
 export function BrainTelemetryTab({
@@ -76,13 +93,17 @@ export function BrainTelemetryTab({
   liveTtft,
   liveP95,
   liveTokensPerSec,
-  setLiveTokensPerSec,
   liveReqPerMin,
-  setLiveReqPerMin,
   liveVectorLatency,
+  totalTokens = 0,
+  successRate = 100,
+  cacheHitRate = 0,
+  providerShare = [],
+  providers = [],
   throughputGraph,
   telemetryStreamLogs,
   setTelemetryStreamLogs,
+  onRefresh,
 }: BrainTelemetryTabProps) {
   // Live Telemetry Event Log Filtering & Search State
   const [logSearchQuery, setLogSearchQuery] = useState("");
@@ -234,20 +255,18 @@ export function BrainTelemetryTab({
             {telemetryLive ? "Pause Feed" : "Resume Feed"}
           </Button>
 
-          {/* Pulse Benchmark Load Trigger */}
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              setLiveTokensPerSec(285);
-              setLiveReqPerMin(92);
-              toast.info("Simulated telemetry load spike triggered!");
-            }}
-            className="h-8 text-xs font-semibold gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 cursor-pointer"
-          >
-            <Zap className="size-3.5 text-primary" />
-            Test Pulse Spike
-          </Button>
+          {/* Refresh Snapshot Trigger */}
+          {onRefresh && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={onRefresh}
+              className="h-8 text-xs font-semibold gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 cursor-pointer"
+            >
+              <Zap className="size-3.5 text-primary" />
+              Refresh Snapshot
+            </Button>
+          )}
         </div>
       </div>
 
@@ -263,7 +282,9 @@ export function BrainTelemetryTab({
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black font-mono text-foreground tracking-tight">{liveTtft} <span className="text-sm font-semibold text-muted-foreground">ms</span></span>
-            <span className="inline-flex items-center rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-1.5 py-0.5">Fast</span>
+            <span className="inline-flex items-center rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-1.5 py-0.5">
+              {liveP95 > 0 ? `p95 ${liveP95}ms` : "Idle"}
+            </span>
           </div>
         </div>
 
@@ -289,7 +310,7 @@ export function BrainTelemetryTab({
             <span className="text-xs font-bold text-foreground flex items-center gap-2">
               <Gauge className="size-4 text-indigo-400" /> Active Throughput
             </span>
-            <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">99.85% Success</span>
+            <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">{successRate.toFixed(1)}% Success</span>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black font-mono text-foreground tracking-tight">{liveReqPerMin}</span>
@@ -303,7 +324,7 @@ export function BrainTelemetryTab({
             <span className="text-xs font-bold text-foreground flex items-center gap-2">
               <Layers className="size-4 text-purple-400" /> Vector RAG Search
             </span>
-            <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/30">94.2% Cache</span>
+            <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/30">{cacheHitRate.toFixed(1)}% Cache</span>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black font-mono text-foreground tracking-tight">{liveVectorLatency} <span className="text-sm font-semibold text-muted-foreground">ms</span></span>
@@ -326,36 +347,48 @@ export function BrainTelemetryTab({
                 <p className="text-xs text-muted-foreground">Token allocation ratio by active provider engine</p>
               </div>
             </div>
-            <span className="text-xs font-mono text-foreground font-bold bg-muted px-2.5 py-1 rounded-md border border-black/15 dark:border-white/20">5.37M Total Tokens</span>
+            <span className="text-xs font-mono text-foreground font-bold bg-muted px-2.5 py-1 rounded-md border border-black/15 dark:border-white/20">
+              {formatCompactTokens(totalTokens)} Total Tokens
+            </span>
           </div>
 
           <div className="space-y-4 pt-1">
-            {[
-              { model: "gpt-4o (OpenAI)", pct: 42, tokens: "2.25M", color: "bg-emerald-500", labelColor: "text-emerald-400" },
-              { model: "claude-3-5-sonnet (Anthropic)", pct: 28, tokens: "1.50M", color: "bg-purple-500", labelColor: "text-purple-400" },
-              { model: "gemini-1.5-flash (Google)", pct: 18, tokens: "960K", color: "bg-blue-500", labelColor: "text-blue-400" },
-              { model: "llama-3.1-70b (Groq LPU)", pct: 8, tokens: "420K", color: "bg-amber-500", labelColor: "text-amber-400" },
-              { model: "llama3.2 (Ollama Local)", pct: 4, tokens: "210K", color: "bg-cyan-500", labelColor: "text-cyan-400" },
-            ].map((item) => (
-              <div key={item.model} className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="font-bold text-foreground flex items-center gap-2 text-xs">
-                    <span className={cn("size-2.5 rounded-full shadow-xs", item.color)} />
-                    {item.model}
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-muted-foreground font-medium">{item.tokens}</span>
-                    <span className={cn("font-extrabold text-xs w-10 text-right", item.labelColor)}>{item.pct}%</span>
+            {providerShare.length > 0 ? (
+              providerShare.slice(0, 6).map((item, idx) => {
+                const colors = [
+                  { bar: "bg-emerald-500", text: "text-emerald-400" },
+                  { bar: "bg-purple-500", text: "text-purple-400" },
+                  { bar: "bg-blue-500", text: "text-blue-400" },
+                  { bar: "bg-amber-500", text: "text-amber-400" },
+                  { bar: "bg-cyan-500", text: "text-cyan-400" },
+                ];
+                const palette = colors[idx % colors.length];
+                return (
+                  <div key={item.id} className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="font-bold text-foreground flex items-center gap-2 text-xs">
+                        <span className={cn("size-2.5 rounded-full shadow-xs", palette.bar)} />
+                        {item.name}
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground font-medium">{formatCompactTokens(item.tokens)}</span>
+                        <span className={cn("font-extrabold text-xs w-12 text-right", palette.text)}>{item.percentage}%</span>
+                      </div>
+                    </div>
+                    <div className="h-3 w-full rounded-full bg-muted/80 overflow-hidden border border-border/60 p-0.5">
+                      <div
+                        className={cn("h-full rounded-full transition-all duration-500 shadow-xs", palette.bar)}
+                        style={{ width: `${item.percentage}%` }}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="h-3 w-full rounded-full bg-muted/80 overflow-hidden border border-border/60 p-0.5">
-                  <div
-                    className={cn("h-full rounded-full transition-all duration-500 shadow-xs", item.color)}
-                    style={{ width: `${item.pct}%` }}
-                  />
-                </div>
+                );
+              })
+            ) : (
+              <div className="py-10 text-center text-xs text-muted-foreground border border-dashed border-border rounded-xl">
+                No model token usage recorded yet. Execute chat or benchmark runs to view breakdown.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -367,40 +400,50 @@ export function BrainTelemetryTab({
                 <Activity className="size-4.5 text-blue-400" />
               </div>
               <div>
-                <h4 className="text-sm font-extrabold text-foreground">Active Latency Spectrum (TTFT)</h4>
-                <p className="text-xs text-muted-foreground">Real-time response latency benchmark per model endpoint</p>
+                <h4 className="text-sm font-extrabold text-foreground">Measured Provider Latency (TTFT)</h4>
+                <p className="text-xs text-muted-foreground">Observed response latency per configured provider</p>
               </div>
             </div>
             <span className="inline-flex items-center rounded-md border text-xs font-mono font-bold border-emerald-500/40 text-emerald-400 bg-emerald-500/10 px-2 py-0.5">
-              Groq LPU Top Speed
+              Measured Only
             </span>
           </div>
 
           <div className="space-y-4 pt-1">
-            {[
-              { provider: "Ollama (Llama 3.2 Local)", latency: 18, rating: "Zero Network", barPct: 6, color: "bg-emerald-500" },
-              { provider: "Groq LPU (Llama 3.1 70B)", latency: 45, rating: "Ultra Fast", barPct: 12, color: "bg-emerald-400" },
-              { provider: "Google AI (Gemini 1.5 Flash)", latency: 180, rating: "Fast", barPct: 40, color: "bg-cyan-400" },
-              { provider: "OpenAI (GPT-4o-mini)", latency: 190, rating: "Fast", barPct: 44, color: "bg-blue-400" },
-              { provider: "OpenAI (GPT-4o)", latency: 280, rating: "Standard", barPct: 62, color: "bg-indigo-400" },
-              { provider: "Anthropic (Claude 3.5 Sonnet)", latency: 310, rating: "Standard", barPct: 70, color: "bg-purple-400" },
-            ].map((item) => (
-              <div key={item.provider} className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="font-bold text-foreground truncate max-w-[240px] text-xs">{item.provider}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground font-sans font-medium">{item.rating}</span>
-                    <span className="font-extrabold text-foreground w-16 text-right text-xs">{item.latency} ms</span>
+            {(() => {
+              const measured = providers.filter((p) => (p.latency || 0) > 0).sort((a, b) => (a.latency || 0) - (b.latency || 0));
+              if (measured.length === 0) {
+                return (
+                  <div className="py-10 text-center text-xs text-muted-foreground border border-dashed border-border rounded-xl">
+                    Run "Test Connection" or "Run Benchmark" in Config to measure real provider latency.
                   </div>
-                </div>
-                <div className="h-3 w-full rounded-full bg-muted/80 overflow-hidden border border-border/60 p-0.5">
-                  <div
-                    className={cn("h-full rounded-full transition-all duration-500 shadow-xs", item.color)}
-                    style={{ width: `${item.barPct}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+                );
+              }
+              const maxLat = Math.max(100, ...measured.map((m) => m.latency || 0));
+              return measured.map((p) => {
+                const lat = p.latency || 0;
+                const barPct = Math.min(100, Math.max(8, Math.round((lat / maxLat) * 100)));
+                const rating = lat < 200 ? "Ultra Fast" : lat < 600 ? "Fast" : "Standard";
+                const color = lat < 200 ? "bg-emerald-500" : lat < 600 ? "bg-blue-400" : "bg-amber-400";
+                return (
+                  <div key={p.id} className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="font-bold text-foreground truncate max-w-[240px] text-xs">{p.name}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground font-sans font-medium">{rating}</span>
+                        <span className="font-extrabold text-foreground w-16 text-right text-xs">{lat} ms</span>
+                      </div>
+                    </div>
+                    <div className="h-3 w-full rounded-full bg-muted/80 overflow-hidden border border-border/60 p-0.5">
+                      <div
+                        className={cn("h-full rounded-full transition-all duration-500 shadow-xs", color)}
+                        style={{ width: `${barPct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
       </div>
@@ -422,28 +465,30 @@ export function BrainTelemetryTab({
               </div>
               <div className="flex items-center gap-2 text-xs font-mono">
                 <span className="flex items-center gap-1.5 text-emerald-400 font-extrabold bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30 text-[11px]">
-                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" /> Peak: 220 tok/s
+                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" /> Peak: {throughputGraph.length > 0 ? Math.max(...throughputGraph) : 0} tok/s
                 </span>
               </div>
             </div>
 
             {/* Dynamic Animated Bar Visualizer */}
             <div className="h-52 pt-3 pb-2 flex items-end justify-between gap-2 border-b border-border/60 px-2 bg-muted/20 rounded-lg">
-              {throughputGraph.map((val, idx) => {
-                const heightPct = Math.min(100, Math.max(15, (val / 220) * 100));
-                return (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-1 group relative">
-                    {/* Hover Tooltip */}
-                    <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-xs font-bold font-mono px-2 py-0.5 rounded shadow-lg pointer-events-none whitespace-nowrap z-20 border border-border">
-                      {val} tok/s
+              {(() => {
+                const maxGraphVal = Math.max(10, ...throughputGraph);
+                return throughputGraph.map((val, idx) => {
+                  const heightPct = val > 0 ? Math.min(100, Math.max(12, Math.round((val / maxGraphVal) * 100))) : 6;
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-1 group relative">
+                      <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-xs font-bold font-mono px-2 py-0.5 rounded shadow-lg pointer-events-none whitespace-nowrap z-20 border border-border">
+                        {val} tok/s
+                      </div>
+                      <div
+                        className="w-full rounded-t-md bg-gradient-to-t from-primary/30 via-primary/70 to-emerald-400 transition-all duration-300 group-hover:bg-emerald-300 group-hover:shadow-[0_0_12px_rgba(52,211,153,0.8)]"
+                        style={{ height: `${heightPct}%` }}
+                      />
                     </div>
-                    <div
-                      className="w-full rounded-t-md bg-gradient-to-t from-primary/30 via-primary/70 to-emerald-400 transition-all duration-300 group-hover:bg-emerald-300 group-hover:shadow-[0_0_12px_rgba(52,211,153,0.8)]"
-                      style={{ height: `${heightPct}%` }}
-                    />
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
             <div className="flex items-center justify-between text-[11px] font-mono font-semibold text-muted-foreground pt-1">
               <span>- {telemetryWindow} ago</span>

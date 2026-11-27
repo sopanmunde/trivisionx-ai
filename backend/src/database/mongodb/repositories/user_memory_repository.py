@@ -2,6 +2,8 @@
 from datetime import datetime, timezone
 from typing import List, Dict
 from bson import ObjectId
+from bson.errors import InvalidId
+from pymongo.errors import DuplicateKeyError
 from database.mongodb.connection import get_database
 from core.constants import COLLECTION_USER_MEMORY
 from core.logger import get_logger
@@ -37,9 +39,16 @@ async def save_user_fact(user_id: str, fact: str) -> str:
         "updated_at": datetime.now(timezone.utc),
     }
     
-    result = await db[COLLECTION_USER_MEMORY].insert_one(doc)
-    logger.info(f"[User Memory] Saved new fact for user={user_id}: '{fact[:60]}...'")
-    return str(result.inserted_id)
+    try:
+        result = await db[COLLECTION_USER_MEMORY].insert_one(doc)
+        logger.info(f"[User Memory] Saved new fact for user={user_id}: '{fact[:60]}...'")
+        return str(result.inserted_id)
+    except DuplicateKeyError:
+        existing = await db[COLLECTION_USER_MEMORY].find_one({
+            "user_id": user_id,
+            "fact": fact
+        })
+        return str(existing["_id"]) if existing else ""
 
 
 async def get_user_facts(user_id: str, limit: int = 15) -> List[Dict]:
@@ -63,8 +72,12 @@ async def delete_user_fact(user_id: str, fact_id: str) -> bool:
     """Delete a specific user memory fact."""
     db = _db()
     try:
+        obj_id = ObjectId(fact_id)
+    except InvalidId:
+        return False
+    try:
         result = await db[COLLECTION_USER_MEMORY].delete_one({
-            "_id": ObjectId(fact_id),
+            "_id": obj_id,
             "user_id": user_id
         })
         logger.info(f"[User Memory] Deleted fact {fact_id} for user={user_id} (deleted_count={result.deleted_count})")

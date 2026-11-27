@@ -11,13 +11,11 @@ Safety:
   - Dangerous builtins (os.system, subprocess, __import__ etc.) are blocked
     when SAFE_MODE=True (default)
 """
+import ast
 import asyncio
-import subprocess
 import sys
 import tempfile
 import os
-import textwrap
-from datetime import datetime, timezone
 from typing import Optional
 from langchain_core.tools import tool
 from core.config import settings
@@ -25,21 +23,56 @@ from core.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Dangerous patterns blocked in safe mode
-_BLOCKED_PATTERNS = [
-    "import os", "import sys", "import subprocess", "import socket",
-    "import shutil", "import pathlib", "__import__", "eval(", "exec(",
-    "open(", "os.system", "os.popen", "os.remove", "os.rmdir",
-    "shutil.rmtree", "sys.exit", "socket.", "__builtins__",
-]
+_BLOCKED_MODULES = frozenset({
+    "os", "sys", "subprocess", "socket", "shutil", "pathlib",
+    "ctypes", "importlib", "pty", "fcntl", "multiprocessing",
+    "signal", "urllib", "http", "requests", "httpx", "builtins",
+})
+_BLOCKED_CALLS = frozenset({
+    "__import__", "eval", "exec", "open", "compile", "breakpoint",
+    "globals", "locals", "vars", "getattr", "setattr", "delattr",
+})
+_BLOCKED_ATTRS = frozenset({
+    "__subclasses__", "__globals__", "__builtins__", "__code__",
+    "__closure__", "__mro__", "__base__", "__bases__", "__import__",
+})
+
+
+def _safe_subprocess_env(tmpdir: str) -> dict[str, str]:
+    env = {"PYTHONPATH": "", "HOME": tmpdir, "TMP": tmpdir, "TEMP": tmpdir}
+    for key in ("PATH", "SYSTEMROOT", "WINDIR"):
+        if os.environ.get(key):
+            env[key] = os.environ[key]
+    return env
 
 
 def _is_safe_code(code: str) -> tuple[bool, str]:
-    """Check for dangerous patterns. Returns (is_safe, reason)."""
-    code_lower = code.lower()
-    for pattern in _BLOCKED_PATTERNS:
-        if pattern.lower() in code_lower:
-            return False, f"Blocked pattern detected: '{pattern}'"
+    """Validate Python source via AST analysis before sandbox execution."""
+    try:
+        tree = ast.parse(code)
+    except SyntaxError as exc:
+        return False, f"SyntaxError: {exc.msg} (line {exc.lineno})"
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                root_pkg = alias.name.split(".", 1)[0]
+                if root_pkg in _BLOCKED_MODULES:
+                    return False, f"Blocked module import: '{root_pkg}'"
+        elif isinstance(node, ast.ImportFrom):
+            root_pkg = (node.module or "").split(".", 1)[0]
+            if root_pkg in _BLOCKED_MODULES:
+                return False, f"Blocked module import: '{root_pkg}'"
+        elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name) and node.func.id in _BLOCKED_CALLS:
+                return False, f"Blocked builtin call: '{node.func.id}()'"
+            if isinstance(node.func, ast.Attribute) and node.func.attr in _BLOCKED_ATTRS:
+                return False, f"Blocked introspection attribute: '{node.func.attr}'"
+        elif isinstance(node, ast.Attribute) and node.attr in _BLOCKED_ATTRS:
+            return False, f"Blocked introspection attribute: '{node.attr}'"
+        elif isinstance(node, ast.Name) and node.id in {"__builtins__", "__loader__"}:
+            return False, f"Blocked identifier: '{node.id}'"
+
     return True, ""
 
 
@@ -61,13 +94,14 @@ async def python_code_executor(code: str, timeout: int = 30) -> str:
     Args:
         code: Valid Python code to execute. Do NOT include dangerous imports.
               Pure computational/algorithmic code only.
-        timeout: Maximum execution time in seconds (default: 30, max: 60).
+        timeout: Maximum execution time in seconds (default: 30, max: 30).
 
     Returns:
         JSON-like string with keys: stdout, stderr, exit_code, execution_time_ms
         Example: "stdout: Hello World\\nexit_code: 0\\nexecution_time_ms: 45"
     """
-    timeout = min(timeout, getattr(settings, "CODE_EXECUTION_TIMEOUT_SECONDS", 30))
+    max_timeout = min(30, getattr(settings, "CODE_EXECUTION_TIMEOUT_SECONDS", 30))
+    timeout = max(1, min(timeout, max_timeout))
     logger.info(f"[python_code_executor] Executing {len(code)} chars of code (timeout={timeout}s)")
 
     # Safety check
@@ -83,7 +117,7 @@ async def python_code_executor(code: str, timeout: int = 30) -> str:
         tmp.write(code)
         tmp_path = tmp.name
 
-    start_time = asyncio.get_event_loop().time()
+    start_time = asyncio.get_running_loop().time()
     stdout_output = ""
     stderr_output = ""
     exit_code = -1
@@ -94,11 +128,7 @@ async def python_code_executor(code: str, timeout: int = 30) -> str:
             sys.executable, tmp_path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env={
-                # Minimal safe env — no PATH manipulation or secrets
-                "PYTHONPATH": "",
-                "HOME": tempfile.gettempdir(),
-            },
+            env=_safe_subprocess_env(tempfile.gettempdir()),
         )
 
         try:
@@ -123,7 +153,7 @@ async def python_code_executor(code: str, timeout: int = 30) -> str:
         except Exception:
             pass
 
-    elapsed_ms = int((asyncio.get_event_loop().time() - start_time) * 1000)
+    elapsed_ms = int((asyncio.get_running_loop().time() - start_time) * 1000)
 
     # Build result string
     parts = []

@@ -45,51 +45,104 @@ async def execute_workflow_job(workflow_id: str, trigger_source: str = "cron", p
 
     try:
         from agents.langgraph.graph import get_graph
-        graph = get_graph(workflow_type)
+        from core.llm_factory import current_user_keys, current_user_id
+        from database.mongodb.repositories.brain_repository import get_user_decrypted_keys
 
-        initial_state = {
-            "query": query_prompt,
-            "conversation_id": None,
-            "user_id": user_id,
-            "filename": payload.get("filename") if payload else None,
-            "report_mode": False,
-            "mode": "agent",
-            "workflow_type": workflow_type,
-            "selected_llm_provider": provider,
-            "selected_llm_model": "",
-            "requires_context": True,
-            "is_voice": False,
-            "history": [],
-            "messages": [],
-            "plan": [],
-            "retrieved_docs": [],
-            "citations": [],
-            "summary": "",
-            "final_output": "",
-            "generated_code": "",
-            "code_review": "",
-            "test_results": "",
-            "analysis_results": "",
-            "visualization_data": {},
-            "errors": [],
-            "current_node": "",
-        }
+        keys_dict: Dict[str, str] = {}
+        if user_id:
+            try:
+                user_keys_list = await get_user_decrypted_keys(user_id)
+                keys_dict = {
+                    k["providerId"]: k["key"]
+                    for k in user_keys_list
+                    if k.get("isActive") and k.get("key")
+                }
+            except Exception as key_err:
+                logger.warning(f"[Workflow Engine] Could not load keys for user {user_id}: {key_err}")
 
-        output_text = ""
-        node_steps = []
+        keys_token = current_user_keys.set(keys_dict)
+        uid_token = current_user_id.set(user_id or "")
+        try:
+            graph = get_graph(workflow_type)
 
-        async for event in graph.astream_events(initial_state, version="v2"):
-            kind = event.get("event", "")
-            name = event.get("name", "")
-            data = event.get("data", {})
+            initial_state = {
+                "query": query_prompt,
+                "conversation_id": None,
+                "user_id": user_id,
+                "filename": payload.get("filename") if payload else None,
+                "report_mode": False,
+                "mode": "agent",
+                "workflow_type": workflow_type,
+                "selected_llm_provider": provider,
+                "selected_llm_model": "",
+                "requires_context": False,
+                "is_voice": False,
+                "history": [],
+                "messages": [],
+                "plan": [],
+                "retrieved_docs": [],
+                "citations": [],
+                "summary": "",
+                "final_output": "",
+                "generated_code": "",
+                "code_review": "",
+                "test_results": "",
+                "analysis_results": "",
+                "visualization_data": {},
+                "errors": [],
+                "current_node": "",
+            }
 
-            if kind == "on_chain_end" and name in (
-                "planner", "memory_retriever", "retriever", "web_researcher", "citation", "summarizer", "reporter",
-            ):
-                output = data.get("output", {}) or {}
-                node_steps.append({"node": name, "status": "completed", "output": str(output)[:200]})
-                if name in ("reporter", "summarizer") and output.get("final_output"):
-                    output_text = output.get("final_output")
+            output_text = ""
+            node_steps = []
+            tracked_nodes = {
+                "planner",
+                "memory_retriever",
+                "retriever",
+                "web_researcher",
+                "citation",
+                "summarizer",
+                "reporter",
+                "coder",
+                "reviewer",
+                "tester",
+                "data_analysis",
+                "vision_extraction",
+                "voice_agent",
+                "synthesizer",
+            }
+            output_nodes = {
+                "reporter",
+                "summarizer",
+                "coder",
+                "reviewer",
+                "tester",
+                "data_analysis",
+                "vision_extraction",
+                "voice_agent",
+                "synthesizer",
+            }
+
+            async for event in graph.astream_events(initial_state, version="v2"):
+                kind = event.get("event", "")
+                name = event.get("name", "")
+                data = event.get("data", {})
+
+                if kind == "on_chain_end" and name in tracked_nodes:
+                    output = data.get("output", {}) or {}
+                    node_steps.append({"node": name, "status": "completed", "output": str(output)[:200]})
+                    if name in output_nodes and isinstance(output, dict):
+                        candidate = (
+                            output.get("final_output")
+                            or output.get("summary")
+                            or output.get("generated_code")
+                            or output.get("analysis_results")
+                        )
+                        if candidate:
+                            output_text = str(candidate)
+        finally:
+            current_user_keys.reset(keys_token)
+            current_user_id.reset(uid_token)
 
         duration_ms = int((time.time() - start_time) * 1000)
         log_data = {
@@ -161,7 +214,7 @@ def sync_schedule_workflow(workflow: Dict[str, Any]):
 
     cron_str = workflow.get("cron_expression", "0 8 * * 1")
     try:
-        trigger = CronTrigger.from_crontab(cron_str)
+        trigger = CronTrigger.from_crontab(cron_str, timezone="UTC")
         _scheduler.add_job(
             execute_workflow_job,
             trigger=trigger,
@@ -169,6 +222,9 @@ def sync_schedule_workflow(workflow: Dict[str, Any]):
             id=job_id,
             name=workflow.get("title", f"Workflow {wf_id}"),
             replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+            misfire_grace_time=300,
         )
         logger.info(f"[Workflow Engine] Scheduled cron job '{job_id}' with schedule '{cron_str}'")
     except Exception as e:
@@ -185,7 +241,7 @@ async def start_scheduler():
         return
 
     logger.info("[Workflow Engine] Initializing APScheduler engine...")
-    _scheduler = AsyncIOScheduler()
+    _scheduler = AsyncIOScheduler(timezone="UTC")
     _scheduler.start()
 
     try:

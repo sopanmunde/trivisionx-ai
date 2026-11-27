@@ -52,13 +52,12 @@ async def get_user_documents(user_id: str, limit: int = 50) -> List[Dict]:
                 "chunk_count": 1,
                 "uploaded_at": 1,
                 "file_size": {
-                    "$cond": [
-                        {"$gt": ["$file_size", None]},
+                    "$ifNull": [
                         "$file_size",
                         {
                             "$cond": [
-                                {"$gt": ["$file_bytes", None]},
-                                {"$binarySize": "$file_bytes"},
+                                {"$ne": [{"$type": "$file_bytes"}, "missing"]},
+                                {"$binarySize": {"$ifNull": ["$file_bytes", b""]}},
                                 0
                             ]
                         }

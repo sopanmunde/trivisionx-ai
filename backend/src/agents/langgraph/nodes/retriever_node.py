@@ -5,8 +5,9 @@ Implements MMR-based retrieval from Pinecone vector store.
 All results are user-scoped via metadata filtering.
 """
 from typing import List, Dict
+import time
 from agents.langgraph.state import AgentState
-from rag.vectorstores.pinecone_store import get_mmr_retriever
+from rag.vectorstores.pinecone_store import get_mmr_retriever, user_namespace
 from rag.retrieval.citation_retriever import format_citation
 from core.constants import DEFAULT_TOP_K
 from core.logger import get_logger
@@ -47,7 +48,12 @@ async def retriever_node(state: AgentState) -> dict:
         f"provider={provider}, model={model_name or 'default'}, filename={filename or 'None'}"
     )
 
-    retriever = get_mmr_retriever(top_k=DEFAULT_TOP_K, filter=user_filter)
+    ns = user_namespace(user_id)
+    retriever = get_mmr_retriever(top_k=DEFAULT_TOP_K, filter=user_filter, namespace=ns)
+    legacy_retriever = (
+        get_mmr_retriever(top_k=DEFAULT_TOP_K, filter=user_filter)
+        if ns else None
+    )
 
     all_docs: List[Dict] = []
     all_citations: List[Dict] = []
@@ -58,7 +64,10 @@ async def retriever_node(state: AgentState) -> dict:
 
     async def fetch_docs(sq: str):
         try:
-            return await asyncio.wait_for(retriever.ainvoke(sq), timeout=15.0)
+            docs = await asyncio.wait_for(retriever.ainvoke(sq), timeout=15.0)
+            if not docs and legacy_retriever is not None:
+                docs = await asyncio.wait_for(legacy_retriever.ainvoke(sq), timeout=15.0)
+            return docs
         except asyncio.TimeoutError:
             logger.warning(f"[Retrieval] Timeout: '{sq[:60]}'")
             return []
@@ -66,7 +75,9 @@ async def retriever_node(state: AgentState) -> dict:
             logger.warning(f"[Retrieval] Error: '{sq[:60]}' — {e}")
             return []
 
+    t_ret_start = time.monotonic()
     results = await asyncio.gather(*(fetch_docs(sq) for sq in search_queries))
+    vector_latency_ms = round((time.monotonic() - t_ret_start) * 1000, 1)
 
     for docs in results:
         for i, doc in enumerate(docs):
@@ -95,5 +106,6 @@ async def retriever_node(state: AgentState) -> dict:
     return {
         "retrieved_docs": all_docs,
         "citations": all_citations,
+        "vector_latency_ms": vector_latency_ms,
         "current_node": "retriever",
     }

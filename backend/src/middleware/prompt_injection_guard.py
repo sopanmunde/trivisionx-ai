@@ -1,13 +1,9 @@
-"""Prompt injection guard — sanitizes user input before LLM processing."""
+"""Prompt injection guard — normalizes and sanitizes user input before LLM processing."""
 import re
-from fastapi import Request, HTTPException, status
-from starlette.middleware.base import BaseHTTPMiddleware
-from core.logger import get_logger
-
-logger = get_logger("security")
+import unicodedata
 
 INJECTION_PATTERNS = [
-    r"ignore\s+previous\s+instructions",
+    r"ignore\s+(?:all\s+)?previous\s+instructions",
     r"disregard\s+all\s+prior",
     r"you\s+are\s+now\s+(?:a\s+)?(?:dan|jailbreak|evil)",
     r"system\s*:\s*you\s+are",
@@ -17,17 +13,23 @@ INJECTION_PATTERNS = [
 ]
 
 COMPILED = [re.compile(p, re.IGNORECASE) for p in INJECTION_PATTERNS]
+_ZERO_WIDTH_RE = re.compile(r"[\u200b-\u200f\u202a-\u202e\ufeff\u00ad]")
 
-BLOCKED_PATHS = {"/api/chat/"}
+
+def _normalize_text(text: str) -> str:
+    normalized = unicodedata.normalize("NFKC", text or "")
+    normalized = _ZERO_WIDTH_RE.sub("", normalized)
+    return normalized
 
 
 def scan_text(text: str) -> bool:
     """Returns True if injection patterns are detected."""
-    return any(p.search(text) for p in COMPILED)
+    normalized = _normalize_text(text)
+    return any(p.search(normalized) for p in COMPILED)
 
 
 def sanitize(text: str) -> str:
-    """Remove potentially harmful control sequences."""
-    text = text.replace("\x00", "").strip()
+    """Normalize unicode and remove potentially harmful control sequences."""
+    text = _normalize_text(text).replace("\x00", "").strip()
     text = re.sub(r"\n{4,}", "\n\n\n", text)
     return text

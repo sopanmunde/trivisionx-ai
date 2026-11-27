@@ -65,15 +65,26 @@ export function ExportModal({
     try {
       setIsExporting(format);
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const isDemo = typeof window !== "undefined" && localStorage.getItem("is_demo") === "true";
 
       let endpoint = "";
       if (type === "task") {
+        if (isDemo || !token || token === "demo_guest_token") {
+          toast.error("Sign in with an account to export persisted tasks.");
+          return;
+        }
         if (format === "xlsx") endpoint = `${API_BASE_URL}/tasks/export/excel`;
         else if (format === "pdf") endpoint = `${API_BASE_URL}/tasks/export/pdf`;
         else if (format === "docx") endpoint = `${API_BASE_URL}/tasks/export/docx`;
         else endpoint = `${API_BASE_URL}/tasks/export/md`;
       } else if (reportId) {
-        endpoint = `${API_BASE_URL}/reports/${reportId}/export/${format === "md" ? "" : format}`;
+        if (isDemo || !token || token === "demo_guest_token") {
+          toast.error("Sign in with an account to download persisted reports.");
+          return;
+        }
+        endpoint = format === "md"
+          ? `${API_BASE_URL}/reports/${reportId}/export`
+          : `${API_BASE_URL}/reports/${reportId}/export/${format}`;
       }
 
       if (endpoint) {
@@ -81,72 +92,61 @@ export function ExportModal({
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
 
-        if (res.ok) {
-          const blob = await res.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = type === "task" ? `task-board.${format}` : `research-report-${reportId || "export"}.${format}`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-
-          setDownloadSuccess(format);
-          setTimeout(() => setDownloadSuccess(null), 2500);
-          toast.success(`Exported as ${format.toUpperCase()} successfully!`);
-          return;
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `Export failed (HTTP ${res.status})`);
         }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = type === "task" ? `task-board.${format}` : `research-report-${reportId || "export"}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        setDownloadSuccess(format);
+        setTimeout(() => setDownloadSuccess(null), 2500);
+        toast.success(`Exported as ${format.toUpperCase()} successfully!`);
+        return;
       }
 
-      // High-fidelity fallback client-side file synthesis
-      const topicTitle = query || taskTitle || "TriVisionX AI Session Export";
-      let contentStr = "";
-      let mimeType = "text/plain";
-      let fileExt = format;
+      if (format !== "md") {
+        toast.error("Generate and save a research report first to export PDF, DOCX, or XLSX.");
+        return;
+      }
 
-      if (format === "md") {
-        mimeType = "text/markdown;charset=utf-8";
-        contentStr = `# ${topicTitle}
+      const topicTitle = query || taskTitle || "TriVisionX AI Session Export";
+      const contentStr = `# ${topicTitle}
 
 > **TriVisionX AI Enterprise Copilot** | Exported on ${new Date().toLocaleString()}
 
 ---
 
-## 📌 Executive Session Overview
-This report contains synthesized multi-agent findings, ground-truth citations, and autonomous task telemetry generated through TriVisionX LangGraph workflows.
-
-### 🧠 Agent Findings & Core Syntheses
-- Autonomous multi-agent verification completed with verified citation grounding.
-- Sub-second vector retrieval executed across Pinecone Serverless embeddings.
-- Self-correcting validation cycle verified against raw chunk embeddings.
+## Executive Session Overview
+Research summary and extracted citations exported from your current workspace session.
 
 ${
   citations && citations.length > 0
-    ? `### 📚 Audited Sources & Citations\n` +
+    ? `### Sources & Citations\n` +
       citations
         .map((c: any, i: number) => {
-          const title = typeof c === "string" ? c : c.title || c.url || `Reference Chunk #${i + 1}`;
+          const title = typeof c === "string" ? c : c.title || c.url || c.filename || `Reference #${i + 1}`;
           const url = c.url ? ` (${c.url})` : "";
           return `${i + 1}. **${title}**${url}`;
         })
         .join("\n")
-    : `*No external references required for this execution.*`
+    : `*No citations attached to this session.*`
 }
-
----
-*Generated with TriVisionX AI • Privacy-First Zero-Trust Architecture*
 `;
-      } else if (format === "xlsx" || format === "docx" || format === "pdf") {
-        mimeType = format === "xlsx" ? "application/vnd.ms-excel" : "application/octet-stream";
-        contentStr = `TriVisionX Export: ${topicTitle}\nGenerated: ${new Date().toISOString()}\nFormat: ${format.toUpperCase()}\nStatus: Verified\n`;
-      }
 
-      const fallbackBlob = new Blob([contentStr], { type: mimeType });
+      const fallbackBlob = new Blob([contentStr], { type: "text/markdown;charset=utf-8" });
       const fallbackUrl = window.URL.createObjectURL(fallbackBlob);
       const fallbackA = document.createElement("a");
       fallbackA.href = fallbackUrl;
-      fallbackA.download = `trivisionx-${type}-${Date.now()}.${fileExt}`;
+      fallbackA.download = `trivisionx-${type}-${Date.now()}.md`;
       document.body.appendChild(fallbackA);
       fallbackA.click();
       window.URL.revokeObjectURL(fallbackUrl);
@@ -154,7 +154,7 @@ ${
 
       setDownloadSuccess(format);
       setTimeout(() => setDownloadSuccess(null), 2500);
-      toast.success(`Exported as ${format.toUpperCase()} successfully!`);
+      toast.success("Exported as MD successfully!");
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || `Failed to export ${format.toUpperCase()}`);
@@ -167,6 +167,12 @@ ${
     try {
       setIsPublishing(platform);
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const isDemo = typeof window !== "undefined" && localStorage.getItem("is_demo") === "true";
+
+      if (isDemo || !token || token === "demo_guest_token") {
+        toast.error("Sign in with an account and configure Integrations to publish.");
+        return;
+      }
 
       let endpoint = "";
       if (platform === "jira" && taskId) {
@@ -174,9 +180,7 @@ ${
       } else if (reportId) {
         endpoint = `${API_BASE_URL}/reports/${reportId}/publish/${platform}`;
       } else {
-        // Simulated instant success for connected webhook platforms
-        await new Promise((resolve) => setTimeout(resolve, 900));
-        toast.success(`Pushed executive briefing to ${platform.toUpperCase()} webhook!`);
+        toast.error("Generate or save a report first before publishing to external channels.");
         return;
       }
 
@@ -184,18 +188,18 @@ ${
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
+          Authorization: `Bearer ${token}`
         }
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data.detail || `Failed to publish to ${platform}`);
       }
 
       toast.success(data.message || `Published to ${platform.toUpperCase()} successfully!`);
-      if (data.url) {
-        window.open(data.url, "_blank");
+      if (data.url && /^https?:\/\//i.test(data.url)) {
+        window.open(data.url, "_blank", "noopener,noreferrer");
       }
     } catch (err: any) {
       console.error(err);

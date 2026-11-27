@@ -77,7 +77,7 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
       transition={{ type: "spring", stiffness: 300, damping: 32 }}
       data-slot="sidebar"
       data-sidebar="sidebar"
-      className="z-50 flex h-full shrink-0 flex-col border border-sidebar-border bg-sidebar text-sidebar-foreground backdrop-blur-xl md:rounded-2xl shadow-sm"
+      className="z-50 flex h-full shrink-0 flex-col border border-sidebar-border bg-sidebar text-sidebar-foreground md:rounded-xl shadow-sm"
     >
       <div className="flex items-center justify-center border-b border-sidebar-border/60 px-1.5 py-3">
         <button
@@ -376,7 +376,7 @@ export default function Sidebar({
       <AnimatePresence>
         {open && (
           <motion.div key="overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden" onClick={onClose} />
+            className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={onClose} />
         )}
       </AnimatePresence>
 
@@ -391,8 +391,7 @@ export default function Sidebar({
               "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
               "fixed inset-y-0 left-0 md:static",
               open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
-              "border-r border-sidebar-border bg-sidebar text-sidebar-foreground backdrop-blur-xl md:rounded-2xl md:border md:shadow-md",
-              "shadow-[4px_0_24px_rgba(0,0,0,0.12)] md:shadow-sm"
+              "border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:rounded-xl md:border md:shadow-sm"
             )}
           >
             {/* HEADER BRAND CONTAINER */}
@@ -610,7 +609,11 @@ export default function Sidebar({
                   id="templates" icon={<FileText className="h-3.5 w-3.5 text-primary" />} title="Templates"
                   badge={templateCount} isOpen={templatesOpen} onToggle={toggleTemplates}
                   addAction={
-                    <TemplatePopover onCreateTemplate={handleCreateTemplate} editingTemplate={editingTemplate}>
+                    <TemplatePopover
+                      onCreateTemplate={handleCreateTemplate}
+                      editingTemplate={editingTemplate}
+                      onClearEditing={() => setEditingTemplate(null)}
+                    >
                       <AddBtn title="New template" />
                     </TemplatePopover>
                   }
@@ -678,11 +681,11 @@ export default function Sidebar({
             </nav>
 
             {/* PROFILE & THEME FOOTER CONTAINER */}
-            <div data-slot="sidebar-footer" className="shrink-0 p-2.5 border-t border-sidebar-border bg-gradient-to-b from-transparent to-sidebar-accent/20">
-              <div className="rounded-2xl border border-sidebar-border bg-sidebar-accent/30 p-2.5 shadow-xs flex items-center justify-between transition-all duration-200 hover:border-sidebar-border/80">
+            <div data-slot="sidebar-footer" className="shrink-0 p-2.5 border-t border-sidebar-border">
+              <div className="rounded-xl border border-sidebar-border bg-sidebar-accent/30 p-2.5 shadow-xs flex items-center justify-between transition-colors duration-200 hover:border-sidebar-border/80">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="relative shrink-0">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground select-none shadow-xs border border-primary-foreground/20 overflow-hidden">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-[11px] font-bold text-primary-foreground select-none shadow-xs overflow-hidden">
                       {user?.avatar_url || user?.picture ? (
                         <img
                           src={user.avatar_url || user.picture}

@@ -7,6 +7,7 @@ pydantic[email]
 pydantic-settings
 
 langchain
+langchain-classic
 langchain-core
 langchain-community
 langchain-google-genai
@@ -48,5 +49,9 @@ pymupdf
 apscheduler
 reportlab
 python-docx
+python-pptx
 openpyxl
+redis
+cryptography
+pytest-asyncio
 

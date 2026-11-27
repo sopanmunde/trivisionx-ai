@@ -1,4 +1,5 @@
 """Task routes — API endpoints to manage tasks in MongoDB and export to external tools."""
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from typing import Dict, List
@@ -11,9 +12,9 @@ from database.mongodb.repositories.task_repository import (
     update_task_db,
     delete_task_metadata,
 )
-from database.mongodb.repositories.integrations_repository import get_integrations
+from database.mongodb.repositories.integrations_repository import get_decrypted_integrations
 from services.third_party_integrations import create_jira_issue
-from services.export_service import generate_xlsx_report
+from services.export_service import generate_xlsx_report, generate_pdf_report, generate_docx_report
 from core.logger import get_logger
 
 router = APIRouter()
@@ -64,6 +65,7 @@ async def remove_task(request: Request, task_id: str, current_user=Depends(get_c
 
 
 @router.get("/export/excel")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def export_tasks_excel(
     request: Request,
     current_user=Depends(get_current_user),
@@ -72,7 +74,8 @@ async def export_tasks_excel(
     user_id = str(current_user["_id"])
     tasks = await get_user_tasks(user_id)
 
-    xlsx_bytes = generate_xlsx_report(
+    xlsx_bytes = await asyncio.to_thread(
+        generate_xlsx_report,
         query="Task Board Export",
         report_text="Task list export from TriVisionX AI Task Board.",
         tasks=tasks,
@@ -85,6 +88,7 @@ async def export_tasks_excel(
 
 
 @router.get("/export/pdf")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def export_tasks_pdf(
     request: Request,
     current_user=Depends(get_current_user),
@@ -94,7 +98,8 @@ async def export_tasks_pdf(
     tasks = await get_user_tasks(user_id)
     summary = _format_tasks_summary(tasks)
 
-    pdf_bytes = generate_pdf_report(
+    pdf_bytes = await asyncio.to_thread(
+        generate_pdf_report,
         query="Task Board Export",
         report_text=summary,
         citations=[],
@@ -109,6 +114,7 @@ async def export_tasks_pdf(
 
 
 @router.get("/export/docx")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def export_tasks_docx(
     request: Request,
     current_user=Depends(get_current_user),
@@ -118,7 +124,8 @@ async def export_tasks_docx(
     tasks = await get_user_tasks(user_id)
     summary = _format_tasks_summary(tasks)
 
-    docx_bytes = generate_docx_report(
+    docx_bytes = await asyncio.to_thread(
+        generate_docx_report,
         query="Task Board Export",
         report_text=summary,
         citations=[],
@@ -134,6 +141,7 @@ async def export_tasks_docx(
 
 @router.get("/export")
 @router.get("/export/md")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def export_tasks_markdown(
     request: Request,
     current_user=Depends(get_current_user),
@@ -152,6 +160,7 @@ async def export_tasks_markdown(
 
 
 @router.post("/{task_id}/export/jira")
+@limiter.limit(RATE_LIMIT_DEFAULT)
 async def export_task_to_jira(
     request: Request,
     task_id: str,
@@ -165,7 +174,7 @@ async def export_task_to_jira(
     if not task_item:
         raise HTTPException(status_code=404, detail="Task item not found")
 
-    integrations = await get_integrations(user_id)
+    integrations = await get_decrypted_integrations(user_id)
     jira_cfg = integrations.get("jira", {})
 
     if not jira_cfg.get("domain") or not jira_cfg.get("apiToken"):
@@ -185,3 +194,32 @@ async def export_task_to_jira(
     if not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to create Jira issue"))
     return res
+
+
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
+
+def _format_tasks_summary(tasks: list) -> str:
+    """Format a list of task dicts into human-readable Markdown/plain text."""
+    if not tasks:
+        return "No tasks found."
+    lines: list = []
+    statuses: dict = {}
+    for t in tasks:
+        s = t.get("status", "todo")
+        statuses.setdefault(s, []).append(t)
+    for s, items in statuses.items():
+        label = s.replace("-", " ").title()
+        lines.append(f"## {label}")
+        for t in items:
+            title = t.get("title") or t.get("name") or "Untitled"
+            priority = t.get("priority", "")
+            due = t.get("dueDate") or t.get("due_date") or ""
+            prefix = f"[{priority}] " if priority else ""
+            due_str = f" (due: {due})" if due else ""
+            lines.append(f"- {prefix}{title}{due_str}")
+            desc = t.get("description", "")
+            if desc:
+                lines.append(f"  {desc[:200]}")
+    return "\n".join(lines)

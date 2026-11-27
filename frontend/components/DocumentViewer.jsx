@@ -325,8 +325,7 @@ function AudioViewer({ src, name }) {
             </div>
           </div>
           <p className="text-center text-sm font-semibold text-zinc-700 dark:text-zinc-300 truncate">{name}</p>
-          <audio controls className="w-full rounded-lg">
-            <source src={src} />
+          <audio controls src={src} className="w-full rounded-lg">
             Your browser does not support audio playback.
           </audio>
         </div>
@@ -390,6 +389,10 @@ export default function DocumentViewer({ open, onClose, file }) {
   // JWT-protected endpoint — a plain <img src> or <iframe src> won't send the
   // Authorization header, resulting in a 401 blank view.
   useEffect(() => {
+    setTextContent(null);
+    setBlobUrl(null);
+    setError(null);
+
     if (!open || !file?.url) return;
 
     // If the file already has inline content, no fetch needed
@@ -400,9 +403,6 @@ export default function DocumentViewer({ open, onClose, file }) {
 
     let objectUrl = null;
     setLoading(true);
-    setError(null);
-    setBlobUrl(null);
-    setTextContent(null);
 
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -416,7 +416,6 @@ export default function DocumentViewer({ open, onClose, file }) {
         objectUrl = URL.createObjectURL(blob);
         setBlobUrl(objectUrl);
 
-        // For text-based types, also decode to string
         const needsText = ["text", "markdown", "json", "csv"].includes(type);
         if (needsText) {
           return blob.text().then((text) => setTextContent(text));
@@ -425,21 +424,13 @@ export default function DocumentViewer({ open, onClose, file }) {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
 
-    // Revoke the blob URL when the viewer closes or file changes
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [open, file?.url, file?.name]);
-
-  useEffect(() => {
-    setTextContent(null);
-    setBlobUrl(null);
-    setError(null);
-  }, [file?.name]);
+  }, [open, file?.url, file?.name, file?.content, type]);
 
   const resolvedContent = file?.content || textContent;
-  // Use blob URL for all rendering (falls back to file.url for demo/static files)
-  const resolvedSrc = blobUrl || file?.url;
+  const resolvedSrc = blobUrl || (file?.url?.startsWith("blob:") || file?.url?.startsWith("data:") ? file.url : null);
 
   function renderViewer() {
     if (!file) return null;
@@ -450,13 +441,6 @@ export default function DocumentViewer({ open, onClose, file }) {
         <div className="text-4xl">⚠️</div>
         <p className="font-semibold text-zinc-700 dark:text-zinc-300">Failed to load file</p>
         <p className="text-sm text-zinc-500">{error}</p>
-        {file.url && (
-          <a href={file.url} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" className="gap-2 rounded-xl mt-2">
-              <ExternalLink className="h-4 w-4" /> Open directly
-            </Button>
-          </a>
-        )}
       </div>
     );
 

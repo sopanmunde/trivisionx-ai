@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AutomationCanvas } from "./automation-canvas";
+import { toast } from "sonner";
 
 export default function WorkflowsModal({ isOpen, onClose }) {
   const [workflows, setWorkflows] = useState([]);
@@ -46,9 +47,14 @@ export default function WorkflowsModal({ isOpen, onClose }) {
 
   const fetchWorkflows = async () => {
     if (!isOpen) return;
+    const token = localStorage.getItem("token");
+    const isDemo = localStorage.getItem("is_demo") === "true";
+    if (!token || token === "demo_guest_token" || isDemo) {
+      setWorkflows([]);
+      return;
+    }
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE_URL}/workflows`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -162,22 +168,31 @@ export default function WorkflowsModal({ isOpen, onClose }) {
 
   const handleRunNow = async (wfId) => {
     setRunningId(wfId);
+    let scheduledRefresh = false;
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE_URL}/workflows/${wfId}/run`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        setTimeout(() => {
-          fetchLogs(wfId);
-          fetchWorkflows();
-          setRunningId(null);
-        }, 3000);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Run failed (${res.status})`);
       }
+      toast.success("Workflow triggered. Refreshing execution logs...");
+      scheduledRefresh = true;
+      setTimeout(() => {
+        fetchLogs(wfId);
+        fetchWorkflows();
+        setRunningId(null);
+      }, 3000);
     } catch (err) {
       console.error("Failed to run workflow:", err);
-      setRunningId(null);
+      toast.error(err.message || "Failed to execute workflow");
+    } finally {
+      if (!scheduledRefresh) {
+        setRunningId(null);
+      }
     }
   };
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,6 +27,7 @@ import {
 } from "./ui/dialog";
 import ModernConfirmDialog from "./ModernConfirmDialog";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/api";
 
 export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
   const [formData, setFormData] = useState({
@@ -34,9 +35,15 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
     last_name: "",
     username: "",
     email: "",
+    bio: "",
+    timezone: "UTC",
+    plan: "Free",
+    auth_provider: "password",
+    email_verified: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [focusedField, setFocusedField] = useState(null);
@@ -57,8 +64,12 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
     setError("");
     try {
       const token = localStorage.getItem("token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const res = await fetch(`${apiUrl}/me`, {
+      if (!token || token === "demo_guest_token") {
+        setError("Sign in with an account to manage profile settings.");
+        setIsLoading(false);
+        return;
+      }
+      const res = await fetch(`${API_BASE_URL}/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch profile");
@@ -68,6 +79,11 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
         last_name: data.last_name || "",
         username: data.username || "",
         email: data.email || "",
+        bio: data.bio || "",
+        timezone: data.timezone || "UTC",
+        plan: data.plan || "Free",
+        auth_provider: data.auth_provider || "password",
+        email_verified: Boolean(data.email_verified),
       });
     } catch (err) {
       setError(err.message);
@@ -87,8 +103,7 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
     setSuccess("");
     try {
       const token = localStorage.getItem("token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const res = await fetch(`${apiUrl}/me`, {
+      const res = await fetch(`${API_BASE_URL}/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -98,13 +113,15 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
           first_name: formData.first_name,
           last_name: formData.last_name,
           username: formData.username,
+          bio: formData.bio,
+          timezone: formData.timezone,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Failed to update profile");
 
       setSuccess("Profile updated successfully!");
-      onUpdate(); // Trigger refresh in parent
+      onUpdate();
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err.message);
@@ -113,14 +130,36 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
     }
   };
 
-  const confirmDeleteAccount = () => {
-    setDeleteAccountConfirmOpen(false);
-    localStorage.removeItem("token");
-    document.cookie = "auth_token=; path=/; max-age=0";
-    toast.success("Account permanently deleted");
-    setTimeout(() => {
-      window.location.href = "/signup";
-    }, 1200);
+  const confirmDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (token && token !== "demo_guest_token") {
+        const res = await fetch(`${API_BASE_URL}/me`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail || "Failed to delete account");
+        }
+      }
+      setDeleteAccountConfirmOpen(false);
+      localStorage.removeItem("token");
+      localStorage.removeItem("is_demo");
+      document.cookie = "auth_token=; path=/; max-age=0";
+      document.cookie = "is_demo=; path=/; max-age=0";
+      toast.success("Account and workspace data permanently deleted");
+      setTimeout(() => {
+        window.location.href = "/signup";
+      }, 900);
+    } catch (err) {
+      setDeleteAccountConfirmOpen(false);
+      toast.error(err.message || "Could not delete account");
+      setError(err.message || "Could not delete account");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const initials =
@@ -277,23 +316,24 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                         animate={{ opacity: 1, x: 0 }}
                         className="space-y-4"
                       >
-                        <div className="rounded-2xl border-border bg-muted/30 p-2 space-y-1">
+                        <div className="rounded-2xl border border-border bg-muted/30 p-2 space-y-1">
                           {[
                             {
-                              icon: Fingerprint,
-                              label: "Biometric Login",
-                              status: "Active",
+                              icon: Mail,
+                              label: "Email Verification",
+                              status: formData.email_verified ? "Verified" : "Unverified",
+                              ok: formData.email_verified,
                             },
                             {
                               icon: Shield,
-                              label: "2-Factor Auth",
-                              status: "Off",
+                              label: "Authentication Method",
+                              status: String(formData.auth_provider || "password").toUpperCase(),
+                              ok: true,
                             },
                           ].map((item, idx) => (
-                            <button
+                            <div
                               key={idx}
-                              type="button"
-                              className="flex w-full items-center justify-between rounded-xl px-4 py-3 hover:bg-background transition-colors border border-transparent hover:border-border/80 shadow-sm hover:shadow-md"
+                              className="flex w-full items-center justify-between rounded-xl px-4 py-3 bg-background/60 border border-border/60"
                             >
                               <div className="flex items-center gap-3">
                                 <div className="h-9 w-9 rounded-lg bg-background border border-border flex items-center justify-center">
@@ -304,19 +344,20 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                                 </span>
                               </div>
                               <span
-                                className={`text-[11px] font-bold ${item.status === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
+                                className={`text-[11px] font-bold ${item.ok ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}
                               >
                                 {item.status}
                               </span>
-                            </button>
+                            </div>
                           ))}
                         </div>
 
                         <div className="pt-6">
                           <button
                             type="button"
+                            disabled={isDeleting}
                             onClick={() => setDeleteAccountConfirmOpen(true)}
-                            className="group flex w-full items-center justify-between rounded-2xl border border-destructive/30 bg-destructive/10 px-5 py-4 hover:bg-destructive/20 transition-all cursor-pointer"
+                            className="group flex w-full items-center justify-between rounded-2xl border border-destructive/30 bg-destructive/10 px-5 py-4 hover:bg-destructive/20 transition-all cursor-pointer disabled:opacity-50"
                           >
                             <div className="flex items-center gap-3">
                               <Trash2 className="h-4.5 w-4.5 text-destructive" />
@@ -328,6 +369,41 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
                           </button>
                         </div>
                       </motion.div>
+                    )}
+
+                    {activeTab === "billing" && (
+                      <motion.div
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="space-y-4"
+                      >
+                        <div className="rounded-2xl border border-border bg-muted/30 p-5 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                              Active Plan
+                            </span>
+                            <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary">
+                              {formData.plan}
+                            </span>
+                          </div>
+                          <p className="text-[13px] text-muted-foreground">
+                            You can configure your own provider API keys in Brain Studio at any time or review plan limits on the pricing page.
+                          </p>
+                          <a
+                            href="/pricing"
+                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
+                          >
+                            View Plans &amp; Upgrade
+                          </a>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {error && (
+                      <div className="flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-[13px] font-medium text-destructive">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <span>{error}</span>
+                      </div>
                     )}
 
                     <AnimatePresence>

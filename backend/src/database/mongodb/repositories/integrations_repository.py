@@ -1,11 +1,27 @@
 """Integrations repository — user integration configurations and plugins."""
-from datetime import datetime
-from typing import Dict, Any
+from copy import deepcopy
+from datetime import datetime, timezone
+from typing import Dict, Any, Optional
+from pymongo.errors import DuplicateKeyError
 from database.mongodb.connection import get_database
 from core.constants import COLLECTION_INTEGRATIONS
+from core.security import encrypt_secret, decrypt_secret, mask_secret
 from core.logger import get_logger
 
 logger = get_logger(__name__)
+
+ALLOWED_INTEGRATION_KEYS = frozenset({
+    "apps", "slack", "teams", "notion", "confluence",
+    "jira", "export", "skills", "mcp_plugins", "lsp", "acp"
+})
+
+_SECRET_PATHS = (
+    ("slack", "webhookUrl"),
+    ("teams", "webhookUrl"),
+    ("notion", "apiKey"),
+    ("confluence", "apiToken"),
+    ("jira", "apiToken"),
+)
 
 
 def _db():
@@ -81,8 +97,8 @@ def get_default_integrations(user_id: str) -> Dict[str, Any]:
                 "id": "mcp-1",
                 "name": "SQLite Server",
                 "endpoint": "http://localhost:8081/mcp/sqlite",
-                "status": "connected",
-                "token": "sq-default-token-xyz123"
+                "status": "disconnected",
+                "token": ""
             },
             {
                 "id": "mcp-2",
@@ -105,43 +121,137 @@ def get_default_integrations(user_id: str) -> Dict[str, Any]:
             "contextLength": 4096,
             "ghostTextStyle": "italic-zinc"
         },
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
     }
 
 
-async def get_integrations(user_id: str) -> Dict[str, Any]:
+def _sanitize_nested(obj: Any) -> Any:
+    if isinstance(obj, dict):
+        return {
+            str(k): _sanitize_nested(v)
+            for k, v in obj.items()
+            if not str(k).startswith("$") and "." not in str(k)
+        }
+    if isinstance(obj, list):
+        return [_sanitize_nested(item) for item in obj]
+    return obj
+
+
+def _is_masked_secret(val: Any) -> bool:
+    return isinstance(val, str) and ("••••" in val or "***" in val)
+
+
+def _transform_doc_secrets(doc: Dict[str, Any], *, mask_for_response: bool) -> Dict[str, Any]:
+    out = deepcopy(doc)
+    for section, field in _SECRET_PATHS:
+        sec_obj = out.get(section)
+        if isinstance(sec_obj, dict):
+            raw = sec_obj.get(field) or ""
+            plain = decrypt_secret(raw) if isinstance(raw, str) and raw else ""
+            if mask_for_response:
+                sec_obj[field] = mask_secret(plain) if plain else ""
+                sec_obj[f"has{field[0].upper()}{field[1:]}"] = bool(plain)
+            else:
+                sec_obj[field] = plain
+
+    plugins = out.get("mcp_plugins")
+    if isinstance(plugins, list):
+        for plugin in plugins:
+            if isinstance(plugin, dict):
+                raw_tok = plugin.get("token") or ""
+                plain_tok = decrypt_secret(raw_tok) if isinstance(raw_tok, str) and raw_tok else ""
+                if mask_for_response:
+                    plugin["token"] = mask_secret(plain_tok) if plain_tok else ""
+                    plugin["hasToken"] = bool(plain_tok)
+                else:
+                    plugin["token"] = plain_tok
+
+    if "_id" in out:
+        out["id"] = str(out.pop("_id"))
+    for dt_field in ("created_at", "updated_at"):
+        if isinstance(out.get(dt_field), datetime):
+            out[dt_field] = out[dt_field].isoformat()
+    return out
+
+
+async def _fetch_or_create_integrations_doc(user_id: str) -> Dict[str, Any]:
     doc = await _db()[COLLECTION_INTEGRATIONS].find_one({"user_id": user_id})
     defaults = get_default_integrations(user_id)
     if not doc:
         doc = defaults
-        await _db()[COLLECTION_INTEGRATIONS].insert_one(doc)
+        try:
+            await _db()[COLLECTION_INTEGRATIONS].insert_one(doc)
+        except DuplicateKeyError:
+            doc = await _db()[COLLECTION_INTEGRATIONS].find_one({"user_id": user_id}) or doc
     else:
-        # Merge missing top-level integration keys if schema expanded
-        updated = False
-        for key in ["slack", "teams", "notion", "confluence", "jira", "export"]:
+        missing: Dict[str, Any] = {}
+        for key in ALLOWED_INTEGRATION_KEYS:
             if key not in doc:
                 doc[key] = defaults[key]
-                updated = True
-        if updated:
+                missing[key] = defaults[key]
+        if missing:
             await _db()[COLLECTION_INTEGRATIONS].update_one(
                 {"user_id": user_id},
-                {"$set": {k: doc[k] for k in ["slack", "teams", "notion", "confluence", "jira", "export"] if k in doc}}
+                {"$set": missing}
             )
-
-    doc["id"] = str(doc.pop("_id"))
     return doc
 
 
+async def get_integrations(user_id: str) -> Dict[str, Any]:
+    doc = await _fetch_or_create_integrations_doc(user_id)
+    return _transform_doc_secrets(doc, mask_for_response=True)
+
+
+async def get_decrypted_integrations(user_id: str) -> Dict[str, Any]:
+    """Internal helper returning decrypted integration credentials for publish/dispatch services."""
+    doc = await _fetch_or_create_integrations_doc(user_id)
+    return _transform_doc_secrets(doc, mask_for_response=False)
+
 
 async def update_integrations(user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-    update_data = {k: v for k, v in data.items() if k not in ["_id", "id", "user_id", "created_at"]}
-    update_data["updated_at"] = datetime.utcnow()
-    
+    existing_doc = await _fetch_or_create_integrations_doc(user_id)
+    update_data: Dict[str, Any] = {}
+
+    for k, v in data.items():
+        if k not in ALLOWED_INTEGRATION_KEYS:
+            continue
+        cleaned_val = _sanitize_nested(v)
+        update_data[k] = cleaned_val
+
+    for section, field in _SECRET_PATHS:
+        if section in update_data and isinstance(update_data[section], dict) and field in update_data[section]:
+            incoming = update_data[section][field]
+            if _is_masked_secret(incoming):
+                prev_raw = (existing_doc.get(section) or {}).get(field, "")
+                update_data[section][field] = prev_raw
+            elif isinstance(incoming, str) and incoming.strip():
+                update_data[section][field] = encrypt_secret(incoming.strip())
+            else:
+                update_data[section][field] = ""
+
+    if "mcp_plugins" in update_data and isinstance(update_data["mcp_plugins"], list):
+        existing_plugins = {
+            p.get("id"): p.get("token", "")
+            for p in (existing_doc.get("mcp_plugins") or [])
+            if isinstance(p, dict) and p.get("id")
+        }
+        for plugin in update_data["mcp_plugins"]:
+            if isinstance(plugin, dict) and "token" in plugin:
+                tok = plugin["token"]
+                if _is_masked_secret(tok):
+                    plugin["token"] = existing_plugins.get(plugin.get("id"), "")
+                elif isinstance(tok, str) and tok.strip():
+                    plugin["token"] = encrypt_secret(tok.strip())
+                else:
+                    plugin["token"] = ""
+
+    update_data["updated_at"] = datetime.now(timezone.utc)
+
     await _db()[COLLECTION_INTEGRATIONS].update_one(
         {"user_id": user_id},
         {"$set": update_data},
         upsert=True
     )
-    
+
     return await get_integrations(user_id)

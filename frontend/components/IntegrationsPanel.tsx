@@ -59,6 +59,23 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
     try {
       setIsLoading(true);
       const token = localStorage.getItem("token");
+      const isDemo = localStorage.getItem("is_demo") === "true";
+      if (!token || token === "demo_guest_token" || isDemo) {
+        setConfig({
+          apps: {
+            tasks: { enabled: true, autoSync: true, defaultList: "Inbox" },
+            calendar: { enabled: true, syncInterval: 30 },
+            email: { enabled: true, autoDraft: false },
+            gallery: { enabled: true, maxFileSize: 5 },
+            notes: { enabled: true, notionSync: false, keepSync: true },
+          },
+          skills: [],
+          mcp_plugins: [],
+          lsp: { enabled: false, servers: [] },
+          acp: { enabled: false, triggerDelay: 150, contextLength: 4096 },
+        });
+        return;
+      }
       const res = await fetch(`${API_BASE_URL}/integrations`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -77,9 +94,14 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
   };
 
   const saveConfig = async (updatedConfig = config) => {
+    const token = localStorage.getItem("token");
+    const isDemo = localStorage.getItem("is_demo") === "true";
+    if (!token || token === "demo_guest_token" || isDemo) {
+      toast.error("Sign in with an account to persist settings.");
+      return;
+    }
     try {
       setIsSaving(true);
-      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE_URL}/integrations`, {
         method: "PUT",
         headers: {
@@ -105,13 +127,14 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
 
   // Helper to toggle boolean configs
   const handleToggleApp = (appKey: string, field: string) => {
+    const appObj = config?.apps?.[appKey] || {};
     const updated = {
       ...config,
       apps: {
-        ...config.apps,
+        ...(config?.apps || {}),
         [appKey]: {
-          ...config.apps[appKey],
-          [field]: !config.apps[appKey][field]
+          ...appObj,
+          [field]: !appObj[field]
         }
       }
     };
@@ -120,12 +143,13 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
   };
 
   const handleUpdateAppText = (appKey: string, field: string, val: any) => {
+    const appObj = config?.apps?.[appKey] || {};
     setConfig({
       ...config,
       apps: {
-        ...config.apps,
+        ...(config?.apps || {}),
         [appKey]: {
-          ...config.apps[appKey],
+          ...appObj,
           [field]: val
         }
       }
@@ -136,7 +160,7 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
   const handleToggleSkill = (skillId: string) => {
     const updated = {
       ...config,
-      skills: config.skills.map((s: any) =>
+      skills: (config?.skills || []).map((s: any) =>
         s.id === skillId ? { ...s, isActive: !s.isActive } : s
       )
     };
@@ -147,7 +171,7 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
   const handleAddSkill = () => {
     if (!newSkillName.trim()) return;
     const newSkill = {
-      id: `skill-${Math.random().toString(36).slice(2)}`,
+      id: `skill-${Date.now()}`,
       name: newSkillName.trim(),
       description: newSkillDesc.trim(),
       systemPrompt: newSkillPrompt.trim(),
@@ -155,7 +179,7 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
     };
     const updated = {
       ...config,
-      skills: [...config.skills, newSkill]
+      skills: [...(config?.skills || []), newSkill]
     };
     setConfig(updated);
     saveConfig(updated);
@@ -169,7 +193,7 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
   const handleDeleteSkill = (skillId: string) => {
     const updated = {
       ...config,
-      skills: config.skills.filter((s: any) => s.id !== skillId)
+      skills: (config?.skills || []).filter((s: any) => s.id !== skillId)
     };
     setConfig(updated);
     saveConfig(updated);
@@ -179,15 +203,15 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
   const handleAddMcp = () => {
     if (!newMcpName.trim() || !newMcpUrl.trim()) return;
     const newMcp = {
-      id: `mcp-${Math.random().toString(36).slice(2)}`,
+      id: `mcp-${Date.now()}`,
       name: newMcpName.trim(),
       endpoint: newMcpUrl.trim(),
-      status: "connected",
+      status: "configured",
       token: newMcpToken.trim()
     };
     const updated = {
       ...config,
-      mcp_plugins: [...config.mcp_plugins, newMcp]
+      mcp_plugins: [...(config?.mcp_plugins || []), newMcp]
     };
     setConfig(updated);
     saveConfig(updated);
@@ -201,7 +225,7 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
   const handleDeleteMcp = (mcpId: string) => {
     const updated = {
       ...config,
-      mcp_plugins: config.mcp_plugins.filter((m: any) => m.id !== mcpId)
+      mcp_plugins: (config?.mcp_plugins || []).filter((m: any) => m.id !== mcpId)
     };
     setConfig(updated);
     saveConfig(updated);
@@ -212,8 +236,8 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
     const updated = {
       ...config,
       lsp: {
-        ...config.lsp,
-        enabled: !config.lsp.enabled
+        ...(config?.lsp || {}),
+        enabled: !config?.lsp?.enabled
       }
     };
     setConfig(updated);
@@ -224,8 +248,8 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
     const updated = {
       ...config,
       lsp: {
-        ...config.lsp,
-        servers: config.lsp.servers.map((s: any) =>
+        ...(config?.lsp || {}),
+        servers: (config?.lsp?.servers || []).map((s: any) =>
           s.language === lang ? { ...s, active: !s.active } : s
         )
       }
@@ -239,8 +263,8 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
     const updated = {
       ...config,
       acp: {
-        ...config.acp,
-        enabled: !config.acp.enabled
+        ...(config?.acp || {}),
+        enabled: !config?.acp?.enabled
       }
     };
     setConfig(updated);

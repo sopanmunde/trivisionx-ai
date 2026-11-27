@@ -111,19 +111,8 @@ SEED_TASKS = [
 
 
 async def get_user_tasks(user_id: str) -> List[Dict]:
-    """Retrieves all tasks for the user. Seeds initial mock tasks if none exist."""
-    count = await _db()[COLLECTION_TASKS].count_documents({"user_id": user_id})
-    if count == 0:
-        logger.info(f"Seeding {len(SEED_TASKS)} mock tasks for user {user_id}")
-        seeded = []
-        for index, t in enumerate(SEED_TASKS):
-            task_copy = t.copy()
-            task_copy["user_id"] = user_id
-            task_copy["created_at"] = datetime.now(timezone.utc)
-            seeded.append(task_copy)
-        await _db()[COLLECTION_TASKS].insert_many(seeded)
-
-    docs = await _db()[COLLECTION_TASKS].find({"user_id": user_id}).to_list(1000)
+    """Retrieves all tasks for the user from MongoDB."""
+    docs = await _db()[COLLECTION_TASKS].find({"user_id": user_id}).sort("created_at", -1).to_list(1000)
     return [clean_task(d) for d in docs]
 
 
@@ -152,14 +141,18 @@ async def create_task(user_id: str, task_data: Dict) -> Dict:
 async def update_task_db(user_id: str, task_id: str, task_update: Dict) -> Optional[Dict]:
     """Updates an existing task in MongoDB."""
     try:
-        # Prevent manual user_id or _id edits
-        task_update.pop("id", None)
-        task_update.pop("_id", None)
-        task_update.pop("user_id", None)
+        allowed_fields = {
+            "code", "type", "title", "description", "status", "priority",
+            "tags", "dueDate", "assignee", "progress", "subtasks", "history"
+        }
+        filtered_update = {k: v for k, v in task_update.items() if k in allowed_fields}
+        if not filtered_update:
+            return None
+        filtered_update["updated_at"] = datetime.now(timezone.utc)
 
         result = await _db()[COLLECTION_TASKS].find_one_and_update(
             {"_id": ObjectId(task_id), "user_id": user_id},
-            {"$set": task_update},
+            {"$set": filtered_update},
             return_document=True
         )
         if result:

@@ -4,9 +4,14 @@ src/core/llm_factory.py — Multi-LLM Provider Factory
 Returns the appropriate LangChain chat model based on provider string.
 Supports: openai, anthropic, google, groq, mistral, cohere, ollama, lmstudio, vllm, custom
 """
-from functools import lru_cache
+from contextvars import ContextVar
 from typing import Optional
+import asyncio
+import threading
+import time
+import weakref
 
+from langchain_core.callbacks import AsyncCallbackHandler
 from langchain_core.language_models.chat_models import BaseChatModel
 from core.config import settings
 from core.logger import get_logger
@@ -14,8 +19,6 @@ from core.logger import get_logger
 logger = get_logger(__name__)
 
 PROVIDER_PRIORITY = ["openai", "anthropic", "google", "groq", "mistral", "cohere"]
-
-from contextvars import ContextVar
 
 PROVIDER_MODEL_MAP = {
     "openai":     ("OPENAI_API_KEY",     settings.OPENAI_CHAT_MODEL),
@@ -31,39 +34,47 @@ PROVIDER_MODEL_MAP = {
 }
 
 current_user_keys: ContextVar[dict] = ContextVar("current_user_keys", default={})
+current_user_id: ContextVar[str] = ContextVar("current_user_id", default="")
 
-
-import asyncio
-import time
 
 class LLMRateLimiter:
     def __init__(self):
         self.last_request_time = 0.0
-        self.lock = asyncio.Lock()
+        self._thread_lock = threading.Lock()
+        self._loop_locks: weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, asyncio.Lock] = weakref.WeakKeyDictionary()
+
+    def _get_loop_lock(self) -> asyncio.Lock:
+        loop = asyncio.get_running_loop()
+        with self._thread_lock:
+            lock = self._loop_locks.get(loop)
+            if lock is None:
+                lock = asyncio.Lock()
+                self._loop_locks[loop] = lock
+            return lock
 
     async def throttle_async(self):
         rate_limit = getattr(settings, "RATE_LIMIT_PER_MINUTE", 60)
         if rate_limit <= 0:
             return
-        
+
         interval = 60.0 / rate_limit
-        async with self.lock:
+        lock = self._get_loop_lock()
+        async with lock:
             now = time.monotonic()
-            time_since_last = now - self.last_request_time
-            if time_since_last < interval:
-                sleep_time = interval - time_since_last
-                logger.info(
-                    f"RateLimiter: Throttling async LLM request. "
-                    f"Sleeping for {sleep_time:.2f}s (Rate: {rate_limit} RPM)"
-                )
-                await asyncio.sleep(sleep_time)
-            self.last_request_time = time.monotonic()
+            next_slot = max(now, self.last_request_time + interval)
+            sleep_time = max(0.0, next_slot - now)
+            self.last_request_time = next_slot
+
+        if sleep_time > 0:
+            logger.info(
+                f"RateLimiter: Throttling async LLM request. "
+                f"Sleeping for {sleep_time:.2f}s (Rate: {rate_limit} RPM)"
+            )
+            await asyncio.sleep(sleep_time)
 
 
 _global_limiter = LLMRateLimiter()
 
-
-from langchain_core.callbacks import AsyncCallbackHandler
 
 class RateLimitingCallbackHandler(AsyncCallbackHandler):
     async def on_llm_start(self, *args, **kwargs) -> None:
@@ -88,7 +99,7 @@ def get_llm(
     Factory: returns a LangChain chat model for the given provider.
 
     Args:
-        provider:  'anthropic' | 'google' | 'groq' | 'mistral'
+        provider:  'anthropic' | 'google' | 'groq' | 'mistral' | 'openai' | 'cohere' | ...
         model_name: Override the default model for the provider.
         temperature: LLM temperature (0.0 - 1.0).
         streaming: Enable token-level streaming.
@@ -101,11 +112,10 @@ def get_llm(
         ValueError: If the provider is unknown.
         RuntimeError: If the required API key is missing.
     """
-    provider = (provider or settings.DEFAULT_LLM_PROVIDER).lower().strip()
-    model = model_name or ""
-    provider = _resolve_provider(provider, model)
+    raw_provider = (provider or "").lower().strip()
+    model = (model_name or "").strip()
+    provider = _resolve_provider(raw_provider, model)
 
-    # Read custom user keys from ContextVar if none is passed explicitly
     if not api_key:
         keys_dict = current_user_keys.get()
         if keys_dict and provider in keys_dict:
@@ -148,15 +158,15 @@ def _resolve_provider(provider: str, model: str) -> str:
     if not model:
         return settings.DEFAULT_LLM_PROVIDER
     model_lower = model.lower()
-    if model_lower.startswith("gpt") or model_lower.startswith("o1"):
+    if model_lower.startswith(("gpt", "o1", "o3", "o4")):
         return "openai"
     if model_lower.startswith("claude"):
         return "anthropic"
     if model_lower.startswith("gemini"):
         return "google"
-    if model_lower.startswith("llama") or "mixtral" in model_lower:
+    if model_lower.startswith(("llama", "gemma")) or "mixtral" in model_lower:
         return "groq"
-    if model_lower.startswith("mistral"):
+    if model_lower.startswith(("mistral", "codestral", "open-mistral")):
         return "mistral"
     if model_lower.startswith("command"):
         return "cohere"
@@ -206,7 +216,7 @@ def _build_google(model: str, temperature: float, streaming: bool, api_key: Opti
         streaming=streaming,
         google_api_key=key,
         max_output_tokens=4096,
-        max_retries=0,
+        max_retries=1,
     )
 
 
@@ -243,9 +253,16 @@ def _build_cohere(model: str, temperature: float, streaming: bool, api_key: Opti
     )
 
 
+def _require_endpoint(env_var: str, provider_name: str) -> str:
+    endpoint = (getattr(settings, env_var, "") or "").strip()
+    if not endpoint:
+        raise RuntimeError(f"{env_var} is not configured for {provider_name}.")
+    return endpoint
+
+
 def _build_ollama(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
-    base_url = settings.OLLAMA_ENDPOINT
+    base_url = _require_endpoint("OLLAMA_ENDPOINT", "Ollama")
     if not base_url.endswith("/v1"):
         base_url = f"{base_url.rstrip('/')}/v1"
     return ChatOpenAI(
@@ -259,7 +276,7 @@ def _build_ollama(model: str, temperature: float, streaming: bool, api_key: Opti
 
 def _build_lmstudio(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
-    base_url = settings.LMSTUDIO_ENDPOINT
+    base_url = _require_endpoint("LMSTUDIO_ENDPOINT", "LM Studio")
     return ChatOpenAI(
         model=model or "any-gguf-model",
         temperature=temperature,
@@ -271,7 +288,7 @@ def _build_lmstudio(model: str, temperature: float, streaming: bool, api_key: Op
 
 def _build_vllm(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
-    base_url = settings.VLLM_ENDPOINT
+    base_url = _require_endpoint("VLLM_ENDPOINT", "vLLM")
     return ChatOpenAI(
         model=model or "any-huggingface-model",
         temperature=temperature,
@@ -283,7 +300,7 @@ def _build_vllm(model: str, temperature: float, streaming: bool, api_key: Option
 
 def _build_custom(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
-    base_url = settings.CUSTOM_ENDPOINT
+    base_url = _require_endpoint("CUSTOM_ENDPOINT", "Custom Endpoint")
     return ChatOpenAI(
         model=model or "custom",
         temperature=temperature,
@@ -293,17 +310,16 @@ def _build_custom(model: str, temperature: float, streaming: bool, api_key: Opti
     )
 
 
-
-
 def get_available_providers() -> dict:
-    """Return which providers are configured (have API keys set)."""
+    """Return which providers are configured (env or active user BYOK key)."""
+    user_keys = current_user_keys.get() or {}
     return {
-        "openai":    bool(settings.OPENAI_API_KEY),
-        "anthropic": bool(settings.ANTHROPIC_API_KEY),
-        "google":    bool(settings.GOOGLE_API_KEY),
-        "groq":      bool(settings.GROQ_API_KEY),
-        "mistral":   bool(settings.MISTRAL_API_KEY),
-        "cohere":    bool(settings.COHERE_API_KEY),
+        "openai":    bool(settings.OPENAI_API_KEY or user_keys.get("openai")),
+        "anthropic": bool(settings.ANTHROPIC_API_KEY or user_keys.get("anthropic")),
+        "google":    bool(settings.GOOGLE_API_KEY or user_keys.get("google")),
+        "groq":      bool(settings.GROQ_API_KEY or user_keys.get("groq")),
+        "mistral":   bool(settings.MISTRAL_API_KEY or user_keys.get("mistral")),
+        "cohere":    bool(settings.COHERE_API_KEY or user_keys.get("cohere")),
         "ollama":    bool(settings.OLLAMA_ENDPOINT),
         "lmstudio":  bool(settings.LMSTUDIO_ENDPOINT),
         "vllm":      bool(settings.VLLM_ENDPOINT),

@@ -2,6 +2,7 @@
 from typing import AsyncGenerator, List, Dict, Optional
 from langchain_core.documents import Document
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from agents.langgraph.nodes.utils import extract_text
 from rag.retrieval.citation_retriever import retrieve_with_citations
 from rag.pipelines.rag_pipeline import build_context_string, RAG_SYSTEM_PROMPT
 from core.logger import get_logger
@@ -38,7 +39,9 @@ async def stream_rag_response(
 
     full_response = ""
     async for chunk in llm.astream(messages):
-        token = chunk.content
+        token = extract_text(chunk.content)
+        if not token:
+            continue
         full_response += token
         yield {"type": "token", "data": token}
 

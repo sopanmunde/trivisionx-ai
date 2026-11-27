@@ -89,37 +89,11 @@ async def drain_inflight_requests(timeout: float):
     logger.info("In-flight requests successfully drained.")
 
 
-def register_signal_handlers():
-    """
-    Cooperatively registers SIGINT and SIGTERM handlers to intercept shutdown
-    signals without breaking Uvicorn's termination loop.
-    """
-    import signal
-    logger = get_logger("main.signals")
-    original_handlers = {}
-
-    def handle_signal(sig, frame):
-        logger.info(f"Received shutdown signal {sig}. Initiating graceful cleanup...")
-        orig_handler = original_handlers.get(sig)
-        if orig_handler and callable(orig_handler):
-            orig_handler(sig, frame)
-
-    for sig in (signal.SIGTERM, signal.SIGINT):
-        try:
-            original_handlers[sig] = signal.getsignal(sig)
-            signal.signal(sig, handle_signal)
-            logger.info(f"Cooperative signal handler registered for signal {sig}")
-        except ValueError:
-            pass
-
-print("Importing config...")
 from core.config import settings
 from core.logger import get_logger
-print("Importing mongo indexes...")
 from database.mongodb.indexes import create_indexes
 from middleware.request_logger import RequestLoggerMiddleware
 
-print("Importing routers...")
 from api.routes.auth_routes import router as auth_router
 from api.routes.google_auth import router as google_auth_router
 from api.routes.github_auth import router as github_auth_router
@@ -142,7 +116,6 @@ from api.routes.workflow_routes import router as workflow_router
 from api.routes.tools_routes import router as tools_router
 
 logger = get_logger(__name__)
-print("main.py imports complete.")
 
 
 @asynccontextmanager
@@ -152,7 +125,6 @@ async def lifespan(app: FastAPI):
     All failures are non-fatal (warnings) so the app can start degraded.
     """
     logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
-    register_signal_handlers()
 
     try:
         await create_indexes()
@@ -229,19 +201,17 @@ async def lifespan(app: FastAPI):
 
     try:
         t_start = time.time()
-        from database.mongodb.connection import get_mongo_client
-        get_mongo_client().close()
+        from database.mongodb.connection import close_mongo_client
+        close_mongo_client()
         logger.info(f"[OK] MongoDB client connection closed in {time.time() - t_start:.4f}s")
     except Exception as e:
         logger.warning(f"Failed to close MongoDB client: {e}")
 
     try:
         t_start = time.time()
-        from core.cache import _get_client
-        client = await _get_client()
-        if client is not None:
-            await client.close()
-            logger.info(f"[OK] Redis client connection closed in {time.time() - t_start:.4f}s")
+        from core.cache import close_cache_client
+        await close_cache_client()
+        logger.info(f"[OK] Redis client connection closed in {time.time() - t_start:.4f}s")
     except Exception as e:
         logger.warning(f"Failed to close Redis client: {e}")
 
@@ -276,16 +246,32 @@ def create_app() -> FastAPI:
 
     origins = [
         settings.FRONTEND_URL,
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3001",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
         "https://trivisionx-ai.vercel.app",
     ]
+    if settings.DEBUG:
+        origins.extend([
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3001",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ])
     origins = list(dict.fromkeys(o for o in origins if o))
 
+    allowed_hosts_env = os.environ.get("ALLOWED_HOSTS", "").strip()
+    if allowed_hosts_env and allowed_hosts_env != "*":
+        app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=[h.strip() for h in allowed_hosts_env.split(",") if h.strip()],
+        )
+    app.add_middleware(RequestLoggerMiddleware)
+    app.add_middleware(
+        CompressionMiddleware,
+        minimum_size=1000,
+        exclude_paths=["/api/chat/", "/api/documents/upload/stream"],
+    )
+    app.add_middleware(GracefulShutdownMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -293,14 +279,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
-    app.add_middleware(RequestLoggerMiddleware)
-    app.add_middleware(
-        CompressionMiddleware,
-        minimum_size=1000,
-        exclude_paths=["/api/chat/"],
-    )
-    app.add_middleware(GracefulShutdownMiddleware)
 
     app.include_router(auth_router,          prefix="/api/auth",                tags=["auth"])
     app.include_router(google_auth_router,   prefix="/api/auth/google",         tags=["auth-google"])

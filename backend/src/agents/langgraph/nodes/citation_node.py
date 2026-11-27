@@ -59,7 +59,7 @@ async def evaluate_citations_relevance(
         structured_llm = llm.with_structured_output(CitationRelevanceScorer)
         result = await structured_llm.ainvoke([SystemMessage(content=prompt)])
         if result and hasattr(result, "relevance_scores") and len(result.relevance_scores) == len(snippets):
-            return [round(s, 2) for s in result.relevance_scores]
+            return [round(min(1.0, max(0.0, float(s))), 2) for s in result.relevance_scores]
     except Exception as e:
         logger.warning(
             f"[Citation] Failed to score citations using LLM structured output: {e}. "
@@ -108,6 +108,11 @@ async def citation_node(state: AgentState) -> dict:
         for idx, cit in enumerate(enriched):
             cit["confidence"] = scores[idx] if idx < len(scores) else round(max(0.95 - idx * 0.05, 0.50), 2)
 
+        enriched.sort(key=lambda c: float(c.get("confidence", 0.0)), reverse=True)
+        for rank, cit in enumerate(enriched, 1):
+            cit["rank"] = rank
+            cit["index"] = rank
+
         logger.info(
             f"[Citation] {len(enriched)} citations "
             f"({len(existing_citations) - len(enriched)} dupes removed)"
@@ -117,7 +122,7 @@ async def citation_node(state: AgentState) -> dict:
     citations: list = []
     seen: set = set()
     for i, doc in enumerate(docs):
-        meta = doc.get("metadata", {})
+        meta = doc.get("metadata", {}) if isinstance(doc, dict) else (getattr(doc, "metadata", {}) or {})
         source = meta.get("filename", meta.get("source", "Unknown"))
         page = meta.get("page", "N/A")
         doc_id = doc.get("doc_id", f"{source}::{page}::{i}")
@@ -146,5 +151,10 @@ async def citation_node(state: AgentState) -> dict:
     for idx, cit in enumerate(citations):
         cit["confidence"] = scores[idx] if idx < len(scores) else round(max(0.95 - idx * 0.05, 0.50), 2)
 
-    logger.info(f"[Citation] Generated {len(citations)} citations (fallback)")
+    citations.sort(key=lambda c: float(c.get("confidence", 0.0)), reverse=True)
+    for rank, cit in enumerate(citations, 1):
+        cit["rank"] = rank
+        cit["index"] = rank
+
+    logger.info(f"[Citation] Generated {len(citations)} citations")
     return {"citations": citations, "current_node": "citation"}

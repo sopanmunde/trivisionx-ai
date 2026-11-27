@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Analytics } from '@vercel/analytics/next';
-import { headers } from "next/headers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -55,14 +54,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { GlobalCommandPalette } from "@/components/global-command-palette";
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers()
-  const nonce = headersList.get("x-nonce") || undefined
-
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className="font-sans antialiased">
@@ -71,15 +67,13 @@ export default async function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
-          nonce={nonce}
         >
           <TooltipProvider>
             {children}
             <GlobalCommandPalette />
           </TooltipProvider>
           <Toaster position="top-center" />
-          {/* @ts-expect-error - Analytics component supports nonce at runtime but lacks it in some type definitions */}
-          <Analytics nonce={nonce} />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>

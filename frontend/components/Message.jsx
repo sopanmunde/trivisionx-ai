@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cls } from "./utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -7,9 +7,30 @@ import "highlight.js/styles/github-dark.css";
 import { Copy, Check, Volume2, VolumeX, ChevronDown, X, ShieldCheck } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
+function extractNodeText(node) {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(extractNodeText).join("");
+  if (node && typeof node === "object" && node.props) {
+    return extractNodeText(node.props.children);
+  }
+  return "";
+}
+
+function isSafeUrl(url) {
+  if (typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (trimmed.startsWith("/")) return true;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function CodeBlock({ children, className, ...props }) {
   const [copied, setCopied] = useState(false);
-  const code = typeof children === "string" ? children : "";
+  const code = extractNodeText(children);
 
   const handleCopy = async () => {
     try {
@@ -54,14 +75,38 @@ export default function Message({ role, content, sources, quality_score, agent_s
   const isUser = role === "user";
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioInstance, setAudioInstance] = useState(null);
+  const audioUrlRef = useRef(null);
   const [showSteps, setShowSteps] = useState(false);
+
+  const cleanupAudio = () => {
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (audioInstance) {
+        audioInstance.pause();
+      }
+      cleanupAudio();
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [audioInstance]);
 
   const handleSpeak = async () => {
     if (isSpeaking) {
       if (audioInstance) {
         audioInstance.pause();
+        setAudioInstance(null);
       }
-      window.speechSynthesis.cancel();
+      cleanupAudio();
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
       setIsSpeaking(false);
       return;
     }
@@ -73,7 +118,7 @@ export default function Message({ role, content, sources, quality_score, agent_s
       const url = `${API_BASE_URL}/audio/tts?text=${encodeURIComponent(content)}`;
 
       const testRes = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: token && token !== "demo_guest_token" ? { Authorization: `Bearer ${token}` } : {}
       });
 
       if (!testRes.ok) {
@@ -81,27 +126,34 @@ export default function Message({ role, content, sources, quality_score, agent_s
       }
 
       const audioBlob = await testRes.blob();
+      cleanupAudio();
       const audioUrl = URL.createObjectURL(audioBlob);
+      audioUrlRef.current = audioUrl;
       const audio = new Audio(audioUrl);
       setAudioInstance(audio);
 
       audio.onended = () => {
         setIsSpeaking(false);
         setAudioInstance(null);
+        cleanupAudio();
       };
 
       audio.onerror = () => {
         setIsSpeaking(false);
         setAudioInstance(null);
+        cleanupAudio();
       };
 
       await audio.play();
 
     } catch (err) {
-      console.log("ElevenLabs TTS not available, falling back to Browser speechSynthesis: ", err.message);
+      if (typeof window === "undefined" || !("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+        setIsSpeaking(false);
+        return;
+      }
       window.speechSynthesis.cancel();
 
-      const cleanText = content
+      const cleanText = String(content || "")
         .replace(/\[\d+\]/g, "")
         .replace(/[*_`#]/g, "")
         .trim();
@@ -148,10 +200,10 @@ export default function Message({ role, content, sources, quality_score, agent_s
 
       <div
         className={cls(
-          "text-[14px] sm:text-[15px] leading-relaxed max-w-[92%] sm:max-w-[85%] md:max-w-[78%] transition-all duration-200",
+          "text-[14px] sm:text-[15px] leading-relaxed max-w-[92%] sm:max-w-[85%] md:max-w-[78%] transition-colors duration-150",
           isUser
-            ? "rounded-2xl bg-zinc-100 dark:bg-zinc-800 px-3.5 sm:px-4 py-2 sm:py-2.5 text-zinc-800 dark:text-zinc-100 select-text"
-            : "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-sm px-3.5 sm:px-4 py-3 sm:py-3.5 text-zinc-800 dark:text-zinc-100 shadow-sm w-full"
+            ? "rounded-xl bg-muted px-3.5 sm:px-4 py-2 sm:py-2.5 text-foreground select-text"
+            : "rounded-xl border border-border bg-card px-3.5 sm:px-4 py-3 sm:py-3.5 text-card-foreground shadow-xs w-full"
         )}
       >
         {content !== undefined ? (
@@ -222,7 +274,7 @@ export default function Message({ role, content, sources, quality_score, agent_s
                             {i + 1}
                           </span>
                           <span className="break-all flex-1 min-w-0">
-                            {url ? (
+                            {isSafeUrl(url) ? (
                               <a
                                 href={url}
                                 target="_blank"
@@ -375,7 +427,7 @@ export default function Message({ role, content, sources, quality_score, agent_s
                           <div key={idx} className="relative flex items-start gap-3">
                             <div className={cls("mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold",
                               isCompleted ? "border-emerald-500/25 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400" :
-                                isRunning ? "border-blue-500/25 bg-blue-500/5 text-blue-600 dark:text-blue-400 animate-pulse" :
+                                isRunning ? "border-blue-500/25 bg-blue-500/5 text-blue-600 dark:text-blue-400" :
                                   "border-rose-500/25 bg-rose-500/5 text-rose-600 dark:text-rose-400"
                             )}>
                               {isCompleted ? "✓" : isRunning ? "●" : "✗"}
@@ -409,7 +461,7 @@ export default function Message({ role, content, sources, quality_score, agent_s
                     title={isSpeaking ? "Stop speaking" : "Speak response"}
                   >
                     {isSpeaking ? (
-                      <VolumeX className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+                      <VolumeX className="h-3.5 w-3.5 text-red-500" />
                     ) : (
                       <Volume2 className="h-3.5 w-3.5" />
                     )}

@@ -33,37 +33,35 @@ interface CommandPreset {
 const COMMAND_PRESETS: CommandPreset[] = [
   {
     id: "run-pipeline",
-    command: "trivisionx run --workflow=deep_research --model=gemini-1.5-pro",
+    command: "curl -N -X POST /api/chat -d '{\"mode\":\"agent\",\"workflow_type\":\"research\"}'",
     title: "Multi-Agent Research Pipeline",
-    description: "Orchestrate 5 parallel LangGraph sub-agents with Pinecone MMR retrieval and citation verification.",
+    description: "Illustrative SSE workflow trace across LangGraph nodes, Pinecone MMR retrieval, and citation grounding.",
     output: [
-      { type: "prompt", text: "sopan@trivisionx:~/projects/agent-matrix (main*)$ trivisionx run --workflow=deep_research --model=gemini-1.5-pro" },
-      { type: "info", text: "[00:00.001] [SYSTEM] Initializing LangGraph state graph v2.4 (5 nodes registered)" },
-      { type: "agent", text: "├─ [NODE:ROUTER] Query intent classified -> 'Comparative Analysis: DeepSeek R1 vs Claude 3.7'" },
-      { type: "agent", text: "├─ [NODE:PINECONE] Querying vector namespace 'trivisionx-mmr' (top_k=5, mmr_lambda=0.75)" },
-      { type: "success", text: "│  └─ [MMR_MATCH] 5 dense chunks retrieved in 18ms (avg similarity score: 0.948)" },
-      { type: "agent", text: "├─ [NODE:SANDBOX] Spawning Python 3.12 Docker isolation container (ID: sbx_4920)" },
-      { type: "success", text: "│  └─ [AST_EVAL] Pytest assertion test passed: test_agent_graph() -> PASS (0 failures)" },
-      { type: "agent", text: "├─ [NODE:LLM_GATEWAY] Dispatching prompt to Gemini 1.5 Pro (streaming 4,096 max tokens)" },
-      { type: "success", text: "└─ [NODE:CITATION_AUDITOR] 100% reference sources verified against Pinecone vector hashes" },
-      { type: "metric", text: "\n✔ Pipeline executed cleanly in 142ms | Tokens: 3,420 t/s | Memory: 42MB | Cost: $0.0004" }
+      { type: "prompt", text: "$ curl -N -X POST http://localhost:8000/api/chat -d '{\"msg\":\"DeepSeek vs Claude\",\"mode\":\"agent\"}'" },
+      { type: "info", text: "[SSE] Initializing LangGraph StateGraph (planner, retriever, citation, summarizer, reporter)" },
+      { type: "agent", text: "├─ [NODE:PLANNER] Classified workflow -> 'research' | user namespace active" },
+      { type: "agent", text: "├─ [NODE:RETRIEVER] Querying Pinecone vector namespace with MMR reranking" },
+      { type: "success", text: "│  └─ [MMR_MATCH] Top relevant document chunks retrieved for context window" },
+      { type: "agent", text: "├─ [NODE:WEB_SEARCH] Querying configured search tool for live external references" },
+      { type: "agent", text: "├─ [NODE:LLM_GATEWAY] Streaming tokens via user BYOK provider key" },
+      { type: "success", text: "└─ [NODE:CITATION] Attached source metadata & saved MongoDB audit log" },
+      { type: "metric", text: "\n✔ Illustrative SSE trace • View real pipeline telemetry in /dashboard/analytics" }
     ]
   },
   {
     id: "vector-query",
-    command: "trivisionx vector search --index=docs-mmr --query=\"DeepSeek R1 reasoning\"",
-    title: "Pinecone Vector MMR Shell",
-    description: "Query high-dimensional document vectors with maximal marginal relevance filtering.",
+    command: "GET /api/documents & GET /api/brain/telemetry/stats",
+    title: "Vector Namespace & Telemetry Overview",
+    description: "Illustrative REST API trace showing document chunk metadata and MongoDB telemetry aggregation.",
     output: [
-      { type: "prompt", text: "sopan@trivisionx:~/projects/agent-matrix (main*)$ trivisionx vector search --index=docs-mmr --query=\"DeepSeek R1 reasoning\"" },
-      { type: "info", text: "[PINECONE_CLI] Connecting to index 'trivisionx-mmr-v2' [us-east-1a]" },
-      { type: "table", text: "ID            SIMILARITY  VECTOR_DIM  CHUNK_SOURCE" },
+      { type: "prompt", text: "$ curl -H \"Authorization: Bearer $TOKEN\" http://localhost:8000/api/documents" },
+      { type: "info", text: "[API] Querying MongoDB documents metadata + Pinecone user_namespace(user_id)" },
+      { type: "table", text: "FIELD         SOURCE                    ISOLATION" },
       { type: "table", text: "----------------------------------------------------------------------" },
-      { type: "success", text: "chunk_8812    0.962       1536-dim    docs/architecture/reasoning_loops.md#L42" },
-      { type: "success", text: "chunk_4901    0.914       1536-dim    docs/benchmarks/deepseek_vs_claude.md#L18" },
-      { type: "success", text: "chunk_1042    0.887       1536-dim    docs/agents/langgraph_router.md#L102" },
-      { type: "info", text: "[MMR_FILTER] Filtered 12 redundant chunks (Diversity delta: 0.18)" },
-      { type: "metric", text: "\n✔ Pinecone search complete in 12.4ms | 3 unique contexts returned" }
+      { type: "success", text: "chunk_count   MongoDB + Pinecone        namespace=\"user_<id>\"" },
+      { type: "success", text: "audit_logs    /api/audit-logs           filtered by current user_id" },
+      { type: "success", text: "brain_keys    /api/brain/keys           Fernet encrypted at rest" },
+      { type: "metric", text: "\n✔ Illustrative preview • Inspect your live workspace in Dashboard -> Brain" }
     ]
   },
   {
@@ -117,19 +115,16 @@ export function TerminalShowcase() {
 
   return (
     <section className="py-24 px-4 bg-background relative overflow-hidden">
-      {/* 3D Ambient Backdrop Spotlight */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
-
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Unified 3D Section Header */}
+        {/* Unified Section Header */}
         <div className="text-center mb-14 max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-muted/50 text-foreground text-xs font-medium tracking-wide shadow-xs mb-4"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-secondary text-secondary-foreground text-xs font-medium tracking-wide shadow-xs mb-4"
           >
-            <TerminalIcon className="w-3.5 h-3.5 text-primary animate-pulse" />
+            <TerminalIcon className="w-3.5 h-3.5 text-primary" />
             <span>DEVELOPER TERMINAL MATRIX</span>
           </motion.div>
 
@@ -156,13 +151,13 @@ export function TerminalShowcase() {
           </motion.p>
         </div>
 
-        {/* Outer Terminal Container with 3D Depth Glass Effect */}
+        {/* Outer Terminal Container */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="rounded-3xl border border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-2xl [box-shadow:0_0_0_1px_rgba(0,0,0,.04),0_20px_50px_rgba(0,0,0,.12),0_40px_80px_rgba(0,0,0,.08)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff10_inset,0_0_0_1px_rgba(255,255,255,.06),0_20px_60px_rgba(0,0,0,.8)] overflow-hidden"
+          transition={{ duration: 0.4 }}
+          className="rounded-xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden"
         >
           {/* Top Mac/Linux Window Header Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 bg-muted/60 border-b border-border select-none">
@@ -191,13 +186,11 @@ export function TerminalShowcase() {
             </div>
           </div>
 
-          {/* Grid Layout: LEFT Frosted Blur Sidebar & RIGHT Live Terminal Output */}
+          {/* Grid Layout: LEFT Command Selector Sidebar & RIGHT Live Terminal Output */}
           <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[460px]">
             
-            {/* LEFT SIDE: Asymmetrical Frosted Blur Command Selector Sidebar */}
-            <div className="lg:col-span-4 relative p-6 bg-card/60 backdrop-blur-2xl border-b lg:border-b-0 lg:border-r border-border flex flex-col justify-between z-20">
-              {/* Decorative side accent line */}
-              <div className="absolute top-0 left-0 bottom-0 w-1 bg-primary opacity-90" />
+            {/* LEFT SIDE: Command Selector Sidebar */}
+            <div className="lg:col-span-4 relative p-6 bg-muted/30 border-b lg:border-b-0 lg:border-r border-border flex flex-col justify-between z-20">
 
               <div className="space-y-6">
                 <div>
@@ -229,7 +222,7 @@ export function TerminalShowcase() {
                             {preset.title}
                           </span>
                           {isSelected && (
-                            <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                            <span className="w-2 h-2 rounded-full bg-primary" />
                           )}
                         </div>
                         <p className="text-[10.5px] text-muted-foreground line-clamp-2 leading-relaxed mb-2">
@@ -253,14 +246,6 @@ export function TerminalShowcase() {
 
             {/* RIGHT SIDE: Dedicated Dark Terminal Console Display */}
             <div className="lg:col-span-8 p-6 bg-zinc-950 dark:bg-black/90 text-zinc-100 font-mono text-xs flex flex-col justify-between relative overflow-hidden">
-              {/* Subtle CRT matrix scanlines */}
-              <div
-                className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                style={{
-                  backgroundImage: "linear-gradient(to bottom, transparent 50%, rgba(255, 255, 255, 0.25) 51%)",
-                  backgroundSize: "100% 4px"
-                }}
-              />
 
               <div className="space-y-3 relative z-10 overflow-x-auto scrollbar-thin pb-4">
                 <AnimatePresence mode="wait">
@@ -277,7 +262,7 @@ export function TerminalShowcase() {
                         return (
                           <div key={idx} className="text-emerald-400 font-bold flex items-center gap-2">
                             <span>{line.text}</span>
-                            <span className="w-2 h-4 bg-emerald-400 inline-block animate-pulse" />
+                            <span className="w-2 h-4 bg-emerald-400 inline-block" />
                           </div>
                         );
                       }

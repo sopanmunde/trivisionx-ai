@@ -17,8 +17,8 @@ def recursive_chunk(
     Recursively split documents using character-level boundaries.
     Preserves metadata from source documents.
     """
-    chunk_size = chunk_size or settings.CHUNK_SIZE
-    chunk_overlap = chunk_overlap or settings.CHUNK_OVERLAP
+    chunk_size = settings.CHUNK_SIZE if chunk_size is None else chunk_size
+    chunk_overlap = settings.CHUNK_OVERLAP if chunk_overlap is None else chunk_overlap
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
@@ -42,8 +42,8 @@ def semantic_chunk(
     Semantic-aware chunking: splits on paragraph/section boundaries first,
     then falls back to recursive splitting for large sections.
     """
-    chunk_size = chunk_size or settings.CHUNK_SIZE
-    chunk_overlap = chunk_overlap or settings.CHUNK_OVERLAP
+    chunk_size = settings.CHUNK_SIZE if chunk_size is None else chunk_size
+    chunk_overlap = settings.CHUNK_OVERLAP if chunk_overlap is None else chunk_overlap
 
     paragraph_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size * 3,

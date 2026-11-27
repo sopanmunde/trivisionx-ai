@@ -77,7 +77,13 @@ console.log('\x1b[36m%s\x1b[0m', `[TriVisionX] Starting Next.js Frontend with: $
 const backend = spawn(pythonCmd, ['index.py'], {
   cwd: backendDir,
   stdio: 'inherit',
-  shell: true
+  shell: true,
+  env: {
+    ...process.env,
+    DEBUG: 'true',
+    FRONTEND_URL: 'http://localhost:3000',
+    REDIRECT_URI: 'http://localhost:3000/login',
+  },
 });
 
 const frontend = spawn(frontendCmd, frontendArgs, {

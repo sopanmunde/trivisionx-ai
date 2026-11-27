@@ -72,21 +72,30 @@ function formatOrdinalDate(date: Date) {
   const day = date.getDate()
   const month = date.toLocaleDateString('en-US', { month: 'long' })
   const year = date.getFullYear()
-  
+
   let suffix = 'th'
   if (day === 1 || day === 21 || day === 31) suffix = 'st'
   else if (day === 2 || day === 22) suffix = 'nd'
   else if (day === 3 || day === 23) suffix = 'rd'
-  
+
   return `${month} ${day}${suffix}, ${year}`
 }
 
 function convert12hTo24h(time12h: string): [number, number] {
   const [time, ampm] = time12h.split(' ')
-  let [h, m] = time.split(':').map(Number)
+  const [rawH, m] = time.split(':').map(Number)
+  let h = rawH
   if (ampm === 'PM' && h !== 12) h += 12
   if (ampm === 'AM' && h === 12) h = 0
   return [h, m]
+}
+
+function format12hTime(date: Date): string {
+  const h = date.getHours()
+  const m = Math.floor(date.getMinutes() / 15) * 15
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  const displayHour = h % 12 === 0 ? 12 : h % 12
+  return `${displayHour}:${m.toString().padStart(2, '0')} ${ampm}`
 }
 
 export function CalendarDashboard() {
@@ -97,12 +106,10 @@ export function CalendarDashboard() {
   const [aiSync, setAiSync] = useState(true)
   const [isAutopilotDirectivesOpen, setIsAutopilotDirectivesOpen] = useState(false)
 
-  // Simulation & Logs state (with color mapping)
+  // Scheduling & Logs state (with color mapping)
   const [isSimulating, setIsSimulating] = useState(false)
-  const [logs, setLogs] = useState<LogItem[]>([
-    { id: '1', text: '23:10:02 - System: Index synchronization complete.', type: 'system' },
-    { id: '2', text: '23:10:05 - System: Autopilot listening for scheduling requests.', type: 'system' },
-    { id: '3', text: '23:10:15 - Memory: Spacing preferences synced from Brain.', type: 'system' }
+  const [logs, setLogs] = useState<LogItem[]>(() => [
+    { id: 'init-1', text: `${new Date().toLocaleTimeString()} - System: Calendar Hub initialized.`, type: 'system' },
   ])
 
   // Custom AI instructions
@@ -110,21 +117,45 @@ export function CalendarDashboard() {
     'Only book meetings in the afternoon. Reserve mornings (09:00 - 13:00) for focus time.'
   )
 
-  // Events list state
+  // Events list & user default email state
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [userEmail, setUserEmail] = useState('')
 
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem("token")
-      const res = await fetch(`${API_BASE_URL}/events`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const isDemo = localStorage.getItem("is_demo") === "true"
+      if (!token || token === "demo_guest_token" || isDemo) {
+        setEvents([])
+        setLogs(prev => [
+          { id: `${Date.now()}-demo`, text: `${new Date().toLocaleTimeString()} - Demo preview active. Sign in to sync calendar events.`, type: 'system' },
+          ...prev,
+        ])
+        return
+      }
+      const [eventsRes, meRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/events`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        fetch(`${API_BASE_URL}/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => null),
+      ])
+      if (meRes && meRes.ok) {
+        const me = await meRes.json()
+        if (me?.email) {
+          setUserEmail(me.email)
+          setNewNotificationEmail(prev => prev || me.email)
         }
-      })
-      if (res.ok) {
-        const data = await res.json()
+      }
+      if (eventsRes.ok) {
+        const data = await eventsRes.json()
         setEvents(data)
+        setLogs(prev => [
+          { id: `${Date.now()}-sync`, text: `${new Date().toLocaleTimeString()} - Synced ${Array.isArray(data) ? data.length : 0} event(s) from MongoDB.`, type: 'system' },
+          ...prev,
+        ])
       }
     } catch (e) {
       console.error("Failed to fetch events", e)
@@ -197,6 +228,7 @@ export function CalendarDashboard() {
 
   // Dialog / Modal Form States
   const [isAddEventOpen, setIsAddEventOpen] = useState(false)
+  const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [newEventTitle, setNewEventTitle] = useState('')
   const [newEventDescription, setNewEventDescription] = useState('')
   const [newEventStartDate, setNewEventStartDate] = useState<Date>(new Date())
@@ -292,11 +324,11 @@ export function CalendarDashboard() {
     if (!selectedDate) return []
     const year = selectedDate.getFullYear()
     const month = selectedDate.getMonth()
-    
+
     const firstDay = new Date(year, month, 1)
     const startOffset = firstDay.getDay()
     const days: { date: Date; isCurrentMonth: boolean }[] = []
-    
+
     const prevMonthLastDay = new Date(year, month, 0).getDate()
     for (let i = startOffset - 1; i >= 0; i--) {
       days.push({
@@ -304,7 +336,7 @@ export function CalendarDashboard() {
         isCurrentMonth: false
       })
     }
-    
+
     const currentMonthDaysCount = new Date(year, month + 1, 0).getDate()
     for (let i = 1; i <= currentMonthDaysCount; i++) {
       days.push({
@@ -312,7 +344,7 @@ export function CalendarDashboard() {
         isCurrentMonth: true
       })
     }
-    
+
     const remaining = 42 - days.length
     for (let i = 1; i <= remaining; i++) {
       days.push({
@@ -320,7 +352,7 @@ export function CalendarDashboard() {
         isCurrentMonth: false
       })
     }
-    
+
     return days
   }, [selectedDate])
 
@@ -349,8 +381,9 @@ export function CalendarDashboard() {
     return selectedDate.getFullYear().toString()
   }, [selectedDate, currentView, weekDays])
 
-  // Click handler to open Dialog and prefill values
+  // Click handler to open Dialog for a new event
   const handleBlockClick = (date: Date, timeSlot?: string) => {
+    setEditingEventId(null)
     setNewEventStartDate(date)
     setNewEventEndDate(date)
     if (timeSlot) {
@@ -359,7 +392,7 @@ export function CalendarDashboard() {
       const displayHour = h % 12 === 0 ? 12 : h % 12
       const displayMin = m.toString().padStart(2, '0')
       setNewEventStartTime(`${displayHour}:${displayMin} ${ampm}`)
-      
+
       const endH = (h + 1) % 24
       const endAmpm = endH >= 12 ? 'PM' : 'AM'
       const endDisplayHour = endH % 12 === 0 ? 12 : endH % 12
@@ -373,12 +406,40 @@ export function CalendarDashboard() {
     setNewEventLocation('')
     setNewEventAllDay(false)
     setNewEventEtiquette('blue')
+    setNewEventNotifications(['2d', '1d', '5h', '1h', '30m', '5m', 'start'])
+    setNewNotificationEmail(userEmail)
     setIsAddEventOpen(true)
   }
 
-  // Handle manual event creation (Save handler)
+  // Click handler to open Dialog for editing an existing event
+  const handleEditEventClick = (ev: CalendarEvent) => {
+    const start = new Date(ev.from)
+    const end = new Date(ev.to)
+    setEditingEventId(ev.id)
+    setNewEventStartDate(start)
+    setNewEventEndDate(end)
+    setNewEventStartTime(format12hTime(start))
+    setNewEventEndTime(format12hTime(end))
+    setNewEventTitle(ev.title)
+    setNewEventDescription(ev.description || '')
+    setNewEventLocation(ev.location || '')
+    setNewEventAllDay(Boolean(ev.allDay))
+    setNewEventEtiquette(ev.type === 'ai-auto' ? 'purple' : ev.type)
+    setNewEventNotifications(ev.emailNotifications || ['2d', '1d', '5h', '1h', '30m', '5m', 'start'])
+    setNewNotificationEmail(ev.notificationEmail || userEmail)
+    setIsAddEventOpen(true)
+  }
+
+  // Handle manual event creation or update (Save handler)
   const handleSaveNewEvent = async () => {
     if (!newEventTitle.trim()) return
+
+    const token = localStorage.getItem("token")
+    const isDemo = localStorage.getItem("is_demo") === "true"
+    if (!token || token === "demo_guest_token" || isDemo) {
+      toast.error("Please sign in to save calendar events.")
+      return
+    }
 
     const [startH, startM] = convert12hTo24h(newEventStartTime)
     const [endH, endM] = convert12hTo24h(newEventEndTime)
@@ -389,7 +450,7 @@ export function CalendarDashboard() {
     const toDate = new Date(newEventEndDate)
     toDate.setHours(endH, endM, 0, 0)
 
-    const newEv = {
+    const eventPayload = {
       title: newEventTitle,
       from: fromDate.toISOString(),
       to: toDate.toISOString(),
@@ -402,29 +463,41 @@ export function CalendarDashboard() {
     }
 
     try {
-      const token = localStorage.getItem("token")
-      const res = await fetch(`${API_BASE_URL}/events`, {
-        method: "POST",
+      const url = editingEventId
+        ? `${API_BASE_URL}/events/${editingEventId}`
+        : `${API_BASE_URL}/events`
+      const method = editingEventId ? "PUT" : "POST"
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(newEv)
+        body: JSON.stringify(eventPayload)
       })
-      if (!res.ok) throw new Error("Failed to create event")
-      const createdEvent = await res.json()
-      setEvents(prev => [...prev, createdEvent])
+      if (!res.ok) throw new Error(editingEventId ? "Failed to update event" : "Failed to create event")
+      const savedEvent = await res.json()
+      setEvents(prev =>
+        editingEventId
+          ? prev.map(e => (e.id === editingEventId ? savedEvent : e))
+          : [...prev, savedEvent]
+      )
       setIsAddEventOpen(false)
+      setEditingEventId(null)
+      toast.success(editingEventId ? "Event updated" : "Event created")
 
-      // Add color-coded log
       const timeLog = new Date().toLocaleTimeString()
       setLogs(prev => [
-        { id: Math.random().toString(), text: `${timeLog} - Created Block: "${newEventTitle}"`, type: newEventEtiquette },
+        {
+          id: `${Date.now()}`,
+          text: `${timeLog} - ${editingEventId ? 'Updated' : 'Created'} Block: "${newEventTitle}"`,
+          type: newEventEtiquette,
+        },
         ...prev
       ])
     } catch (err: any) {
       console.error(err)
-      toast.error(err.message || "Failed to create event")
+      toast.error(err.message || "Failed to save event")
     }
   }
 
@@ -455,70 +528,123 @@ export function CalendarDashboard() {
     }
   }
 
-  // Autopilot Simulation Handler
-  const runAutopilotSimulation = () => {
+  // Real AI Autopilot Scheduling Handler
+  const runAutopilotSimulation = async () => {
     if (isSimulating || !selectedDate) return
+    const token = localStorage.getItem("token")
+    const isDemo = localStorage.getItem("is_demo") === "true"
+    if (!token || token === "demo_guest_token" || isDemo) {
+      toast.error("Sign in with an account to run AI auto-scheduling.")
+      return
+    }
+    if (!aiSync) {
+      toast.error("Enable the Auto-booking engine toggle first.")
+      return
+    }
+
     setIsSimulating(true)
+    const addLog = (text: string, type: LogItem['type'] = 'system') => {
+      setLogs(prev => [
+        { id: `${Date.now()}-${Math.random()}`, text: `${new Date().toLocaleTimeString()} - ${text}`, type },
+        ...prev,
+      ])
+    }
 
-    const steps = [
-      'Inbox scan: booking request from "integration-teams@trivisionx.ai"',
-      'Parsing request details: tomorrow at 14:00 requested.',
-      'Checking scheduling slots...',
-      'Validating spacing limits: afternoon availability checked.',
-      'Auto-booking confirmed.',
-      'Creating calendar record.'
-    ]
-
-    let currentStep = 0
-    const interval = setInterval(() => {
-      if (currentStep < steps.length) {
-        setLogs(prev => [
-          { id: Math.random().toString(), text: `${new Date().toLocaleTimeString()} - Autopilot: ${steps[currentStep]}`, type: 'system' },
-          ...prev
-        ])
-        currentStep++
-      } else {
-        clearInterval(interval)
-        setIsSimulating(false)
-
-        const tomorrow = new Date(selectedDate)
-        tomorrow.setDate(tomorrow.getDate() + 1)
-        tomorrow.setHours(14, 0, 0, 0)
-        
-        const endTomorrow = new Date(tomorrow)
-        endTomorrow.setHours(15, 0, 0, 0)
-
-        const newEv = {
-          title: 'AI Booking: Integration Call',
-          from: tomorrow.toISOString(),
-          to: endTomorrow.toISOString(),
-          type: 'blue',
-          description: 'Scheduled automatically by AI Agent.'
-        }
-        const token = localStorage.getItem("token")
-        fetch(`${API_BASE_URL}/events`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(newEv)
-        }).then(res => {
-          if (res.ok) {
-            return res.json()
-          }
-          throw new Error("Failed to save autopilot event")
-        }).then(createdEvent => {
-          setEvents(prev => [...prev, createdEvent])
-          setLogs(prev => [
-            { id: Math.random().toString(), text: `${new Date().toLocaleTimeString()} - Autopilot Auto-Scheduled: "AI Booking: Integration Call"`, type: 'blue' },
-            ...prev
-          ])
-        }).catch(err => {
-          console.error(err)
+    try {
+      addLog("Autopilot: Analyzing busy slots & scheduling rules via LLM...")
+      const windowEnd = new Date(selectedDate)
+      windowEnd.setDate(windowEnd.getDate() + 7)
+      const busySlots = events
+        .filter(ev => {
+          const d = new Date(ev.from)
+          return d >= selectedDate && d <= windowEnd
         })
+        .map(ev => `${ev.title}: ${ev.from} to ${ev.to}`)
+        .join('\n') || 'None scheduled in the next 7 days.'
+
+      const targetDateStr = selectedDate.toISOString().slice(0, 10)
+      const prompt = `Schedule one 60-minute focus or planning session on or shortly after ${targetDateStr} (local timezone offset ${-new Date().getTimezoneOffset()} minutes) that obeys these user rules:\n"${aiInstructions}"\n\nExisting busy events (avoid overlaps):\n${busySlots}\n\nReturn ONLY a raw JSON object (no markdown fences) with keys: "title" (string), "from" (valid ISO-8601 datetime string), "to" (valid ISO-8601 datetime string), "description" (string explaining why this slot matches the rules).`
+
+      const chatRes = await fetch(`${API_BASE_URL}/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ msg: prompt, mode: "quick" }),
+      })
+
+      if (!chatRes.ok || !chatRes.body) {
+        throw new Error(`AI service returned HTTP ${chatRes.status}`)
       }
-    }, 1000)
+
+      const reader = chatRes.body.getReader()
+      const decoder = new TextDecoder("utf-8")
+      let buffer = ""
+      let rawOutput = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const chunks = buffer.split("\n\n")
+        buffer = chunks.pop() || ""
+        for (const chunk of chunks) {
+          const trimmed = chunk.trim()
+          if (!trimmed.startsWith("data: ")) continue
+          let evt
+          try {
+            evt = JSON.parse(trimmed.slice(6))
+          } catch {
+            continue
+          }
+          if (evt.error) throw new Error(evt.error)
+          if (evt.type === "token" && evt.data) rawOutput += evt.data
+        }
+      }
+
+      const jsonMatch = rawOutput.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) {
+        throw new Error("LLM did not return a structured event JSON. Ensure an active LLM API key is configured.")
+      }
+
+      const proposal = JSON.parse(jsonMatch[0])
+      const fromMs = Date.parse(proposal.from)
+      const toMs = Date.parse(proposal.to)
+      if (!proposal.title || Number.isNaN(fromMs) || Number.isNaN(toMs) || toMs <= fromMs) {
+        throw new Error("LLM proposed an invalid time range.")
+      }
+
+      addLog(`Autopilot: Selected slot "${proposal.title}" (${new Date(fromMs).toLocaleString()}). Saving to MongoDB...`)
+      const newEv = {
+        title: String(proposal.title).slice(0, 120),
+        from: new Date(fromMs).toISOString(),
+        to: new Date(toMs).toISOString(),
+        type: 'ai-auto' as const,
+        description: proposal.description || 'Scheduled automatically via TriVisionX AI.',
+        notificationEmail: userEmail || undefined,
+      }
+
+      const saveRes = await fetch(`${API_BASE_URL}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(newEv)
+      })
+      if (!saveRes.ok) throw new Error("Failed to save scheduled event")
+      const createdEvent = await saveRes.json()
+      setEvents(prev => [...prev, createdEvent])
+      addLog(`Autopilot Scheduled: "${createdEvent.title}"`, 'ai-auto')
+      toast.success(`AI scheduled "${createdEvent.title}"`)
+    } catch (err: any) {
+      console.error(err)
+      addLog(`Autopilot Error: ${err.message || 'Scheduling failed'}`, 'system')
+      toast.error(err.message || "AI scheduling failed")
+    } finally {
+      setIsSimulating(false)
+    }
   }
 
   // Navigate Date
@@ -579,15 +705,15 @@ export function CalendarDashboard() {
 
   return (
     <div className="relative flex-1 overflow-y-auto bg-background p-4 md:p-6 space-y-5">
-      
+
       {/* Root Create Event Dialog Overlay */}
       <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
         <DialogContent className="sm:max-w-[500px] p-0 bg-card/95 text-foreground border border-border/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] backdrop-blur-xl gap-0 overflow-hidden transition-all duration-300">
-          
+
           {/* Container 1: Hero Glass Header */}
           <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-b from-muted/50 via-card/80 to-card overflow-hidden">
             <div className="absolute top-0 right-0 -mt-10 -mr-10 size-40 bg-gradient-to-br from-indigo-500/15 to-purple-500/0 rounded-full blur-2xl pointer-events-none" />
-            
+
             <div className="relative flex items-center justify-between">
               <div className="flex items-center gap-3.5">
                 <div className="size-11 rounded-2xl bg-gradient-to-b from-card to-muted border border-border/80 shadow-[0_4px_12px_rgba(0,0,0,0.12)] flex items-center justify-center shrink-0">
@@ -595,10 +721,10 @@ export function CalendarDashboard() {
                 </div>
                 <div>
                   <DialogTitle className="text-base font-extrabold text-foreground tracking-tight">
-                    New Event Node
+                    {editingEventId ? 'Edit Event Node' : 'New Event Node'}
                   </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                    Schedule calendar block & set notifications
+                    {editingEventId ? 'Update calendar block & notification preferences' : 'Schedule calendar block & set notifications'}
                   </DialogDescription>
                 </div>
               </div>
@@ -612,7 +738,7 @@ export function CalendarDashboard() {
               </button>
             </div>
           </div>
-          
+
           {/* Scrollable Form Body */}
           <div className="p-6 space-y-4 text-xs max-h-[75vh] overflow-y-auto scrollbar-thin">
 
@@ -760,7 +886,7 @@ export function CalendarDashboard() {
 
             {/* Container 4: Color Etiquette & Notifications */}
             <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-muted/30 to-muted/10 p-4 space-y-3.5 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
-              
+
               {/* Etiquette (Colors) */}
               <div className="space-y-2">
                 <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider block">
@@ -775,9 +901,8 @@ export function CalendarDashboard() {
                       <button
                         key={key}
                         onClick={() => setNewEventEtiquette(key)}
-                        className={`size-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
-                          isSelected ? 'border-foreground scale-110 shadow-sm' : 'border-border/60 hover:border-foreground/50'
-                        } ${colorConfig.dot}`}
+                        className={`size-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${isSelected ? 'border-foreground scale-110 shadow-sm' : 'border-border/60 hover:border-foreground/50'
+                          } ${colorConfig.dot}`}
                         type="button"
                         title={colorConfig.label}
                       >
@@ -814,14 +939,14 @@ export function CalendarDashboard() {
             >
               Cancel
             </Button>
-            
+
             <Button
               disabled={!newEventTitle.trim()}
               onClick={handleSaveNewEvent}
               className="h-10 text-xs font-extrabold rounded-xl px-6 bg-gradient-to-b from-foreground via-foreground to-foreground/90 text-background hover:from-foreground/90 hover:to-foreground shadow-[0_6px_20px_rgba(0,0,0,0.25)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0 transition-all gap-2"
             >
               <Plus className="size-4" />
-              Save Event Node
+              {editingEventId ? 'Save Changes' : 'Save Event Node'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -952,10 +1077,10 @@ export function CalendarDashboard() {
 
       {/* ─── Main Workspace Grid Container ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
+
         {/* ─── LEFT SIDEBAR PANEL (Width 4/12) ─── */}
         <div className="lg:col-span-4 space-y-5">
-          
+
           {/* CONTAINER 1: AI Autopilot Directives & Rules (Collapsible with Zoom/Scale Trigger) */}
           <div className={cn(
             "bg-card border rounded-2xl p-4 transition-all duration-300 relative",
@@ -1043,11 +1168,11 @@ export function CalendarDashboard() {
                   >
                     {isSimulating ? (
                       <span className="flex items-center gap-1.5">
-                        <RefreshCw className="size-3 animate-spin text-foreground" /> Simulating Agent...
+                        <RefreshCw className="size-3 animate-spin text-foreground" /> Scheduling...
                       </span>
                     ) : (
                       <span className="flex items-center gap-1.5">
-                        <Cpu className="size-3 text-foreground" /> Simulate Auto-Booking
+                        <Cpu className="size-3 text-foreground" /> AI Auto-Schedule
                       </span>
                     )}
                   </Button>
@@ -1133,10 +1258,10 @@ export function CalendarDashboard() {
 
         {/* ─── RIGHT CALENDAR VIEW PANEL (Width 8/12) ─── */}
         <div className="lg:col-span-8 space-y-5 flex flex-col">
-          
+
           {/* CONTAINER 5: Toolbar & Control Ribbon */}
           <div className="dashboard-3d-card p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-wrap">
-            
+
             <div className="flex items-center gap-2 flex-wrap">
               {/* Year Navigation Controls */}
               <div className="flex items-center border border-border rounded-xl overflow-hidden bg-muted/20 shadow-xs">
@@ -1197,7 +1322,7 @@ export function CalendarDashboard() {
               >
                 Today ({new Date().getDate()})
               </Button>
-              
+
               <span className="text-sm font-bold text-foreground ml-1 truncate max-w-[150px] sm:max-w-[220px]">
                 {headerViewTitle}
               </span>
@@ -1235,7 +1360,7 @@ export function CalendarDashboard() {
 
           {/* CONTAINER 6: Main Calendar Display Canvas */}
           <div className="dashboard-3d-container p-4 flex-1 overflow-hidden min-h-[520px]">
-            
+
             {/* Day View */}
             {currentView === 'day' && (
               <div className="flex flex-col h-full bg-muted/10 rounded-xl overflow-hidden border border-border/60">
@@ -1247,7 +1372,7 @@ export function CalendarDashboard() {
                 </div>
                 <div className="flex-1 overflow-y-auto max-h-[500px] divide-y divide-border/40 scrollbar-thin">
                   {dayTimelineHours.map(hour => {
-                    const matched = searchedEvents.find(e => {
+                    const matchedEvents = searchedEvents.filter(e => {
                       const hourNum = hour.substring(0, 2)
                       const evHourNum = new Date(e.from).getHours().toString().padStart(2, '0')
                       return evHourNum === hourNum && new Date(e.from).toDateString() === selectedDate?.toDateString()
@@ -1258,60 +1383,62 @@ export function CalendarDashboard() {
                         <div className="w-16 p-3.5 text-[10px] font-semibold text-muted-foreground text-right border-r border-border/60 bg-muted/10">
                           {hour}
                         </div>
-                        <div className="flex-1 p-2 relative flex items-center">
-                          {matched ? (
-                            <div
-                              onClick={() => matched && handleBlockClick(new Date(matched.from))}
-                              className={`w-full border rounded-xl p-2.5 pl-4 text-xs relative group/event transition-all cursor-pointer bg-card border-border shadow-xs hover:border-foreground/30`}
-                            >
-                              <div className={`absolute inset-y-2 left-2 w-1 rounded-full ${
-                                matched.type && etiquetteColors[matched.type] ? etiquetteColors[matched.type].dot : 'bg-muted-foreground'
-                              }`} />
-                              <div className="flex items-center justify-between">
-                                <div className="font-bold text-foreground">{matched.title}</div>
-                                <div className="flex items-center gap-1 opacity-0 group-hover/event:opacity-100 transition-opacity">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      convertEventToTask(matched);
-                                    }}
-                                    className="h-5 px-1.5 text-[10px] font-semibold text-foreground hover:bg-muted rounded-md"
-                                    title="Convert event to Task"
-                                  >
-                                    + Task
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      convertEventToNote(matched);
-                                    }}
-                                    className="h-5 px-1.5 text-[10px] font-semibold text-foreground hover:bg-muted rounded-md"
-                                    title="Save event as Meeting Note"
-                                  >
-                                    + Note
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handleDeleteEvent(matched.id)
-                                    }}
-                                    className="size-5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md"
-                                  >
-                                    <Trash2 className="size-3" />
-                                  </Button>
+                        <div className="flex-1 p-2 relative flex flex-col gap-1.5 justify-center">
+                          {matchedEvents.length > 0 ? (
+                            matchedEvents.map(matched => (
+                              <div
+                                key={matched.id}
+                                onClick={() => handleEditEventClick(matched)}
+                                className={`w-full border rounded-xl p-2.5 pl-4 text-xs relative group/event transition-all cursor-pointer bg-card border-border shadow-xs hover:border-foreground/30`}
+                              >
+                                <div className={`absolute inset-y-2 left-2 w-1 rounded-full ${matched.type && etiquetteColors[matched.type] ? etiquetteColors[matched.type].dot : 'bg-muted-foreground'
+                                  }`} />
+                                <div className="flex items-center justify-between">
+                                  <div className="font-bold text-foreground">{matched.title}</div>
+                                  <div className="flex items-center gap-1 opacity-0 group-hover/event:opacity-100 transition-opacity">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        convertEventToTask(matched);
+                                      }}
+                                      className="h-5 px-1.5 text-[10px] font-semibold text-foreground hover:bg-muted rounded-md"
+                                      title="Convert event to Task"
+                                    >
+                                      + Task
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        convertEventToNote(matched);
+                                      }}
+                                      className="h-5 px-1.5 text-[10px] font-semibold text-foreground hover:bg-muted rounded-md"
+                                      title="Save event as Meeting Note"
+                                    >
+                                      + Note
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleDeleteEvent(matched.id)
+                                      }}
+                                      className="size-5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md"
+                                    >
+                                      <Trash2 className="size-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="text-[10px] text-muted-foreground mt-0.5 flex justify-between">
+                                  <span>{formatDateRange(new Date(matched.from), new Date(matched.to))}</span>
+                                  {matched.location && <span className="opacity-80">Location: {matched.location}</span>}
                                 </div>
                               </div>
-                              <div className="text-[10px] text-muted-foreground mt-0.5 flex justify-between">
-                                <span>{formatDateRange(new Date(matched.from), new Date(matched.to))}</span>
-                                {matched.location && <span className="opacity-80">Location: {matched.location}</span>}
-                              </div>
-                            </div>
+                            ))
                           ) : (
                             <div
                               onClick={() => selectedDate && handleBlockClick(selectedDate, hour)}
@@ -1345,17 +1472,15 @@ export function CalendarDashboard() {
                         onClick={() => {
                           setSelectedDate(day)
                         }}
-                        className={`flex flex-col h-full min-h-[400px] cursor-pointer hover:bg-muted/20 transition-colors ${
-                          isSelected ? 'bg-muted/30' : ''
-                        }`}
+                        className={`flex flex-col h-full min-h-[400px] cursor-pointer hover:bg-muted/20 transition-colors ${isSelected ? 'bg-muted/30' : ''
+                          }`}
                       >
                         <div className="p-3 text-center border-b border-border/60 bg-muted/20 flex flex-col items-center">
                           <span className="text-[10px] font-bold text-muted-foreground uppercase">
                             {day.toLocaleDateString('en-US', { weekday: 'short' })}
                           </span>
-                          <span className={`text-sm font-semibold rounded-full size-6 flex items-center justify-center mt-1 transition-all ${
-                            isToday ? 'bg-foreground text-background font-bold shadow-xs' : 'text-foreground'
-                          }`}>
+                          <span className={`text-sm font-semibold rounded-full size-6 flex items-center justify-center mt-1 transition-all ${isToday ? 'bg-foreground text-background font-bold shadow-xs' : 'text-foreground'
+                            }`}>
                             {day.getDate()}
                           </span>
                         </div>
@@ -1372,13 +1497,12 @@ export function CalendarDashboard() {
                               key={event.id}
                               onClick={(e) => {
                                 e.stopPropagation()
-                                handleBlockClick(new Date(event.from))
+                                handleEditEventClick(event)
                               }}
                               className={`border rounded-xl p-2 text-[10.5px] relative pl-4 leading-normal group/event cursor-pointer bg-card border-border shadow-xs hover:border-foreground/30`}
                             >
-                              <div className={`absolute inset-y-1.5 left-1.5 w-1 rounded-full ${
-                                event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-muted-foreground'
-                              }`} />
+                              <div className={`absolute inset-y-1.5 left-1.5 w-1 rounded-full ${event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-muted-foreground'
+                                }`} />
                               <div className="font-bold text-foreground truncate">{event.title}</div>
                               <div className="text-[9px] text-muted-foreground mt-0.5 font-medium">
                                 {new Date(event.from).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -1432,18 +1556,16 @@ export function CalendarDashboard() {
                           onClick={() => {
                             handleBlockClick(date)
                           }}
-                          className={`min-h-[75px] p-2 flex flex-col justify-between cursor-pointer hover:bg-muted/30 transition-colors group/cell ${
-                            isSelected ? 'bg-muted/40 font-semibold' : ''
-                          }`}
+                          className={`min-h-[75px] p-2 flex flex-col justify-between cursor-pointer hover:bg-muted/30 transition-colors group/cell ${isSelected ? 'bg-muted/40 font-semibold' : ''
+                            }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className={`text-xs font-semibold rounded-full size-5.5 flex items-center justify-center ${
-                              isToday
-                                ? 'bg-foreground text-background font-bold shadow-xs'
-                                : isCurrentMonth
+                            <span className={`text-xs font-semibold rounded-full size-5.5 flex items-center justify-center ${isToday
+                              ? 'bg-foreground text-background font-bold shadow-xs'
+                              : isCurrentMonth
                                 ? 'text-foreground'
                                 : 'text-muted-foreground/40'
-                            }`}>
+                              }`}>
                               {date.getDate()}
                             </span>
                           </div>
@@ -1454,13 +1576,12 @@ export function CalendarDashboard() {
                                 key={event.id}
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleBlockClick(new Date(event.from))
+                                  handleEditEventClick(event)
                                 }}
                                 className={`border border-border/60 bg-card rounded-lg px-1.5 py-0.5 text-[9px] font-semibold truncate relative pl-3.5 text-foreground shadow-xs`}
                               >
-                                <div className={`absolute inset-y-1 left-1.5 w-1 rounded-full ${
-                                  event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-muted-foreground'
-                                }`} />
+                                <div className={`absolute inset-y-1 left-1.5 w-1 rounded-full ${event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-muted-foreground'
+                                  }`} />
                                 {event.title}
                               </div>
                             ))}
@@ -1483,7 +1604,7 @@ export function CalendarDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 overflow-y-auto max-h-[500px] scrollbar-thin">
                 {yearMonths.map(month => {
                   const monthName = month.toLocaleDateString('en-US', { month: 'long' })
-                  
+
                   const year = month.getFullYear()
                   const mVal = month.getMonth()
                   const daysInMonth = new Date(year, mVal + 1, 0).getDate()
@@ -1497,12 +1618,12 @@ export function CalendarDashboard() {
                       <h4 className="text-xs font-bold text-foreground border-b border-border/60 pb-1 mb-2">
                         {monthName}
                       </h4>
-                      
+
                       <div className="grid grid-cols-7 gap-0.5 text-[8.5px] text-center text-muted-foreground font-semibold select-none">
                         {Array.from({ length: startDay }).map((_, i) => (
                           <div key={`offset-${i}`} />
                         ))}
-                        
+
                         {Array.from({ length: daysInMonth }).map((_, i) => {
                           const dateVal = new Date(year, mVal, i + 1)
                           const isSelected = dateVal.toDateString() === selectedDate?.toDateString()
@@ -1515,13 +1636,12 @@ export function CalendarDashboard() {
                                 setSelectedDate(dateVal)
                                 setCurrentView('month')
                               }}
-                              className={`size-4 flex items-center justify-center rounded-full cursor-pointer hover:bg-muted transition-all ${
-                                isSelected
-                                  ? 'bg-foreground text-background font-bold'
-                                  : hasEvents
+                              className={`size-4 flex items-center justify-center rounded-full cursor-pointer hover:bg-muted transition-all ${isSelected
+                                ? 'bg-foreground text-background font-bold'
+                                : hasEvents
                                   ? 'border border-border font-bold text-foreground'
                                   : ''
-                              }`}
+                                }`}
                             >
                               {i + 1}
                             </div>
@@ -1543,9 +1663,9 @@ export function CalendarDashboard() {
                     {searchedEvents.length} Total Agenda Blocks
                   </Badge>
                 </div>
-                
+
                 <div className="flex-1 overflow-y-auto max-h-[440px] p-4 divide-y divide-border/60 space-y-4 scrollbar-thin">
-                  {searchedEvents
+                  {[...searchedEvents]
                     .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime())
                     .map(event => {
                       const evDate = new Date(event.from)
@@ -1561,12 +1681,11 @@ export function CalendarDashboard() {
                           </div>
 
                           <div
-                            onClick={() => handleBlockClick(evDate)}
+                            onClick={() => handleEditEventClick(event)}
                             className={`flex-1 border rounded-xl p-4 cursor-pointer bg-card border-border/80 hover:border-foreground/30 shadow-xs transition-colors relative pl-6`}
                           >
-                            <div className={`absolute inset-y-4 left-3 w-1 rounded-full ${
-                              event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-muted-foreground'
-                            }`} />
+                            <div className={`absolute inset-y-4 left-3 w-1 rounded-full ${event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-muted-foreground'
+                              }`} />
                             <div className="flex items-start justify-between gap-4">
                               <div>
                                 <h4 className="text-sm font-bold text-foreground">{event.title}</h4>

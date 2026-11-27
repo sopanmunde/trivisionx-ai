@@ -9,6 +9,7 @@ import { Briefcase, MapPin, Clock, ArrowRight, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/api";
 
 type Role = {
   title: string;
@@ -21,43 +22,65 @@ type Role = {
 };
 
 const roles: Role[] = [
-  { 
-    title: "Senior Backend Engineer", team: "Platform", location: "Remote", type: "Full-time", hot: true,
-    description: "Build the core infrastructure for our multi-agent orchestration engine using Python, FastAPI, and Pinecone.",
-    requirements: ["5+ years backend engineering", "Strong Python & async programming", "Experience with vector databases"]
+  {
+    title: "Backend & LangGraph Contributor", team: "Platform", location: "Remote", type: "Contributor / Inquiry", hot: true,
+    description: "Collaborate on FastAPI routes, LangGraph agent orchestration, and Pinecone RAG retrieval.",
+    requirements: ["Python & FastAPI async patterns", "Experience with LangChain or LangGraph", "MongoDB & REST API design"]
   },
-  { 
-    title: "AI/ML Research Scientist", team: "Research", location: "Remote", type: "Full-time", hot: true,
-    description: "Improve our Semantic MMR retrieval and hallucination-detection algorithms.",
-    requirements: ["PhD or MS in CS/AI", "Published research in NLP or LLMs", "PyTorch expertise"]
+  {
+    title: "AI Retrieval & Evaluation Researcher", team: "Research", location: "Remote", type: "Contributor / Inquiry", hot: true,
+    description: "Help benchmark Hybrid MMR retrieval, citation grounding, and multi-agent routing accuracy.",
+    requirements: ["Vector search / RAG pipelines", "Prompt & structured output reliability", "Python evaluation scripts"]
   },
-  { 
-    title: "Senior Frontend Engineer", team: "Product", location: "Remote", type: "Full-time", hot: false,
-    description: "Craft a beautiful, highly interactive studio for users to build and debug agent pipelines.",
-    requirements: ["Strong React & Next.js", "Experience with complex state management", "Eye for design and UI/UX"]
-  },
-  { 
-    title: "DevRel Engineer", team: "Growth", location: "Remote", type: "Full-time", hot: false,
-    description: "Engage with developers, build templates, write tutorials, and speak at conferences.",
-    requirements: ["Experience as a developer", "Excellent technical writing", "Public speaking experience"]
-  },
-  { 
-    title: "Enterprise Account Executive", team: "Sales", location: "San Francisco, CA", type: "Full-time", hot: false,
-    description: "Close high-value contracts with enterprise clients and build long-term relationships.",
-    requirements: ["3+ years enterprise B2B SaaS sales", "Track record of quota attainment", "Excellent communication"]
+  {
+    title: "Frontend Next.js Engineer", team: "Product", location: "Remote", type: "Contributor / Inquiry", hot: false,
+    description: "Build accessible interactive workspaces across Next.js 15, TypeScript, Tailwind CSS, and SSE streaming.",
+    requirements: ["React, Next.js App Router & TypeScript", "State & streaming UI experience", "Attention to accessibility & testing"]
   },
 ];
 
 export function CareersList() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [portfolio, setPortfolio] = useState("");
+  const [coverLetter, setCoverLetter] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleApplySubmit = (e: React.FormEvent) => {
+  const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsOpen(false);
-    toast.success("Application Submitted!", {
-      description: "Thanks for applying. Our team will review your application soon.",
-    });
+    if (!firstName.trim() || !email.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
+          subject: `Career Inquiry: ${selectedRole?.title || "General"}`,
+          message: `Role: ${selectedRole?.title || "General"}\nPortfolio/LinkedIn: ${portfolio || "N/A"}\n\nNote:\n${coverLetter.trim() || "No cover note provided."}`,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || "Failed to submit application");
+      setIsOpen(false);
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPortfolio("");
+      setCoverLetter("");
+      toast.success("Application Submitted!", {
+        description: "Your inquiry was saved to TriVisionX. We'll review it shortly.",
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit application");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -131,27 +154,27 @@ export function CareersList() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-semibold">First Name</label>
-                <Input required placeholder="Jane" />
+                <Input required placeholder="Jane" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-semibold">Last Name</label>
-                <Input required placeholder="Doe" />
+                <Input required placeholder="Doe" value={lastName} onChange={(e) => setLastName(e.target.value)} />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold">Email</label>
-              <Input type="email" required placeholder="jane@example.com" />
+              <Input type="email" required placeholder="jane@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold">LinkedIn / Portfolio URL</label>
-              <Input type="url" placeholder="https://linkedin.com/in/jane" />
+              <Input type="url" placeholder="https://linkedin.com/in/jane" value={portfolio} onChange={(e) => setPortfolio(e.target.value)} />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold">Cover Letter / Note</label>
-              <Textarea rows={4} placeholder="Why are you a great fit?" />
+              <Textarea rows={4} placeholder="Why are you a great fit?" value={coverLetter} onChange={(e) => setCoverLetter(e.target.value)} />
             </div>
-            <Button type="submit" className="w-full mt-4">
-              <Send className="w-4 h-4 mr-2" /> Submit Application
+            <Button type="submit" disabled={isSubmitting} className="w-full mt-4">
+              <Send className="w-4 h-4 mr-2" /> {isSubmitting ? "Submitting..." : "Submit Application"}
             </Button>
           </form>
         </DialogContent>

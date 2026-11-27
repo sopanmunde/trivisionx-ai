@@ -378,64 +378,16 @@ function CodingLoopVisual() {
 }
 
 export function BentoGrid() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-
-  // Link scatter-snap explosion animation to page scroll
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 90,
-    damping: 24,
-    mass: 0.5,
-  });
-
-  // As you scroll into view:
-  // [0.06, 0.42]: Scattered cards converge & snap into rigid grid
-  // [0.42, 0.72]: Held in snapped position
-  // [0.72, 0.95]: Disperse on scroll past
-  const assemble = useTransform(smoothProgress, [0.06, 0.42, 0.72, 0.95], [0, 1, 1, 0]);
-  const cardOpacity = useTransform(assemble, [0, 0.25], [0.3, 1]);
-
-  // Card 1: Top-Left Large card (slides in from left with tilt)
-  const c1X = useTransform(assemble, [0, 1], [-80, 0]);
-  const c1Y = useTransform(assemble, [0, 1], [-40, 0]);
-  const c1R = useTransform(assemble, [0, 1], [-4, 0]);
-
-  // Card 2: Top-Right card (slides in from right with tilt)
-  const c2X = useTransform(assemble, [0, 1], [80, 0]);
-  const c2Y = useTransform(assemble, [0, 1], [-40, 0]);
-  const c2R = useTransform(assemble, [0, 1], [5, 0]);
-
-  // Card 3: Bottom-Left card (slides in from bottom-left)
-  const c3X = useTransform(assemble, [0, 1], [-70, 0]);
-  const c3Y = useTransform(assemble, [0, 1], [60, 0]);
-  const c3R = useTransform(assemble, [0, 1], [3, 0]);
-
-  // Card 4: Bottom-Middle card (drops in vertically with scale)
-  const c4Y = useTransform(assemble, [0, 1], [80, 0]);
-  const c4Scale = useTransform(assemble, [0, 1], [0.92, 1]);
-
-  // Card 5: Bottom-Right card (slides in from bottom-right)
-  const c5X = useTransform(assemble, [0, 1], [70, 0]);
-  const c5Y = useTransform(assemble, [0, 1], [60, 0]);
-  const c5R = useTransform(assemble, [0, 1], [-3, 0]);
-
   return (
-    <section ref={sectionRef} id="features" className="relative py-28 px-4 sm:px-6 lg:px-8 bg-background text-foreground transition-colors overflow-hidden select-none">
-      {/* 3D Ambient Backdrop Spotlight */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
-
+    <section id="features" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-background text-foreground transition-colors overflow-hidden select-none">
       <div className="relative z-10 max-w-6xl mx-auto">
-        {/* Unified 3D Section Header */}
+        {/* Unified Section Header */}
         <div className="text-center mb-16 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-muted/50 text-foreground text-xs font-medium tracking-wide shadow-xs mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-secondary text-secondary-foreground text-xs font-medium tracking-wide shadow-xs mb-4">
             <Bot className="w-3.5 h-3.5 text-primary" />
             <span>AUTONOMOUS AGENT ORCHESTRATION</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
             Self-correcting agent loops.
             <br />
             <span className="text-muted-foreground font-semibold">Engineered for enterprise scale.</span>
@@ -445,23 +397,14 @@ export function BentoGrid() {
           </p>
         </div>
 
-        {/* Bento Grid with Kinetic Parallax Scatter-Snap Explode */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" style={{ perspective: "1200px" }}>
+        {/* Clean shadcn Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* 1. Large Card: Agentic Workflow Orchestration */}
-          <motion.div
-            style={{
-              x: c1X,
-              y: c1Y,
-              rotateZ: c1R,
-              opacity: cardOpacity,
-              transformStyle: "preserve-3d",
-            }}
-            className="md:col-span-2"
-          >
-            <div className="h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 hover:bg-card/95 hover:border-primary/50 backdrop-blur-xl transition-all duration-500 ease-out p-6 flex flex-col justify-between [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:-translate-y-1">
+          <div className="md:col-span-2">
+            <div className="h-full rounded-xl border border-border bg-card text-card-foreground hover:border-foreground/20 transition-colors p-6 flex flex-col justify-between shadow-sm">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="flex-1">
-                  <div className="p-2.5 rounded-xl bg-accent text-accent-foreground w-fit mb-4 border border-border/70">
+                  <div className="p-2.5 rounded-lg bg-muted text-foreground w-fit mb-4 border border-border">
                     <Bot className="w-5 h-5 text-primary" strokeWidth={1.5} />
                   </div>
                   <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">
@@ -490,21 +433,13 @@ export function BentoGrid() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* 2. Autonomous Context Retrieval */}
-          <motion.div
-            style={{
-              x: c2X,
-              y: c2Y,
-              rotateZ: c2R,
-              opacity: cardOpacity,
-              transformStyle: "preserve-3d",
-            }}
-          >
-            <div className="h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 hover:bg-card/95 hover:border-primary/50 backdrop-blur-xl transition-all duration-500 ease-out p-5 flex flex-col justify-between [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:-translate-y-1">
+          <div>
+            <div className="h-full rounded-xl border border-border bg-card text-card-foreground hover:border-foreground/20 transition-colors p-5 flex flex-col justify-between shadow-sm">
               <div className="mb-4">
-                <div className="p-2 rounded-xl bg-accent text-accent-foreground w-fit mb-3 border border-border/70">
+                <div className="p-2 rounded-lg bg-muted text-foreground w-fit mb-3 border border-border">
                   <Search className="w-4 h-4 text-primary" strokeWidth={1.5} />
                 </div>
                 <h3 className="text-base font-bold text-foreground mb-1.5 tracking-tight">Autonomous Context Retrieval</h3>
@@ -514,21 +449,13 @@ export function BentoGrid() {
               </div>
               <RetrievalVisual />
             </div>
-          </motion.div>
+          </div>
 
           {/* 3. Dynamic Model Routing */}
-          <motion.div
-            style={{
-              x: c3X,
-              y: c3Y,
-              rotateZ: c3R,
-              opacity: cardOpacity,
-              transformStyle: "preserve-3d",
-            }}
-          >
-            <div className="h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 hover:bg-card/95 hover:border-primary/50 backdrop-blur-xl transition-all duration-500 ease-out p-5 flex flex-col justify-between [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:-translate-y-1">
+          <div>
+            <div className="h-full rounded-xl border border-border bg-card text-card-foreground hover:border-foreground/20 transition-colors p-5 flex flex-col justify-between shadow-sm">
               <div className="mb-4">
-                <div className="p-2 rounded-xl bg-accent text-accent-foreground w-fit mb-3 border border-border/70">
+                <div className="p-2 rounded-lg bg-muted text-foreground w-fit mb-3 border border-border">
                   <Cpu className="w-4 h-4 text-primary" strokeWidth={1.5} />
                 </div>
                 <h3 className="text-base font-bold text-foreground mb-1.5 tracking-tight">Dynamic Model Routing</h3>
@@ -538,20 +465,13 @@ export function BentoGrid() {
               </div>
               <MultiLlmVisual />
             </div>
-          </motion.div>
+          </div>
 
           {/* 4. Automated Report Synthesis */}
-          <motion.div
-            style={{
-              y: c4Y,
-              scale: c4Scale,
-              opacity: cardOpacity,
-              transformStyle: "preserve-3d",
-            }}
-          >
-            <div className="h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 hover:bg-card/95 hover:border-primary/50 backdrop-blur-xl transition-all duration-500 ease-out p-5 flex flex-col justify-between [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:-translate-y-1">
+          <div>
+            <div className="h-full rounded-xl border border-border bg-card text-card-foreground hover:border-foreground/20 transition-colors p-5 flex flex-col justify-between shadow-sm">
               <div className="mb-4">
-                <div className="p-2 rounded-xl bg-accent text-accent-foreground w-fit mb-3 border border-border/70">
+                <div className="p-2 rounded-lg bg-muted text-foreground w-fit mb-3 border border-border">
                   <FileText className="w-4 h-4 text-primary" strokeWidth={1.5} />
                 </div>
                 <h3 className="text-base font-bold text-foreground mb-1.5 tracking-tight">Automated Report Synthesis</h3>
@@ -561,21 +481,13 @@ export function BentoGrid() {
               </div>
               <ReportVisual />
             </div>
-          </motion.div>
+          </div>
 
           {/* 5. Self-Correcting Coding Loop */}
-          <motion.div
-            style={{
-              x: c5X,
-              y: c5Y,
-              rotateZ: c5R,
-              opacity: cardOpacity,
-              transformStyle: "preserve-3d",
-            }}
-          >
-            <div className="h-full rounded-2xl border border-border/80 bg-card/85 dark:bg-card/65 hover:bg-card/95 hover:border-primary/50 backdrop-blur-xl transition-all duration-500 ease-out p-5 flex flex-col justify-between [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_4px_16px_rgba(0,0,0,.04),0_16px_36px_rgba(0,0,0,.04)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff0d_inset,0_0_0_1px_rgba(255,255,255,.05),0_16px_36px_rgba(0,0,0,.5)] hover:shadow-2xl hover:-translate-y-1">
+          <div>
+            <div className="h-full rounded-xl border border-border bg-card text-card-foreground hover:border-foreground/20 transition-colors p-5 flex flex-col justify-between shadow-sm">
               <div className="mb-4">
-                <div className="p-2 rounded-xl bg-accent text-accent-foreground w-fit mb-3 border border-border/70">
+                <div className="p-2 rounded-lg bg-muted text-foreground w-fit mb-3 border border-border">
                   <Code className="w-4 h-4 text-primary" strokeWidth={1.5} />
                 </div>
                 <h3 className="text-base font-bold text-foreground mb-1.5 tracking-tight">Self-Correcting Coding Loop</h3>
@@ -585,7 +497,7 @@ export function BentoGrid() {
               </div>
               <CodingLoopVisual />
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

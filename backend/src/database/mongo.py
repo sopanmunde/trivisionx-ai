@@ -27,9 +27,6 @@ class _LazyCollection:
     def __getattr__(self, item):
         return getattr(_db()[self._name], item)
 
-    def __call__(self, *args, **kwargs):
-        return _db()[self._name](*args, **kwargs)
-
 
 users_collection       = _LazyCollection(COLLECTION_USERS)
 conversations_collection = _LazyCollection(COLLECTION_CONVERSATIONS)

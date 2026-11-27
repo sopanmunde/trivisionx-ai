@@ -1,6 +1,6 @@
 """MongoDB-backed conversation memory for persistent chat context."""
-from typing import List, Dict
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Dict, List, Optional
 from core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -10,14 +10,18 @@ async def get_conversation_history(
     messages_collection,
     conversation_id: str,
     limit: int = 10,
+    user_id: Optional[str] = None,
 ) -> List[Dict]:
     """
     Fetch the last N messages for a conversation from MongoDB.
     Returns list of {role, content} dicts.
     """
     try:
+        query: Dict = {"conversation_id": conversation_id}
+        if user_id:
+            query["user_id"] = user_id
         docs = await messages_collection.find(
-            {"conversation_id": conversation_id}
+            query
         ).sort("created_at", -1).limit(limit).to_list(limit)
         docs = list(reversed(docs))
         return [{"role": d["role"], "content": d["content"]} for d in docs]
@@ -41,5 +45,5 @@ async def save_message(
         "role": role,
         "content": content,
         "sources": sources or [],
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
     })

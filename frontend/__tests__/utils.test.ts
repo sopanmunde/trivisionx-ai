@@ -38,6 +38,8 @@ describe('Frontend Utility Functions', () => {
 
       const hoursAgo = new Date(now.getTime() - 2 * 3600 * 1000)
       expect(timeAgo(hoursAgo)).toContain('hour')
+
+      expect(timeAgo('not-a-valid-date')).toBe('just now')
     })
   })
 

@@ -5,6 +5,7 @@ If is_voice is True, cleans disfluencies, repetitions, and formatting issues.
 """
 from langchain_core.messages import SystemMessage, HumanMessage
 from agents.langgraph.state import AgentState
+from agents.langgraph.nodes.utils import extract_text
 from core.llm_factory import get_llm
 from core.logger import get_logger
 
@@ -46,7 +47,7 @@ async def voice_preprocessing_node(state: AgentState) -> dict:
             HumanMessage(content=f"ASR Transcript: {query}")
         ]
         response = await llm.ainvoke(messages)
-        cleaned_query = response.content.strip()
+        cleaned_query = extract_text(response.content).strip() or query
         logger.info(f"[Voice Preprocessor] Cleaned spoken query: '{cleaned_query}'")
         return {
             "query": cleaned_query,

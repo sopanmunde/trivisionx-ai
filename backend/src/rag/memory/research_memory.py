@@ -1,5 +1,5 @@
 """Research memory — saves complete research sessions to MongoDB."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from core.logger import get_logger
 
@@ -28,7 +28,7 @@ async def save_research_session(
         "citations": citations,
         "summary": summary,
         "final_output": final_output,
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
     }
     result = await reports_collection.insert_one(doc)
     logger.info(f"Saved research session {result.inserted_id} for user {user_id}")

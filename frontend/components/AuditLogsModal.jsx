@@ -21,6 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AuditLogsModal({ isOpen, onClose, defaultSearch = "" }) {
   const [logs, setLogs] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState(defaultSearch);
   const [selectedLog, setSelectedLog] = useState(null);
@@ -29,34 +30,53 @@ export default function AuditLogsModal({ isOpen, onClose, defaultSearch = "" }) 
     if (defaultSearch) setSearch(defaultSearch);
   }, [defaultSearch]);
 
-  const fetchAuditLogs = async () => {
+  const fetchAuditLogs = async (signal) => {
     if (!isOpen) return;
+    const token = localStorage.getItem("token");
+    const isDemo = localStorage.getItem("is_demo") === "true";
+    if (!token || token === "demo_guest_token" || isDemo) {
+      setLogs([]);
+      setTotalCount(0);
+      return;
+    }
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
       const url = new URL(`${API_BASE_URL}/audit-logs`);
       url.searchParams.append("limit", "50");
       if (search.trim()) url.searchParams.append("search", search.trim());
 
       const res = await fetch(url.toString(), {
         headers: { Authorization: `Bearer ${token}` },
+        signal,
       });
       if (res.ok) {
         const data = await res.json();
-        setLogs(data.audit_logs || []);
-        if (data.audit_logs?.length > 0 && !selectedLog) {
-          setSelectedLog(data.audit_logs[0]);
+        const items = data.audit_logs || [];
+        setLogs(items);
+        setTotalCount(typeof data.total === "number" ? data.total : items.length);
+        if (items.length > 0 && !selectedLog) {
+          setSelectedLog(items[0]);
         }
       }
     } catch (err) {
-      console.error("Failed to fetch audit logs:", err);
+      if (err?.name !== "AbortError") {
+        console.error("Failed to fetch audit logs:", err);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAuditLogs();
+    if (!isOpen) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetchAuditLogs(controller.signal);
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [isOpen, search]);
 
   if (!isOpen) return null;
@@ -74,14 +94,14 @@ export default function AuditLogsModal({ isOpen, onClose, defaultSearch = "" }) 
     URL.revokeObjectURL(url);
   };
 
-  const totalLogs = logs.length;
+  const totalLogs = totalCount || logs.length;
   const successCount = logs.filter((l) => l.status === "success").length;
-  const successRate = totalLogs > 0 ? Math.round((successCount / totalLogs) * 100) : 100;
+  const successRate = logs.length > 0 ? Math.round((successCount / logs.length) * 100) : 100;
   const avgCitations =
-    totalLogs > 0
+    logs.length > 0
       ? (
           logs.reduce((sum, l) => sum + (l.citations?.length || 0), 0) /
-          totalLogs
+          logs.length
         ).toFixed(1)
       : "0";
 
@@ -244,7 +264,7 @@ export default function AuditLogsModal({ isOpen, onClose, defaultSearch = "" }) 
                       </span>
                     </div>
                     <h3 className="text-sm font-bold text-foreground leading-snug">
-                      "{selectedLog.query}"
+                      &ldquo;{selectedLog.query}&rdquo;
                     </h3>
                   </div>
 
@@ -326,7 +346,10 @@ export default function AuditLogsModal({ isOpen, onClose, defaultSearch = "" }) 
 
                       <div className="space-y-2">
                         {selectedLog.citations.map((cit, idx) => {
-                          const confPct = cit.confidence ? Math.round(cit.confidence * 100) : 85;
+                          const rawScore = Number(cit.confidence ?? cit.score);
+                          const confPct = Number.isFinite(rawScore)
+                            ? Math.round(rawScore <= 1 ? rawScore * 100 : rawScore)
+                            : null;
                           return (
                             <div
                               key={idx}
@@ -335,9 +358,11 @@ export default function AuditLogsModal({ isOpen, onClose, defaultSearch = "" }) 
                               <span className="font-semibold text-foreground truncate max-w-[70%]">
                                 {idx + 1}. {cit.filename || cit.source || "Document"} {cit.page ? `(Page ${cit.page})` : ""}
                               </span>
-                              <Badge className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                {confPct}% Confidence Match
-                              </Badge>
+                              {confPct !== null && (
+                                <Badge className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                  {confPct}% Confidence Match
+                                </Badge>
+                              )}
                             </div>
                           );
                         })}

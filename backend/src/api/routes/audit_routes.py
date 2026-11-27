@@ -9,6 +9,7 @@ from typing import List, Optional
 from core.security import get_current_user
 from database.mongodb.repositories.audit_log_repository import (
     get_user_audit_logs,
+    count_user_audit_logs,
     get_audit_log_by_id,
     get_conversation_audit_logs,
 )
@@ -30,7 +31,8 @@ async def list_audit_logs(
     """
     user_id = str(current_user["_id"])
     logs = await get_user_audit_logs(user_id=user_id, limit=limit, skip=skip, search=search)
-    return {"audit_logs": logs, "total": len(logs), "limit": limit, "skip": skip}
+    total = await count_user_audit_logs(user_id=user_id, search=search)
+    return {"audit_logs": logs, "total": total, "limit": limit, "skip": skip}
 
 
 @router.get("/conversation/{conversation_id}", summary="Get audit logs for a conversation")

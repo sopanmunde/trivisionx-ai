@@ -7,6 +7,7 @@ from core.constants import RATE_LIMIT_DEFAULT
 from database.mongodb.repositories.event_repository import (
     get_user_events,
     create_event,
+    update_event,
     delete_event_metadata,
 )
 from core.logger import get_logger
@@ -29,6 +30,17 @@ async def add_event(request: Request, event_data: Dict, current_user=Depends(get
     """Create a new calendar event."""
     user_id = str(current_user["_id"])
     return await create_event(user_id, event_data)
+
+
+@router.put("/{event_id}", response_model=Dict)
+@limiter.limit(RATE_LIMIT_DEFAULT)
+async def modify_event(request: Request, event_id: str, event_data: Dict, current_user=Depends(get_current_user)):
+    """Update an existing calendar event."""
+    user_id = str(current_user["_id"])
+    updated = await update_event(user_id, event_id, event_data)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return updated
 
 
 @router.delete("/{event_id}")

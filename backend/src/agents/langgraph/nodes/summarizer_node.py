@@ -6,10 +6,9 @@ well-cited markdown answer using the dynamically selected LLM.
 Supports automatic provider failover on quota errors.
 """
 from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
-from langchain_core.callbacks.manager import adispatch_custom_event
 from agents.langgraph.state import AgentState
 from core.llm_factory import get_llm, get_fallback_providers
-from agents.langgraph.nodes.utils import extract_text
+from agents.langgraph.nodes.utils import extract_text, safe_dispatch_custom_event
 from core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -155,7 +154,7 @@ async def summarizer_node(state: AgentState) -> dict:
             attempt_model = model_name if attempt_idx == 0 else ""
 
             if workflow_type == "coding":
-                llm = get_llm(provider=attempt_provider, model_name=attempt_model or "gpt-4o-mini", temperature=0.2)
+                llm = get_llm(provider=attempt_provider, model_name=attempt_model, temperature=0.2)
             elif workflow_type == "data_analysis":
                 llm = get_llm(provider=attempt_provider, model_name=attempt_model, temperature=0.2)
             elif requires_context and docs:
@@ -175,15 +174,15 @@ async def summarizer_node(state: AgentState) -> dict:
             if has_more:
                 next_prov = fallback_providers[attempt_idx + 1]
                 logger.warning(f"[Summarizer] failing over: {attempt_provider} -> {next_prov}")
-                
+
                 reason = "Error"
                 if "quota" in err_msg or "429" in err_msg:
                     reason = "Quota exhausted"
                 elif "503" in err_msg or "unavailable" in err_msg:
                     reason = "Service unavailable"
-                    
-                await adispatch_custom_event(
-                    "provider_switch", 
+
+                await safe_dispatch_custom_event(
+                    "provider_switch",
                     {"from": attempt_provider, "to": next_prov, "reason": reason}
                 )
                 continue

@@ -1,7 +1,7 @@
 """Contextual retriever — uses LangChain ContextualCompressionRetriever to reduce noise."""
 from typing import List, Optional, Dict
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import LLMChainExtractor
+from langchain_classic.retrievers import ContextualCompressionRetriever
+from langchain_classic.retrievers.document_compressors import LLMChainExtractor
 from langchain_core.documents import Document
 from rag.vectorstores.pinecone_store import get_mmr_retriever
 from core.logger import get_logger

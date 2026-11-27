@@ -99,12 +99,25 @@ async def note_ai_action(request: Request, note_id: str, payload: Dict, current_
         prompt = f"{custom_prompt}\n\nTitle: {title}\nContent:\n{content}"
 
     try:
-        from core.llm_factory import get_llm
-        llm = get_llm(streaming=False)
-        response = await llm.ainvoke(prompt)
-        text = response.content if hasattr(response, "content") else str(response)
-        return {"action": action, "result": text}
+        from core.config import settings
+        from core.llm_factory import get_llm, current_user_keys, current_user_id
+        from agents.langgraph.nodes.utils import extract_text
+        from database.mongodb.repositories.brain_repository import get_user_decrypted_keys
+
+        user_keys_list = await get_user_decrypted_keys(user_id)
+        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive") and k.get("key")}
+        keys_token = current_user_keys.set(keys_dict)
+        uid_token = current_user_id.set(user_id)
+        try:
+            llm = get_llm(streaming=False)
+            response = await llm.ainvoke(prompt)
+            text = extract_text(response.content) if hasattr(response, "content") else str(response)
+            return {"action": action, "result": text}
+        finally:
+            current_user_keys.reset(keys_token)
+            current_user_id.reset(uid_token)
     except Exception as e:
         logger.error(f"Error executing note AI action: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        detail = str(e) if settings.DEBUG else "Failed to execute note AI action."
+        raise HTTPException(status_code=500, detail=detail)
 

@@ -101,7 +101,7 @@ export default function SettingsPopover({ children, onUserUpdate = () => { }, on
   useEffect(() => {
     const token =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) return;
+    if (!token || token === "demo_guest_token") return;
     fetch(
       `${API_BASE_URL}/me`,
       {
@@ -183,9 +183,16 @@ export default function SettingsPopover({ children, onUserUpdate = () => { }, on
                   <div className="mt-3.5 flex items-center gap-2 rounded-xl border-border/60 bg-card px-3 py-2 shadow-sm">
                     <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />
                     <span className="text-[11px] font-semibold text-foreground">
-                      Free plan
+                      {user?.plan ? `${user.plan} plan` : "Free plan"}
                     </span>
-                    <button className="ml-auto text-[10px] font-bold text-primary-foreground bg-primary px-2 py-0.5 rounded-lg hover:bg-primary/90 transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false);
+                        router.push("/pricing");
+                      }}
+                      className="ml-auto text-[10px] font-bold text-primary-foreground bg-primary px-2 py-0.5 rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+                    >
                       Upgrade
                     </button>
                   </div>
@@ -193,6 +200,15 @@ export default function SettingsPopover({ children, onUserUpdate = () => { }, on
 
                 {/* ── Menu sections ── */}
                 <div className="p-1.5 space-y-0.5">
+                  <MenuItem
+                    icon={Settings}
+                    label="Edit Profile"
+                    suffix={<ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                    onClick={() => {
+                      setOpen(false);
+                      setIsProfileOpen(true);
+                    }}
+                  />
                   <MenuItem
                     icon={Settings}
                     label="All Settings"
@@ -248,6 +264,10 @@ export default function SettingsPopover({ children, onUserUpdate = () => { }, on
                     icon={HelpCircle}
                     label="Get help"
                     suffix={<ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                    onClick={() => {
+                      setOpen(false);
+                      router.push("/contact");
+                    }}
                   />
                 </div>
 
@@ -255,7 +275,14 @@ export default function SettingsPopover({ children, onUserUpdate = () => { }, on
 
                 <div className="p-1.5 space-y-0.5">
                   <div className="relative overflow-hidden rounded-xl">
-                    <button className="group relative flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left transition-all duration-150 hover:bg-amber-500/10 active:scale-[0.98]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false);
+                        router.push("/pricing");
+                      }}
+                      className="group relative flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] text-left transition-all duration-150 hover:bg-amber-500/10 active:scale-[0.98] cursor-pointer"
+                    >
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
                         <Crown className="h-3.5 w-3.5 text-amber-500" />
                       </div>
@@ -272,6 +299,10 @@ export default function SettingsPopover({ children, onUserUpdate = () => { }, on
                     icon={BookOpen}
                     label="Learn more"
                     suffix={<ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                    onClick={() => {
+                      setOpen(false);
+                      router.push("/docs");
+                    }}
                   />
                 </div>
 
@@ -284,7 +315,9 @@ export default function SettingsPopover({ children, onUserUpdate = () => { }, on
                     danger
                     onClick={() => {
                       localStorage.removeItem("token");
+                      localStorage.removeItem("is_demo");
                       document.cookie = "auth_token=; path=/; max-age=0";
+                      document.cookie = "is_demo=; path=/; max-age=0";
                       window.location.href = "/login";
                     }}
                   />

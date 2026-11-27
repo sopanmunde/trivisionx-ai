@@ -89,8 +89,8 @@ async def code_generation_node(state: AgentState) -> dict:
     )
 
     llm = get_llm(
-        provider=provider or "google",
-        model_name=model_name or "gemini-2.5-flash",
+        provider=provider or "",
+        model_name=model_name or "",
         temperature=0.15 if is_retry else 0.2,
     )
 
@@ -119,6 +119,21 @@ async def code_generation_node(state: AgentState) -> dict:
                 messages.append(AIMessage(content=content))
 
         messages.append(HumanMessage(content=query))
+        filename = state.get("filename")
+        user_id = state.get("user_id")
+        if filename and user_id:
+            try:
+                from database.mongodb.connection import get_database
+                from core.constants import COLLECTION_DOCUMENTS
+                doc = await get_database()[COLLECTION_DOCUMENTS].find_one({
+                    "user_id": user_id,
+                    "filename": filename,
+                })
+                if doc and doc.get("file_bytes"):
+                    raw_text = bytes(doc["file_bytes"]).decode("utf-8", errors="replace")[:8000]
+                    messages[-1] = HumanMessage(content=f"{query}\n\nAttached file '{filename}':\n```\n{raw_text}\n```")
+            except Exception as e:
+                logger.debug(f"[CodeGen] Could not read attached file '{filename}': {e}")
 
     try:
         response = await llm.ainvoke(messages)

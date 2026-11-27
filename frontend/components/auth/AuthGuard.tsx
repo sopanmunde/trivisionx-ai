@@ -7,35 +7,70 @@ interface AuthGuardProps {
   children: React.ReactNode
 }
 
+function parseCookieValue(name: string): string | null {
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`))
+  return match ? decodeURIComponent(match.split("=").slice(1).join("=")) : null
+}
+
+function isTokenValid(token: string | null): boolean {
+  if (!token || token === "demo_guest_token") return false
+  const parts = token.split(".")
+  if (parts.length !== 3) return false
+  try {
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/")
+    const payload = JSON.parse(atob(base64))
+    if (typeof payload.exp === "number" && payload.exp * 1000 <= Date.now()) {
+      return false
+    }
+    return Boolean(payload.sub)
+  } catch {
+    return false
+  }
+}
+
 export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   useEffect(() => {
     try {
-      const token = localStorage.getItem("token")
-      const cookieAuth = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("auth_token="))
+      const pathname = window.location.pathname
+      const isDemoRoute = pathname === "/demo" || pathname.startsWith("/demo/")
+      const lsToken = localStorage.getItem("token")
+      const cookieToken = parseCookieValue("auth_token")
+      const validToken = isTokenValid(lsToken)
+        ? lsToken
+        : isTokenValid(cookieToken)
+          ? cookieToken
+          : null
 
-      const isDemo =
-        localStorage.getItem("is_demo") === "true" ||
-        document.cookie.includes("is_demo=true") ||
-        (typeof window !== "undefined" &&
-          (window.location.search.includes("demo=true") ||
-           window.location.pathname.startsWith("/demo")))
-
-      if (!token && !cookieAuth && !isDemo) {
-        setIsAuthenticated(false)
-        router.replace("/login")
-      } else {
-        if (isDemo && !token) {
+      if (isDemoRoute) {
+        if (!validToken) {
           localStorage.setItem("is_demo", "true")
           localStorage.setItem("token", "demo_guest_token")
-          document.cookie = "is_demo=true; path=/; max-age=86400"
+          document.cookie = "is_demo=true; path=/; max-age=86400; SameSite=Lax"
         }
         setIsAuthenticated(true)
+        return
       }
+
+      if (!validToken) {
+        localStorage.removeItem("token")
+        localStorage.removeItem("is_demo")
+        document.cookie = "auth_token=; path=/; max-age=0"
+        document.cookie = "is_demo=; path=/; max-age=0"
+        setIsAuthenticated(false)
+        router.replace("/login")
+        return
+      }
+
+      if (lsToken !== validToken) {
+        localStorage.setItem("token", validToken)
+      }
+      localStorage.removeItem("is_demo")
+      setIsAuthenticated(true)
     } catch {
       setIsAuthenticated(false)
       router.replace("/login")
